@@ -1,0 +1,107 @@
+[versions]
+activityCompose = "1.12.2"
+agp = "9.0.0"
+androidXTestManifest = "1.10.0"
+assertk = "0.28.1"
+benchmark = "1.4.1"
+binaryCompatibility = "0.18.1"
+coilCompose = "3.3.0"
+composeHotReload = "1.0.0"
+composeMultiplatform = "1.10.0"
+dokka = "2.1.0"
+espressoCore = "3.7.0"
+junitVersion = "1.3.0"
+kotlin = "2.3.0"
+kotlinxCoroutines = "1.10.2"
+ktor = "3.4.0"
+material3 = "1.9.0"
+material3Adaptive = "1.2.0"
+mavenPublish = "0.36.0"
+jetbrainsLifecycle = "2.9.6"
+jetbrainsNavigation = "2.9.1"
+media3 = "1.9.0"
+robolectric = "4.16.1"
+roborazzi = "1.56.0"
+serialization = "1.10.0"
+spotless = "8.1.0"
+uiautomator = "2.3.0"
+
+[libraries]
+assertk = { module = "com.willowtreeapps.assertk:assertk", version.ref = "assertk" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
+androidx-media3-ui-compose = { module = "androidx.media3:media3-ui-compose", version.ref = "media3" }
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+# Compose
+jetbrains-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+jetbrains-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+jetbrains-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+jetbrains-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+compose-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "androidXTestManifest" }
+compose-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+jetbrains-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jetbrainsLifecycle" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinxCoroutines" }
+compose-material-icons = "org.jetbrains.compose.material:material-icons-core:1.7.3"
+jetbrains-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
+jetbrains-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "material3Adaptive" }
+jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrainsNavigation" }
+
+coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coilCompose" }
+ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+
+# Formatting
+ktlint-core = "com.pinterest.ktlint:ktlint-core:1.8.0"
+ktlint-compose-rules = "io.nlopez.compose.rules:ktlint:0.5.5"
+
+# build-logic dependencies
+android-api-gradlePlugin = { module = "com.android.tools.build:gradle-api", version.ref = "agp" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
+
+# Compose UI testing
+jetbrains-compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeMultiplatform" }
+jetbrains-compose-uiTestJunit4 = { module = "org.jetbrains.compose.ui:ui-test-junit4", version.ref = "composeMultiplatform" }
+
+# Benchmark testing
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
+
+# Screenshot testing
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-core = { module = "io.github.takahirom.roborazzi:roborazzi-core", version.ref = "roborazzi" }
+roborazzi-compose-ios = { module = "io.github.takahirom.roborazzi:roborazzi-compose-ios", version.ref = "roborazzi" }
+roborazzi-compose-desktop = { module = "io.github.takahirom.roborazzi:roborazzi-compose-desktop", version.ref = "roborazzi" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+android-test = { id = "com.android.test", version.ref = "agp" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibility" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+compose-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+
+liquid-root = { id = "io.github.fletchmckee.liquid.root" }
+liquid-android-kotlin-multiplatform-library = { id = "io.github.fletchmckee.liquid.android.kotlin.multiplatform.library" }
+liquid-android-application = { id = "io.github.fletchmckee.liquid.android.application" }
+liquid-android-test = { id = "io.github.fletchmckee.liquid.android.test" }
+liquid-kotlin-multiplatform = { id = "io.github.fletchmckee.liquid.kotlin.multiplatform" }
+liquid-compose-multiplatform = { id = "io.github.fletchmckee.liquid.compose.multiplatform" }
+
+

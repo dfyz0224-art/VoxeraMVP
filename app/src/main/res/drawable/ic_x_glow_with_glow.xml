@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Основная иконка - яркая, уменьшенная чтобы поместиться в круг -->
+    <item>
+        <inset
+            android:drawable="@drawable/ic_x_white"
+            android:insetLeft="20%"
+            android:insetTop="20%"
+            android:insetRight="20%"
+            android:insetBottom="20%" />
+    </item>
+</layer-list>
