@@ -9,6 +9,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Canvas
@@ -27,25 +31,65 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
-import com.vanoprojects.voxera.ui.theme.VoxeraTheme
-import com.vanoprojects.voxera.ui.theme.VoxeraColors
+import com.vanoprojects.voxera.ui.theme.*
+import com.vanoprojects.voxera.ui.theme.TextWithShadow
+import io.github.fletchmckee.liquid.liquid
+import io.github.fletchmckee.liquid.liquefiable
+import io.github.fletchmckee.liquid.rememberLiquidState
+
+private const val ONBOARDING_TEXT_1 = "Voxera — это интеллектуальная система анализа голоса, построенная на технологиях искусственного интеллекта, цифровой обработки звука и машинного обучения. Она считывает краткие фрагменты вашей речи и оценивает состояние человека по многим параметрам, связанным с эмоциями, физиологией и поведением."
+private const val ONBOARDING_TEXT_2 = "Голос — это не просто слова: он отражает работу дыхания, мышц, нервной системы и эмоций. Именно эти признаки Voxera анализирует, чтобы понять ваш уровень стресса, эмоциональный фон, когнитивную нагрузку, энергетическое состояние и стабильность поведения."
 
 @Composable
 fun ModeSelectScreen(
   onBack: () -> Unit,
-  onModeChosen: (String) -> Unit
+  onModeChosen: (String) -> Unit,
+  onOpenSettings: () -> Unit = {},
+  onboardingCompleted: Boolean = true,
+  onOnboardingComplete: () -> Unit = {}
 ) {
-  // Фон bg_reverse для ModeSelect
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+  val liquidState = rememberLiquidState()
+  var showOnboardingOverlay by remember { mutableStateOf(true) } // Локальное состояние: при "Начать" скрываем карточку
+
+  // Всё содержимое под карточкой должно быть liquefiable для корректного стеклянного эффекта
   Box(modifier = Modifier.fillMaxSize()) {
-    Image(
-      painter = painterResource(R.drawable.bg_reverse_stars),
-      contentDescription = null,
-      contentScale = ContentScale.Crop,
-      modifier = Modifier.fillMaxSize()
-    )
-    
-    Column(
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .then(if (showOnboardingOverlay) Modifier.liquefiable(liquidState) else Modifier)
+    ) {
+      when (theme.type) {
+        ThemeType.LIGHT -> {
+          Image(
+            painter = painterResource(R.drawable.bg_light),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+          )
+        }
+        ThemeType.GLASS -> {
+          Image(
+            painter = painterResource(R.drawable.bg_stars),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+          )
+        }
+        ThemeType.DARK -> {
+          Image(
+            painter = painterResource(R.drawable.bg_reverse_stars),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+          )
+        }
+      }
+
+      Column(
       modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -64,17 +108,24 @@ fun ModeSelectScreen(
           contentDescription = null,
           modifier = Modifier
             .fillMaxWidth(),
-          contentScale = ContentScale.Fit
+          contentScale = ContentScale.Fit,
+
         )
       }
       
       Spacer(modifier = Modifier.height(28.dp))
       
       // Заголовок "Выберите режим" под логотипом, перед карточками - по центру, ближе к карточкам
+      // В светлой теме - белый, в остальных - backgroundTextPrimary
+      val titleColor = if (theme.type == ThemeType.LIGHT) {
+        Color.White
+      } else {
+        colors.backgroundTextPrimary
+      }
       Text(
         text = "Выберите режим",
         style = MaterialTheme.typography.headlineSmall,
-        color = VoxeraColors.TextPrimary,
+        color = titleColor,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center
@@ -85,41 +136,128 @@ fun ModeSelectScreen(
       // Карточки с фиксированной высотой
       ModeCard(
         iconRes = R.drawable.ic_mother,
-        title = "Я — родитель",
+        title = "Родительский режим",
         subtitle = "Поддержка и оценка перегруза, усталости, тревожности",
-        onClick = { onModeChosen("mom") }
+        onClick = { onModeChosen("mom") },
+        gradientIndex = 0
       )
       Spacer(modifier = Modifier.height(16.dp))
       ModeCard(
         iconRes = R.drawable.ic_teen,
-        title = "Я — тинейджер",
-        subtitle = "Короткая оценка настроения и внутреннего напряжения",
-        onClick = { onModeChosen("teen") }
+        title = "Универсальный режим",
+        subtitle = "Общая оценка состояния",
+        onClick = { onModeChosen("teen") },
+        gradientIndex = 1
       )
       Spacer(modifier = Modifier.height(16.dp))
       ModeCard(
         iconRes = R.drawable.ic_quick,
-        title = "Быстрый анализ",
-        subtitle = "Универсальная оценка за 15–30 секунд",
-        onClick = { onModeChosen("quick") }
+        title = "Глубокий анализ",
+        subtitle = "Подробная оценка и психоэмоциональный портрет",
+        onClick = { onModeChosen("quick") },
+        gradientIndex = 2
       )
 
       Spacer(modifier = Modifier.weight(1f))
-      OutlinedButton(
-        onClick = { onModeChosen("history") },
+      Row(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-          contentColor = Color.Black
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-          width = 1.5.dp,
-          color = Color.Black.copy(alpha = 0.3f)
-        )
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
       ) {
-        Text("История", color = Color.Black)
+        ThemedOutlinedButton(
+          text = "История",
+        onClick = { onModeChosen("history") },
+          modifier = Modifier.weight(1f)
+        )
+        ThemedFilledButton(
+          text = "Настройки",
+          onClick = onOpenSettings,
+          modifier = Modifier.weight(1f)
+        )
       }
       Spacer(modifier = Modifier.height(10.dp))
+    }
+    }
+
+    // Онбординг: затемнение фона + стеклянная карточка поверх экрана
+    if (showOnboardingOverlay) {
+      // Затемнение фона
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .background(Color.Black.copy(alpha = 0.8f))
+      )
+      var onboardingStep by remember { mutableStateOf(0) }
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(24.dp),
+        contentAlignment = Alignment.Center
+      ) {
+        Column(
+          horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          // Стеклянная карточка: прозрачная, frost, искажение фона
+          val cardShape = RoundedCornerShape(24.dp)
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(400.dp)
+              .clip(cardShape)
+              .liquid(liquidState) {
+                shape = cardShape
+                frost = 1.2.dp
+                refraction = 0.1f
+                curve = 0.1f
+                edge = 0.08f
+                tint = Color.Black.copy(alpha = 0.52f)
+                saturation = 0.55f
+                dispersion = 0.05f
+              }
+              .padding(32.dp)
+          ) {
+            Text(
+              text = if (onboardingStep == 0) ONBOARDING_TEXT_1 else ONBOARDING_TEXT_2,
+              style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 16.sp,
+                lineHeight = 24.sp
+              ),
+              color = Color.White,
+              modifier = Modifier.fillMaxSize()
+            )
+          }
+          Spacer(modifier = Modifier.height(24.dp))
+          // Кнопка: "Далее" или "Начать"
+          val buttonBg = if (theme.type == ThemeType.LIGHT) {
+            Color(0xFF2E5F9E).copy(alpha = 0.9f)
+          } else {
+            Color.White.copy(alpha = 0.25f)
+          }
+          val buttonTextColor = Color.White
+          if (onboardingStep == 0) {
+            Button(
+              onClick = { onboardingStep = 1 },
+              modifier = Modifier.fillMaxWidth(),
+              shape = RoundedCornerShape(12.dp),
+              colors = ButtonDefaults.buttonColors(containerColor = buttonBg)
+            ) {
+              Text("Далее", color = buttonTextColor)
+            }
+          } else {
+            Button(
+              onClick = {
+                showOnboardingOverlay = false
+                onOnboardingComplete()
+              },
+              modifier = Modifier.fillMaxWidth(),
+              shape = RoundedCornerShape(12.dp),
+              colors = ButtonDefaults.buttonColors(containerColor = buttonBg)
+            ) {
+              Text("Начать", color = buttonTextColor)
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -129,99 +267,47 @@ private fun ModeCard(
   iconRes: Int,
   title: String,
   subtitle: String,
-  onClick: () -> Unit
+  onClick: () -> Unit,
+  gradientIndex: Int
 ) {
-  val cardHeight = 140.dp // Фиксированная высота карточки - можно легко менять
-  val shape = RoundedCornerShape(16.dp) // Увеличено скругление для более кнопочного вида
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
   
-  // Box для позиционирования карточки и тени
-  Box(
-    modifier = Modifier
-      .fillMaxWidth()
-      .height(cardHeight)
-  ) {
-    // Мягкая тень со всех сторон через Canvas
-    Canvas(
-      modifier = Modifier.fillMaxSize()
+  ThemedCard(onClick = onClick, gradientIndex = gradientIndex) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically
     ) {
-      val shadowSpread = 12.dp.toPx()
-      val cardWidth = size.width
-      val cardHeight = size.height
-      val cornerRadius = 19.dp.toPx()
+      // Иконка слева - еще больше
+      Image(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        modifier = Modifier.size(88.dp),
+        colorFilter = ColorFilter.tint(colors.primaryGlow.copy(alpha = 0.9f))
+        )
+      Spacer(modifier = Modifier.width(24.dp))
       
-      // Рисуем несколько слоев тени для создания мягкого эффекта
-      for (i in 1..8) {
-        val spread = shadowSpread * (i / 8f)
-        val alpha = (0.25f / i).coerceAtMost(0.15f)
-        
-        // Рисуем скругленный прямоугольник с расширением во все стороны
-        drawRoundRect(
-          color = Color.Black.copy(alpha = alpha),
-          topLeft = Offset(-spread, -spread + spread * 0.2f), // Небольшое смещение вниз
-          size = Size(cardWidth + spread * 2, cardHeight + spread * 2),
-          cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius + spread)
+      Column(modifier = Modifier.weight(1f)) {
+        TextWithShadow(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+          color = colors.textPrimary,
+        fontWeight = FontWeight.SemiBold
+      )
+      Spacer(modifier = Modifier.height(6.dp))
+        TextWithShadow(
+        text = subtitle,
+        style = MaterialTheme.typography.bodyMedium,
+          color = colors.textSecondary
         )
       }
-    }
-    
-    // Сама карточка поверх тени - без shadow модификатора
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .clip(shape)
-        .background(
-          // Градиентный фон для более выразительного вида
-          brush = Brush.linearGradient(
-            colors = listOf(
-              VoxeraColors.CardBackground.copy(alpha = 0.95f),
-              VoxeraColors.CardBackground.copy(alpha = 0.85f)
-            )
-          ),
-          shape = shape
-        )
-        .border(
-          width = 1.3.dp,
-          color = VoxeraColors.PrimaryGlow.copy(alpha = 0.53f),
-          shape = shape
-        )
-        .clickable(onClick = onClick)
-        .padding(vertical = 28.dp, horizontal = 24.dp)
-    ) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        // Иконка слева - еще больше
-        Image(
-          painter = painterResource(iconRes),
-          contentDescription = null,
-          modifier = Modifier.size(88.dp), // Увеличено до 88.dp
-          colorFilter = ColorFilter.tint(VoxeraColors.PrimaryGlow.copy(alpha = 0.9f))
-        )
-        Spacer(modifier = Modifier.width(24.dp))
-        
-        Column(modifier = Modifier.weight(1f)) {
-          Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = VoxeraColors.TextPrimary,
-            fontWeight = FontWeight.SemiBold
-          )
-          Spacer(modifier = Modifier.height(6.dp))
-          Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = VoxeraColors.TextSecondary
-          )
-        }
-        Text(
-          text = "›",
-          style = MaterialTheme.typography.titleLarge,
-          color = VoxeraColors.PrimaryGlow.copy(alpha = 0.7f),
-          modifier = Modifier.padding(start = 8.dp)
-        )
-      }
+      TextWithShadow(
+        text = "›",
+        style = MaterialTheme.typography.titleLarge,
+        color = colors.primaryGlow.copy(alpha = 0.7f),
+        modifier = Modifier.padding(start = 8.dp)
+      )
     }
   }
 }
@@ -232,7 +318,8 @@ private fun ModeSelectScreenPreview() {
   VoxeraTheme {
     ModeSelectScreen(
       onBack = {},
-      onModeChosen = {}
+      onModeChosen = {},
+      onboardingCompleted = true
     )
   }
 }

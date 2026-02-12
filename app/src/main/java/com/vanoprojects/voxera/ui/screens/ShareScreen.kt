@@ -28,26 +28,48 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
-import com.vanoprojects.voxera.ui.theme.VoxeraTheme
-import com.vanoprojects.voxera.ui.theme.VoxeraColors
+import com.vanoprojects.voxera.ui.theme.*
+import com.vanoprojects.voxera.ui.theme.TextWithShadow
 import io.github.fletchmckee.liquid.liquid
 import io.github.fletchmckee.liquid.liquefiable
 import io.github.fletchmckee.liquid.rememberLiquidState
 
 @Composable
-fun ShareScreen(onBack: () -> Unit) {
+fun ShareScreen() {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
   val liquidState = rememberLiquidState()
   
   Box(modifier = Modifier.fillMaxSize()) {
-    // Фон bg_clean - должен быть liquefiable для liquid эффекта
-    Image(
-      painter = painterResource(R.drawable.bg_clean),
-      contentDescription = null,
-      contentScale = ContentScale.Crop,
-      modifier = Modifier
-        .fillMaxSize()
-        .liquefiable(liquidState)
-    )
+    // Фон: для светлой темы - белый, для стеклянной - bg_stars, для темной - bg_clean с liquid эффектом
+    when (theme.type) {
+      ThemeType.LIGHT -> {
+        Image(
+          painter = painterResource(R.drawable.bg_light),
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier = Modifier.fillMaxSize()
+        )
+      }
+      ThemeType.GLASS -> {
+        Image(
+          painter = painterResource(R.drawable.bg_stars),
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier = Modifier.fillMaxSize()
+        )
+      }
+      ThemeType.DARK -> {
+        Image(
+          painter = painterResource(R.drawable.bg_clean),
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier = Modifier
+            .fillMaxSize()
+            .liquefiable(liquidState)
+        )
+      }
+    }
     
     Column(
       modifier = Modifier
@@ -55,10 +77,15 @@ fun ShareScreen(onBack: () -> Unit) {
         .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
       Spacer(modifier = Modifier.height(18.dp))
-      // Кастомный заголовок - больше и темно-синего цвета, по центру
+      // Кастомный заголовок - в стеклянной теме белый, в остальных - shadowColor
+      val titleColor = if (theme.type == ThemeType.GLASS) {
+        Color.White
+      } else {
+        colors.shadowColor
+      }
       Text(
         text = "Поделиться результатом",
-        color = Color(0xFF1E3A5F), // Темно-синий цвет
+        color = titleColor,
         style = MaterialTheme.typography.headlineMedium.copy(
           fontSize = 42.sp, // Увеличенный размер
           fontWeight = FontWeight.Light,
@@ -70,7 +97,7 @@ fun ShareScreen(onBack: () -> Unit) {
       Spacer(modifier = Modifier.height(22.dp))
       Text(
         text = "Публикуется только краткая карточка без деталей",
-        color = Color(0xFF1E3A5F), // Темно-синий цвет
+        color = colors.backgroundTextSecondary,
         style = MaterialTheme.typography.bodyLarge.copy(
           fontSize = 18.sp, // Увеличенный размер
           fontWeight = FontWeight.Normal
@@ -95,43 +122,41 @@ fun ShareScreen(onBack: () -> Unit) {
           iconRes = R.drawable.ic_tiktok,
           liquidState = liquidState,
           onClick = { },
-          modifier = Modifier.weight(1f)
+          modifier = Modifier.weight(1f),
+          gradientIndex = 0
         )
         ShareButton(
           label = "Instagram",
           iconRes = R.drawable.ic_instagram,
           liquidState = liquidState,
           onClick = { },
-          modifier = Modifier.weight(1f)
+          modifier = Modifier.weight(1f),
+          gradientIndex = 1
         )
         ShareButton(
           label = "Telegram",
           iconRes = R.drawable.ic_telegram,
           liquidState = liquidState,
           onClick = { },
-          modifier = Modifier.weight(1f)
+          modifier = Modifier.weight(1f),
+          gradientIndex = 2
         )
         ShareButton(
           label = "Ссылка",
           iconRes = R.drawable.ic_link,
           liquidState = liquidState,
           onClick = { },
-          modifier = Modifier.weight(1f)
+          modifier = Modifier.weight(1f),
+          gradientIndex = 3
         )
       }
 
       Spacer(modifier = Modifier.height(18.dp))
-      Button(
+      ThemedFilledButton(
+        text = "Ещё…",
         onClick = { },
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-          containerColor = Color.White // Белый фон
-        ),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(vertical = 14.dp)
-      ) {
-        Text("Ещё…", color = Color(0xFF071223)) // Темно-синий текст
-      }
+        modifier = Modifier.fillMaxWidth()
+      )
       Spacer(modifier = Modifier.height(10.dp))
     }
   }
@@ -139,84 +164,32 @@ fun ShareScreen(onBack: () -> Unit) {
 
 @Composable
 private fun SharePreviewCard() {
-  val cardHeight = 200.dp // Увеличенная высота карточки
-  val shape = RoundedCornerShape(16.dp)
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
   
-  // Box для позиционирования карточки и тени
-  Box(
-    modifier = Modifier
-      .fillMaxWidth()
-      .height(cardHeight)
-  ) {
-    // Мягкая тень со всех сторон через Canvas (как в ModeSelect)
-    Canvas(
-      modifier = Modifier.fillMaxSize()
-    ) {
-      val shadowSpread = 12.dp.toPx()
-      val cardWidth = size.width
-      val cardHeight = size.height
-      val cornerRadius = 19.dp.toPx()
-      
-      // Рисуем несколько слоев тени для создания мягкого эффекта
-      for (i in 1..8) {
-        val spread = shadowSpread * (i / 8f)
-        val alpha = (0.25f / i).coerceAtMost(0.15f)
-        
-        // Рисуем скругленный прямоугольник с расширением во все стороны
-        drawRoundRect(
-          color = Color.Black.copy(alpha = alpha),
-          topLeft = Offset(-spread, -spread + spread * 0.2f), // Небольшое смещение вниз
-          size = Size(cardWidth + spread * 2, cardHeight + spread * 2),
-          cornerRadius = CornerRadius(cornerRadius + spread)
-        )
-      }
-    }
-    
-    // Сама карточка поверх тени - без shadow модификатора (как в ModeSelect)
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .clip(shape)
-        .background(
-          // Градиентный фон для более выразительного вида
-          brush = Brush.linearGradient(
-            colors = listOf(
-              VoxeraColors.CardBackground.copy(alpha = 0.95f),
-              VoxeraColors.CardBackground.copy(alpha = 0.85f)
-            )
-          ),
-          shape = shape
-        )
-        .border(
-          width = 1.3.dp,
-          color = VoxeraColors.PrimaryGlow.copy(alpha = 0.53f),
-          shape = shape
-        )
-        .padding(vertical = 28.dp, horizontal = 24.dp)
-    ) {
-      Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center
+  ThemedCard(modifier = Modifier.height(200.dp), gradientIndex = 0) {
+    Column(
+      modifier = Modifier.fillMaxSize(),
+      verticalArrangement = Arrangement.Center
       ) {
         Image(
           painter = painterResource(R.drawable.ic_voxera_logo_text),
           contentDescription = null,
           modifier = Modifier.height(44.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-          "Состояние",
-          color = VoxeraColors.TextSecondary,
-          style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-          "Стабильнее, лёгкое напряжение",
-          color = VoxeraColors.TextPrimary,
-          style = MaterialTheme.typography.titleMedium,
-          fontWeight = FontWeight.Normal // Убрали SemiBold
-        )
-      }
+      Spacer(modifier = Modifier.height(16.dp))
+      TextWithShadow(
+        text = "Состояние",
+        color = colors.textSecondary,
+        style = MaterialTheme.typography.bodySmall
+      )
+      Spacer(modifier = Modifier.height(4.dp))
+      TextWithShadow(
+        text = "Стабильнее, лёгкое напряжение",
+        color = colors.textPrimary,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Normal
+      )
     }
   }
 }
@@ -227,45 +200,39 @@ private fun ShareButton(
   iconRes: Int,
   liquidState: io.github.fletchmckee.liquid.LiquidState,
   onClick: () -> Unit,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  gradientIndex: Int
 ) {
-  val buttonShape = RoundedCornerShape(14.dp)
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
   
-  Box(
-    modifier = modifier
-      .height(100.dp) // Увеличена высота кнопок
-      .clip(buttonShape)
-      .clickable(onClick = onClick)
-      .liquid(liquidState) {
-        shape = buttonShape
-        // Liquid glass эффект - прозрачное стекло с искажением фона
-        frost = 1.5.dp // Легкая мутность для эффекта стекла
-        refraction = 0.8f // Искажение фона
-        curve = 0.4f
-        edge = 0.05f
-        tint = Color.White.copy(alpha = 0.0f) // Без оттенка
-        saturation = 1.0f
-        dispersion = 0.6f // Искажение фона
-      },
-    contentAlignment = Alignment.Center
+  // В светлой теме иконки и текст белые, в остальных - тоже белые
+  val iconColor = Color.White
+  val textColor = Color.White
+  
+  // Используем ThemedCard для всех тем, передаем liquidState для стеклянной темы
+  ThemedCard(
+    modifier = modifier.height(100.dp),
+    onClick = onClick,
+    liquidState = liquidState,
+    gradientIndex = gradientIndex
   ) {
     Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
-      modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
+      modifier = Modifier.fillMaxSize()
     ) {
       Image(
         painter = painterResource(iconRes),
         contentDescription = null,
         modifier = Modifier.size(50.dp), // Увеличен размер иконок
-        colorFilter = ColorFilter.tint(Color.White) // Белые иконки
+        colorFilter = ColorFilter.tint(iconColor)
       )
       Spacer(modifier = Modifier.height(6.dp))
-      Text(
+      TextWithShadow(
         text = label,
-        style = MaterialTheme.typography.bodySmall,
-        fontSize = 11.sp, // Немного увеличен размер текста
-        color = Color.White // Белый текст
+        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+        color = textColor
       )
     }
   }
@@ -275,6 +242,6 @@ private fun ShareButton(
 @Composable
 private fun ShareScreenPreview() {
   VoxeraTheme {
-    ShareScreen(onBack = {})
+    ShareScreen()
   }
 }

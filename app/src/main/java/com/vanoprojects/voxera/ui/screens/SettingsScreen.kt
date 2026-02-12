@@ -1,8 +1,10 @@
 package com.vanoprojects.voxera.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,56 +17,93 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.vanoprojects.voxera.ui.theme.VoxeraColors
+import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.data.PreferencesManager
+import com.vanoprojects.voxera.ui.theme.*
+import com.vanoprojects.voxera.ui.theme.TextWithShadow
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
-  onBack: () -> Unit,
   onAbout: () -> Unit,
   onHelp: () -> Unit
 ) {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+  val context = LocalContext.current
+  val prefsManager = remember { PreferencesManager(context) }
+  val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
+  val scope = rememberCoroutineScope()
+  
   var keepHistory by remember { mutableStateOf(true) }
   var shareMinimal by remember { mutableStateOf(true) }
 
-  VoxeraBackground {
+  // Фон: для светлой темы - белый, для остальных - VoxeraBackground
+  Box(modifier = Modifier.fillMaxSize()) {
+    if (theme.type == ThemeType.LIGHT) {
+      Image(
+        painter = painterResource(R.drawable.bg_light),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize()
+      )
+    } else {
+      VoxeraBackground {}
+    }
+    
     Column(
       modifier = Modifier
         .fillMaxSize()
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = "Настройки", onBack = onBack)
+      TopBar(title = "Настройки")
       Spacer(modifier = Modifier.height(16.dp))
 
       SettingCard(
         title = "Сохранять историю",
         subtitle = "Хранить результаты локально на устройстве",
         checked = keepHistory,
-        onChecked = { keepHistory = it }
+        onChecked = { keepHistory = it },
+        gradientIndex = 0
       )
       Spacer(modifier = Modifier.height(16.dp))
       SettingCard(
         title = "Делиться только кратко",
         subtitle = "Без деталей и чувствительных данных",
         checked = shareMinimal,
-        onChecked = { shareMinimal = it }
+        onChecked = { shareMinimal = it },
+        gradientIndex = 1
+      )
+
+      Spacer(modifier = Modifier.height(16.dp))
+      ThemeSelectorCard(
+        currentTheme = currentTheme,
+        onThemeSelected = { themeType ->
+          scope.launch {
+            prefsManager.setThemeType(themeType)
+          }
+        }
       )
 
       Spacer(modifier = Modifier.height(18.dp))
-      OutlinedButton(
+      ThemedOutlinedButton(
+        text = "О приложении",
         onClick = onAbout,
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1E3A5F))
-      ) { Text("О приложении", color = Color(0xFF1E3A5F)) }
+        modifier = Modifier.fillMaxWidth()
+      )
 
       Spacer(modifier = Modifier.height(8.dp))
-      OutlinedButton(
+      ThemedOutlinedButton(
+        text = "Помощь",
         onClick = onHelp,
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1E3A5F))
-      ) { Text("Помощь", color = Color(0xFF1E3A5F)) }
+        modifier = Modifier.fillMaxWidth()
+      )
     }
   }
 }
@@ -74,87 +113,113 @@ private fun SettingCard(
   title: String,
   subtitle: String,
   checked: Boolean,
-  onChecked: (Boolean) -> Unit
+  onChecked: (Boolean) -> Unit,
+  gradientIndex: Int
 ) {
-  val cardHeight = 140.dp // Фиксированная высота карточки как в ModeSelect
-  val shape = RoundedCornerShape(16.dp) // Скругление как в ModeSelect
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
   
-  // Box для позиционирования карточки и тени
-  Box(
-    modifier = Modifier
-      .fillMaxWidth()
-      .height(cardHeight)
-  ) {
-    // Мягкая тень со всех сторон через Canvas (как в ModeSelect)
-    Canvas(
+  ThemedCard(gradientIndex = gradientIndex) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Column(modifier = Modifier.weight(1f)) {
+        TextWithShadow(
+          text = title,
+          style = MaterialTheme.typography.titleMedium,
+          color = colors.textPrimary,
+          fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        TextWithShadow(
+          text = subtitle,
+          style = MaterialTheme.typography.bodyMedium,
+          color = colors.textSecondary
+        )
+      }
+      Switch(
+        checked = checked,
+        onCheckedChange = onChecked
+      )
+    }
+  }
+}
+
+@Composable
+private fun ThemeSelectorCard(
+  currentTheme: ThemeType,
+  onThemeSelected: (ThemeType) -> Unit
+) {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+  
+  ThemedCard(modifier = Modifier.height(240.dp), gradientIndex = 2) {
+    Column(
       modifier = Modifier.fillMaxSize()
     ) {
-      val shadowSpread = 12.dp.toPx()
-      val cardWidth = size.width
-      val cardHeight = size.height
-      val cornerRadius = 19.dp.toPx()
+      TextWithShadow(
+        text = "Тема оформления",
+        style = MaterialTheme.typography.titleMedium,
+        color = colors.textPrimary,
+        fontWeight = FontWeight.SemiBold
+      )
+      Spacer(modifier = Modifier.height(16.dp))
       
-      // Рисуем несколько слоев тени для создания мягкого эффекта
-      for (i in 1..8) {
-        val spread = shadowSpread * (i / 8f)
-        val alpha = (0.25f / i).coerceAtMost(0.15f)
-        
-        // Рисуем скругленный прямоугольник с расширением во все стороны
-        drawRoundRect(
-          color = Color.Black.copy(alpha = alpha),
-          topLeft = Offset(-spread, -spread + spread * 0.2f), // Небольшое смещение вниз
-          size = Size(cardWidth + spread * 2, cardHeight + spread * 2),
-          cornerRadius = CornerRadius(cornerRadius + spread)
-        )
-      }
+      ThemeOption(
+        title = "Стеклянная",
+        themeType = ThemeType.GLASS,
+        isSelected = currentTheme == ThemeType.GLASS,
+        onClick = { onThemeSelected(ThemeType.GLASS) }
+      )
+      Spacer(modifier = Modifier.height(16.dp))
+      ThemeOption(
+        title = "Светлая",
+        themeType = ThemeType.LIGHT,
+        isSelected = currentTheme == ThemeType.LIGHT,
+        onClick = { onThemeSelected(ThemeType.LIGHT) }
+      )
+      Spacer(modifier = Modifier.height(16.dp))
+      ThemeOption(
+        title = "Темная",
+        themeType = ThemeType.DARK,
+        isSelected = currentTheme == ThemeType.DARK,
+        onClick = { onThemeSelected(ThemeType.DARK) }
+      )
     }
-    
-    // Сама карточка поверх тени - стиль как в ModeSelect
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .clip(shape)
-        .background(
-          // Градиентный фон для более выразительного вида
-          brush = Brush.linearGradient(
-            colors = listOf(
-              VoxeraColors.CardBackground.copy(alpha = 0.95f),
-              VoxeraColors.CardBackground.copy(alpha = 0.85f)
-            )
-          ),
-          shape = shape
-        )
-        .border(
-          width = 1.3.dp,
-          color = VoxeraColors.PrimaryGlow.copy(alpha = 0.53f),
-          shape = shape
-        )
-        .padding(vertical = 28.dp, horizontal = 24.dp)
-    ) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Column(modifier = Modifier.weight(1f)) {
-          Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = VoxeraColors.TextPrimary,
-            fontWeight = FontWeight.SemiBold
-          )
-          Spacer(modifier = Modifier.height(6.dp))
-          Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = VoxeraColors.TextSecondary
-          )
-        }
-        Switch(
-          checked = checked,
-          onCheckedChange = onChecked
-        )
-      }
-    }
+  }
+}
+
+@Composable
+private fun ThemeOption(
+  title: String,
+  themeType: ThemeType,
+  isSelected: Boolean,
+  onClick: () -> Unit
+) {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+  
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .height(48.dp)
+      .clickable(onClick = onClick),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    RadioButton(
+      selected = isSelected,
+      onClick = onClick,
+      colors = RadioButtonDefaults.colors(
+        selectedColor = colors.primaryGlow
+      )
+    )
+    Spacer(modifier = Modifier.width(8.dp))
+    TextWithShadow(
+      text = title,
+      color = colors.textPrimary,
+      style = MaterialTheme.typography.bodyMedium
+    )
   }
 }

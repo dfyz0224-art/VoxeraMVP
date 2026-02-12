@@ -36,11 +36,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.ui.theme.VoxeraTheme
 import com.vanoprojects.voxera.ui.theme.VoxeraColors
+import com.vanoprojects.voxera.ui.theme.LocalVoxeraTheme
+import com.vanoprojects.voxera.ui.theme.ThemeType
 import io.github.fletchmckee.liquid.liquid
 import io.github.fletchmckee.liquid.liquefiable
 import io.github.fletchmckee.liquid.rememberLiquidState
@@ -48,7 +51,6 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun RecordingScreen(
-    onBack: () -> Unit,
     onGoProcessing: () -> Unit, // переход на processing должен быть ПОСЛЕ отпускания
 ) {
     val liquidState = rememberLiquidState()
@@ -80,11 +82,18 @@ fun RecordingScreen(
     )
     
     val breathing = if (isHolding) breathingHold else breathingIdle
+    val theme = LocalVoxeraTheme.current
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Фон должен быть liquefiable, чтобы liquid мог “сэмплить” пиксели
+        // Фон должен быть liquefiable, чтобы liquid мог "сэмплить" пиксели
+        // Для стеклянной темы используем bg_stars, для светлой - bg_light_reverse, для темной - bg_clean
+        val backgroundRes = when (theme.type) {
+            ThemeType.GLASS -> R.drawable.bg_stars
+            ThemeType.LIGHT -> R.drawable.bg_light_reverse
+            ThemeType.DARK -> R.drawable.bg_clean
+        }
         Image(
-            painter = painterResource(R.drawable.bg_clean), // выбери свой фон из ассетов
+            painter = painterResource(backgroundRes),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -100,22 +109,6 @@ fun RecordingScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(8.dp))
-            // Только кнопка назад вверху
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "←",
-                    color = VoxeraColors.TextPrimary,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { onBack() })
-                        }
-                )
-            }
-            Spacer(Modifier.height(14.dp))
 
             // Центр экрана — кнопка (на том же месте)
             Spacer(Modifier.weight(1f))
@@ -167,23 +160,34 @@ fun RecordingScreen(
                             .offset(y = (-200).dp), // Смещаем выше, чтобы не перекрывать кнопку
                             horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Заголовок по центру - большой, черный, как на референсе
+                        // Заголовок по центру - цвет зависит от темы
+                        val titleColor = when (theme.type) {
+                            ThemeType.LIGHT -> Color(0xFF0D1B3A) // Темно-синий для светлой темы
+                            ThemeType.DARK -> Color(0xFF0D1B3A) // Темно-синий для темной темы
+                            else -> Color.White
+                        }
                         Text(
                             text = "Запись голоса",
-                            color = Color.Black.copy(alpha = textAlpha),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontSize = 40.sp, // Увеличен размер
+                            color = titleColor.copy(alpha = textAlpha),
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontSize = 40.sp,
                                 fontWeight = FontWeight.Normal,
-                                lineHeight = 35.sp,
+                                letterSpacing = 0.04.em,
+                                lineHeight = 42.sp,
                             ),
                             modifier = Modifier.padding(bottom = 20.dp),
                             textAlign = TextAlign.Center
                         )
 
-                        // Текст над кнопкой - большой, черный, как на референсе
+                        // Текст над кнопкой - цвет зависит от темы
+                        val descriptionColor = when (theme.type) {
+                            ThemeType.LIGHT -> Color(0xFF0A1628) // Темный для светлой темы
+                            ThemeType.DARK -> Color(0xFF0A1628) // Темный для темной темы
+                            else -> Color.White
+                        }
                         Text(
                             text = "Скажите 2–3 предложения о том, как прошёл ваш день.",
-                            color = Color.Black.copy(alpha = textAlpha),
+                            color = descriptionColor.copy(alpha = textAlpha),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Normal,
@@ -198,9 +202,15 @@ fun RecordingScreen(
 
             Spacer(Modifier.weight(1f))
 
+            // Цвет текста зависит от темы
+            val timeTextColor = when (theme.type) {
+                ThemeType.LIGHT -> Color(0xFF1A2F4A) // Темно-синий для светлой темы
+                ThemeType.DARK -> Color(0xFF1A2F4A) // Темно-синий для темной темы
+                else -> Color.White
+            }
             Text(
                 text = "15–30 секунд",
-                color = VoxeraColors.TextSecondary,
+                color = timeTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
 
@@ -471,7 +481,6 @@ private fun LiquidRecordButtonHold(
 private fun RecordingScreenPreview() {
   VoxeraTheme {
     RecordingScreen(
-      onBack = {},
       onGoProcessing = {}
     )
   }

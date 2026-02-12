@@ -23,21 +23,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
-import com.vanoprojects.voxera.ui.theme.VoxeraTheme
-import com.vanoprojects.voxera.ui.theme.VoxeraColors
+import com.vanoprojects.voxera.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
 fun ProcessingScreen(onDone: () -> Unit) {
+  val theme = LocalVoxeraTheme.current
+  
   LaunchedEffect(Unit) {
     delay(2000) // 1-2 секунды
     onDone()
   }
 
   Box(modifier = Modifier.fillMaxSize()) {
-    // Фон bg_clean для ProcessingScreen
+    // Фон: для стеклянной темы - bg_stars, для светлой - bg_light_reverse, для темной - bg_clean
+    val backgroundRes = when (theme.type) {
+      ThemeType.GLASS -> R.drawable.bg_stars
+      ThemeType.LIGHT -> R.drawable.bg_light_reverse
+      ThemeType.DARK -> R.drawable.bg_clean
+    }
     Image(
-      painter = painterResource(R.drawable.bg_clean),
+      painter = painterResource(backgroundRes),
       contentDescription = null,
       contentScale = ContentScale.Crop,
       modifier = Modifier.fillMaxSize()
@@ -53,17 +59,19 @@ fun ProcessingScreen(onDone: () -> Unit) {
       // Красивая анимация загрузки
       ProcessingAnimation()
       Spacer(modifier = Modifier.height(24.dp))
+      val colors = theme.colors
+      
       Text(
         text = "Анализируем",
         style = MaterialTheme.typography.headlineSmall,
-        color = VoxeraColors.TextPrimary,
+        color = colors.backgroundTextPrimary,
         fontWeight = FontWeight.SemiBold
       )
       Spacer(modifier = Modifier.height(8.dp))
       Text(
         text = "Это займёт несколько секунд",
         style = MaterialTheme.typography.bodyMedium,
-        color = VoxeraColors.TextSecondary
+        color = colors.backgroundTextSecondary
       )
     }
   }

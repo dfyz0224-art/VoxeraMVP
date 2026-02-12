@@ -13,7 +13,9 @@ import kotlinx.coroutines.launch
 fun VoxeraNavHost(
   navController: NavHostController = rememberNavController(),
   consentGiven: Boolean = false,
-  onConsentGiven: suspend () -> Unit = {}
+  onConsentGiven: suspend () -> Unit = {},
+  onboardingCompleted: Boolean = true,
+  onOnboardingComplete: () -> Unit = {}
 ) {
   val scope = rememberCoroutineScope()
   
@@ -21,6 +23,8 @@ fun VoxeraNavHost(
     composable(Routes.Mode) {
       ModeSelectScreen(
         onBack = { /* no-op */ },
+        onboardingCompleted = onboardingCompleted,
+        onOnboardingComplete = onOnboardingComplete,
         onModeChosen = { mode ->
           if (mode == "history") {
             navController.navigate(Routes.History)
@@ -30,14 +34,14 @@ fun VoxeraNavHost(
               navController.navigate(Routes.Recording)
             } else {
               navController.navigate(Routes.Consent)
-            }
-          }
       }
+          }
+        },
+        onOpenSettings = { navController.navigate(Routes.Settings) }
       )
     }
     composable(Routes.Consent) {
       ConsentScreen(
-        onBack = { navController.popBackStack() },
         onAccept = {
           scope.launch {
             onConsentGiven()
@@ -50,7 +54,6 @@ fun VoxeraNavHost(
     }
     composable(Routes.Recording) {
       RecordingScreen(
-        onBack = { navController.popBackStack() },
         onGoProcessing = { navController.navigate(Routes.Processing) }
       )
     }
@@ -67,28 +70,22 @@ fun VoxeraNavHost(
       )
     }
     composable(Routes.Share) {
-      ShareScreen(
-        onBack = { navController.popBackStack() }
-      )
+      ShareScreen()
     }
     composable(Routes.History) {
-      HistoryScreen(
-        onBack = { navController.popBackStack() },
-        onOpenSettings = { navController.navigate(Routes.Settings) }
-      )
+      HistoryScreen()
     }
     composable(Routes.Settings) {
       SettingsScreen(
-        onBack = { navController.popBackStack() },
         onAbout = { navController.navigate(Routes.About) },
         onHelp = { navController.navigate(Routes.Help) }
       )
     }
     composable(Routes.About) {
-      AboutScreen(onBack = { navController.popBackStack() })
+      AboutScreen()
     }
     composable(Routes.Help) {
-      HelpScreen(onBack = { navController.popBackStack() })
+      HelpScreen()
     }
   }
 }
