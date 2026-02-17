@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 
 @Composable
@@ -23,6 +24,7 @@ fun ConsentScreen(
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   var agree1 by remember { mutableStateOf(false) }
   var agree2 by remember { mutableStateOf(false) }
 
@@ -44,14 +46,14 @@ fun ConsentScreen(
     ) {
       Spacer(modifier = Modifier.height(18.dp))
       Text(
-        text = "Приватность и согласие",
+        text = strings.privacyAndConsent,
         style = MaterialTheme.typography.headlineSmall,
         color = colors.backgroundTextPrimary,
         fontWeight = FontWeight.SemiBold
       )
       Spacer(modifier = Modifier.height(10.dp))
       Text(
-        text = "Voxera анализирует голосовые признаки для оценки текущего состояния. Это не медицинский диагноз.",
+        text = strings.consentDescription,
         style = MaterialTheme.typography.bodyMedium,
         color = colors.backgroundTextSecondary,
       )
@@ -60,19 +62,19 @@ fun ConsentScreen(
       ConsentRow(
         checked = agree1,
         onChecked = { agree1 = it },
-        text = "Я согласен(а) на обработку голосовых данных для анализа"
+        text = strings.consentVoice
       )
       Spacer(modifier = Modifier.height(12.dp))
       ConsentRow(
         checked = agree2,
         onChecked = { agree2 = it },
-        text = "Я ознакомлен(а) с правилами приватности"
+        text = strings.consentPrivacy
       )
 
       Spacer(modifier = Modifier.weight(1f))
 
       ThemedFilledButton(
-        text = "Начать",
+        text = strings.start,
           onClick = onAccept,
         modifier = Modifier.fillMaxWidth()
       )

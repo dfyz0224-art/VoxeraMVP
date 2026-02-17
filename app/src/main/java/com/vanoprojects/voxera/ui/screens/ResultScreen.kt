@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 import com.vanoprojects.voxera.ui.theme.TextWithShadow
 
@@ -36,7 +37,7 @@ fun ResultScreen(
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
-  // Размеры шрифтов - можно легко менять
+  val strings = LocalStrings.current
   val titleFontSize = 24.sp
   val subtitleFontSize = 16.sp
   
@@ -83,7 +84,7 @@ fun ResultScreen(
         colors.backgroundTextPrimary
       }
       Text(
-        text = "Результат",
+        text = strings.result,
         style = MaterialTheme.typography.headlineSmall.copy(fontSize = 42.sp),
         color = titleColor,
         fontWeight = FontWeight.Light,
@@ -93,25 +94,25 @@ fun ResultScreen(
 
       Spacer(modifier = Modifier.height(48.dp))
 
-      MetricCard(title = "Эмоциональный фон", value = "Напряжённый", progress = 0.72f, gradientIndex = 0)
+      MetricCard(title = strings.emotionalBackground, value = strings.tense, progress = 0.72f, gradientIndex = 0)
       Spacer(modifier = Modifier.height(12.dp))
-      MetricCard(title = "Уровень стресса", value = "Средний", progress = 0.55f, gradientIndex = 1)
+      MetricCard(title = strings.stressLevel, value = strings.medium, progress = 0.55f, gradientIndex = 1)
       Spacer(modifier = Modifier.height(12.dp))
-      MetricCard(title = "Внутренняя тревожность", value = "Средняя", progress = 0.58f, gradientIndex = 2)
+      MetricCard(title = strings.innerAnxiety, value = strings.mediumF, progress = 0.58f, gradientIndex = 2)
       Spacer(modifier = Modifier.height(12.dp))
-      MetricCard(title = "Ресурс", value = "Снижен", progress = 0.40f, gradientIndex = 3)
+      MetricCard(title = strings.resource, value = strings.reduced, progress = 0.40f, gradientIndex = 3)
 
       Spacer(modifier = Modifier.weight(1f))
 
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ThemedOutlinedButton(
-          text = "Поделиться",
+          text = strings.share,
           onClick = onShare,
           modifier = Modifier.weight(1f)
         )
 
         ThemedFilledButton(
-          text = "Новый анализ",
+          text = strings.newAnalysis,
           onClick = onNewAnalysis,
           modifier = Modifier.weight(1f)
         )

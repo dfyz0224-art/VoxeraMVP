@@ -11,6 +11,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -29,7 +30,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,11 +38,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.ui.theme.VoxeraTheme
 import com.vanoprojects.voxera.ui.theme.VoxeraColors
 import com.vanoprojects.voxera.ui.theme.LocalVoxeraTheme
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.ThemeType
 import io.github.fletchmckee.liquid.liquid
 import io.github.fletchmckee.liquid.liquefiable
@@ -55,10 +57,10 @@ fun RecordingScreen(
 ) {
     val liquidState = rememberLiquidState()
 
-    var isHolding by remember { mutableStateOf(false) }
-    var holdStartTime by remember { mutableStateOf(0L) }
-    var isTransitioning by remember { mutableStateOf(false) } // Флаг перехода на Processing
-    val HOLD_THRESHOLD_MS = 300L // 0.3 секунды
+    var isRecording by remember { mutableStateOf(false) }
+    var isTransitioning by remember { mutableStateOf(false) }
+    var timerExpired by remember { mutableStateOf(false) }
+    var timerSeconds by remember { mutableStateOf(30) }
 
     // Breathing эффект - сильнее при удержании
     val breathingIdle by rememberInfiniteTransition(label = "breathingIdle").animateFloat(
@@ -81,8 +83,22 @@ fun RecordingScreen(
         label = "breathingHold"
     )
     
-    val breathing = if (isHolding) breathingHold else breathingIdle
+    val breathing = if (isRecording) breathingHold else breathingIdle
     val theme = LocalVoxeraTheme.current
+    val strings = LocalStrings.current
+
+    // Таймер 30 сек при записи
+    LaunchedEffect(isRecording) {
+        if (isRecording) {
+            timerExpired = false
+            timerSeconds = 30
+            while (timerSeconds > 0) {
+                delay(1000)
+                timerSeconds -= 1
+            }
+            timerExpired = true
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Фон должен быть liquefiable, чтобы liquid мог "сэмплить" пиксели
@@ -116,59 +132,58 @@ fun RecordingScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(), // Полная высота для колец, которые уходят за края
+                    .weight(1f), // Ограничиваем высоту, чтобы таймер был виден
                 contentAlignment = Alignment.Center
             ) {
-                // Кольца-волны только во время удержания (за кнопкой)
-                // Синхронизированы с дыханием кнопки
-                if (isHolding) {
+                // Кольца-волны только во время записи (за кнопкой)
+                if (isRecording) {
                     WaterRings(baseSize = 200.dp, breathing = breathing)
                 }
 
-                // Кнопка на своем месте (центр экрана)
-                LiquidRecordButtonHold(
+                // Кнопка на своем месте (центр экрана) — клик для старта/стопа записи
+                LiquidRecordButtonClick(
                     liquidState = liquidState,
-                    isHolding = isHolding,
+                    isRecording = isRecording,
                     breathing = breathing,
-                    onHoldStart = {
-                        holdStartTime = System.currentTimeMillis()
-                        isHolding = true
-                    },
-                    onHoldEnd = {
-                        val holdDuration = System.currentTimeMillis() - holdStartTime
-                        isHolding = false
-                        // Если удержание >= 0.3 сек, переходим на processing
-                        if (holdDuration >= HOLD_THRESHOLD_MS) {
-                            isTransitioning = true // Устанавливаем флаг перехода
+                    onClick = {
+                        if (isRecording) {
+                            isRecording = false
+                            isTransitioning = true
                             onGoProcessing()
+                        } else {
+                            isRecording = true
                         }
                     }
                 )
                 
-                // Заголовок и текст над кнопкой - абсолютное позиционирование
-                // Текст исчезает при удержании кнопки и не появляется при переходе
+                // Заголовок и текст над кнопкой — при записи показываем другой текст
                 val textAlpha by animateFloatAsState(
-                    targetValue = if (isHolding || isTransitioning) 0f else 1f,
+                    targetValue = if (isTransitioning) 0f else 1f,
                     animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
                     label = "textAlpha"
                 )
                 
-                if (textAlpha > 0.01f) {
+                if (textAlpha > 0.01f || isRecording) {
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(y = (-200).dp), // Смещаем выше, чтобы не перекрывать кнопку
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            .offset(y = (-200).dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Заголовок по центру - цвет зависит от темы
                         val titleColor = when (theme.type) {
-                            ThemeType.LIGHT -> Color(0xFF0D1B3A) // Темно-синий для светлой темы
-                            ThemeType.DARK -> Color(0xFF0D1B3A) // Темно-синий для темной темы
+                            ThemeType.LIGHT -> Color(0xFF0D1B3A)
+                            ThemeType.DARK -> Color(0xFF0D1B3A)
                             else -> Color.White
                         }
+                        val descriptionColor = when (theme.type) {
+                            ThemeType.LIGHT -> Color(0xFF0A1628)
+                            ThemeType.DARK -> Color(0xFF0A1628)
+                            else -> Color.White
+                        }
+                        val alpha = if (isRecording) 1f else textAlpha
                         Text(
-                            text = "Запись голоса",
-                            color = titleColor.copy(alpha = textAlpha),
+                            text = strings.voiceRecording,
+                            color = titleColor.copy(alpha = alpha),
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 fontSize = 40.sp,
                                 fontWeight = FontWeight.Normal,
@@ -178,16 +193,14 @@ fun RecordingScreen(
                             modifier = Modifier.padding(bottom = 20.dp),
                             textAlign = TextAlign.Center
                         )
-
-                        // Текст над кнопкой - цвет зависит от темы
-                        val descriptionColor = when (theme.type) {
-                            ThemeType.LIGHT -> Color(0xFF0A1628) // Темный для светлой темы
-                            ThemeType.DARK -> Color(0xFF0A1628) // Темный для темной темы
-                            else -> Color.White
+                        val descriptionText = when {
+                            !isRecording -> strings.tapToStart
+                            timerExpired -> strings.tapToStop
+                            else -> strings.saySentences
                         }
                         Text(
-                            text = "Скажите 2–3 предложения о том, как прошёл ваш день.",
-                            color = descriptionColor.copy(alpha = textAlpha),
+                            text = descriptionText,
+                            color = descriptionColor.copy(alpha = alpha),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Normal,
@@ -202,17 +215,32 @@ fun RecordingScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // Цвет текста зависит от темы
+            // Таймер при записи (пока не истёк) или подсказка "15–30 секунд"
             val timeTextColor = when (theme.type) {
-                ThemeType.LIGHT -> Color(0xFF1A2F4A) // Темно-синий для светлой темы
-                ThemeType.DARK -> Color(0xFF1A2F4A) // Темно-синий для темной темы
+                ThemeType.LIGHT -> Color(0xFF1A2F4A)
+                ThemeType.DARK -> Color(0xFF1A2F4A)
                 else -> Color.White
             }
-            Text(
-                text = "15–30 секунд",
-                color = timeTextColor,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(28.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isRecording && !timerExpired) {
+                    Text(
+                        text = "${timerSeconds} ${strings.secondsShort}",
+                        color = timeTextColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp)
+                    )
+                } else if (!isRecording) {
+                    Text(
+                        text = strings.durationHint,
+                        color = timeTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
 
             Spacer(Modifier.height(10.dp))
         }
@@ -367,52 +395,54 @@ private fun WaterRings(baseSize: Dp, breathing: Float) {
 }
 
 @Composable
-private fun LiquidRecordButtonHold(
+private fun LiquidRecordButtonClick(
     liquidState: io.github.fletchmckee.liquid.LiquidState,
-    isHolding: Boolean,
+    isRecording: Boolean,
     breathing: Float = 1f,
-    onHoldStart: () -> Unit,
-    onHoldEnd: () -> Unit
+    onClick: () -> Unit
 ) {
     val tintIdle = Color.White.copy(alpha = 0.0f)
-    val tintHold = VoxeraColors.PrimaryGlow.copy(alpha = 0.02f) // Почти прозрачный
+    val tintHold = VoxeraColors.PrimaryGlow.copy(alpha = 0.02f)
+    var isPressed by remember { mutableStateOf(false) }
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = tween(durationMillis = 80, easing = FastOutSlowInEasing),
+        label = "pressScale"
+    )
 
     Box(
         modifier = Modifier
             .size(200.dp)
             .graphicsLayer {
-                scaleX = breathing
-                scaleY = breathing
+                scaleX = breathing * pressScale
+                scaleY = breathing * pressScale
             }
-            // Тень для glow эффекта - усилена для неонового эффекта
             .shadow(
-                elevation = if (isHolding) 32.dp else 20.dp,
+                elevation = if (isRecording) 32.dp else 20.dp,
                 shape = CircleShape,
                 clip = false,
-                ambientColor = VoxeraColors.PrimaryGlow.copy(alpha = if (isHolding) 0.3f else 0.15f),
-                spotColor = VoxeraColors.PrimaryGlow.copy(alpha = if (isHolding) 0.4f else 0.2f)
+                ambientColor = VoxeraColors.PrimaryGlow.copy(alpha = if (isRecording) 0.3f else 0.15f),
+                spotColor = VoxeraColors.PrimaryGlow.copy(alpha = if (isRecording) 0.4f else 0.2f)
             )
             .liquid(liquidState) {
                 shape = CircleShape
-
-                // Liquid glass эффект - кнопка практически прозрачная
-                frost = if (isHolding) 1.dp else 0.dp // Минимальная мутность
-                refraction = if (isHolding) 0.25f else 0.20f // Меньше рефракции
+                frost = if (isRecording) 1.dp else 0.dp
+                refraction = if (isRecording) 0.25f else 0.20f
                 curve = 0.20f
                 edge = 0.1f
-
-                tint = if (isHolding) tintHold else tintIdle
-                saturation = if (isHolding) 1.05f else 1.0f // Почти без насыщенности
-                dispersion = if (isHolding) 0.7f else 0.5f // Меньше дисперсии
+                tint = if (isRecording) tintHold else tintIdle
+                saturation = if (isRecording) 1.05f else 1.0f
+                dispersion = if (isRecording) 0.7f else 0.5f
             }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        onHoldStart()
+                        isPressed = true
                         try {
                             awaitRelease()
+                            onClick()
                         } finally {
-                            onHoldEnd()
+                            isPressed = false
                         }
                     }
                 )
@@ -426,7 +456,7 @@ private fun LiquidRecordButtonHold(
                 .clip(CircleShape)
                 .background(
                     Brush.radialGradient(
-                        0f to VoxeraColors.PrimaryGlow.copy(alpha = if (isHolding) 0.06f else 0.03f),
+                        0f to VoxeraColors.PrimaryGlow.copy(alpha = if (isRecording) 0.06f else 0.03f),
                         0.3f to Color.Transparent,
                         1f to Color.Transparent
                     )
@@ -439,7 +469,7 @@ private fun LiquidRecordButtonHold(
             contentDescription = "Mic",
             modifier = Modifier.size(140.dp),
             colorFilter = ColorFilter.tint(
-                VoxeraColors.TextPrimary.copy(alpha = if (isHolding) 1f else 0.9f)
+                VoxeraColors.TextPrimary.copy(alpha = if (isRecording) 1f else 0.9f)
             )
         )
         
@@ -447,7 +477,7 @@ private fun LiquidRecordButtonHold(
         Canvas(modifier = Modifier.matchParentSize()) {
             val center = Offset(size.width / 2, size.height / 2)
             val baseRadius = size.minDimension / 2 - 2.dp.toPx()
-            val glowAlpha = if (isHolding) 1.0f else 0.8f
+            val glowAlpha = if (isRecording) 1.0f else 0.8f
             
             // Создаем эффект свечения - рисуем несколько концентрических кругов
             // Внешние слои для свечения (более прозрачные)
@@ -465,7 +495,7 @@ private fun LiquidRecordButtonHold(
             }
             
             // Основная яркая обводка
-            val strokeWidth = if (isHolding) 4.dp.toPx() else 2.5.dp.toPx()
+            val strokeWidth = if (isRecording) 4.dp.toPx() else 2.5.dp.toPx()
             drawCircle(
                 color = VoxeraColors.PrimaryGlow.copy(alpha = glowAlpha),
                 radius = baseRadius,

@@ -1,30 +1,50 @@
 package com.vanoprojects.voxera.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.screens.*
 import kotlinx.coroutines.launch
 
 @Composable
 fun VoxeraNavHost(
   navController: NavHostController = rememberNavController(),
+  prefsManager: PreferencesManager,
   consentGiven: Boolean = false,
   onConsentGiven: suspend () -> Unit = {},
-  onboardingCompleted: Boolean = true,
+  onboardingCompleted: Boolean = false,
   onOnboardingComplete: () -> Unit = {}
 ) {
   val scope = rememberCoroutineScope()
-  
-  NavHost(navController = navController, startDestination = Routes.Mode) {
+  val startDestination = if (onboardingCompleted) Routes.Mode else Routes.Onboarding
+
+  LaunchedEffect(onboardingCompleted) {
+    if (onboardingCompleted && navController.currentBackStackEntry?.destination?.route == Routes.Onboarding) {
+      navController.navigate(Routes.Mode) {
+        popUpTo(Routes.Onboarding) { inclusive = true }
+      }
+    }
+  }
+
+  NavHost(navController = navController, startDestination = startDestination) {
+    composable(Routes.Onboarding) {
+      OnboardingScreen(
+        onComplete = {
+          navController.navigate(Routes.Mode) {
+            popUpTo(Routes.Onboarding) { inclusive = true }
+          }
+        },
+        prefsManager = prefsManager
+      )
+    }
     composable(Routes.Mode) {
       ModeSelectScreen(
         onBack = { /* no-op */ },
-        onboardingCompleted = onboardingCompleted,
-        onOnboardingComplete = onOnboardingComplete,
         onModeChosen = { mode ->
           if (mode == "history") {
             navController.navigate(Routes.History)
@@ -78,7 +98,8 @@ fun VoxeraNavHost(
     composable(Routes.Settings) {
       SettingsScreen(
         onAbout = { navController.navigate(Routes.About) },
-        onHelp = { navController.navigate(Routes.Help) }
+        onHelp = { navController.navigate(Routes.Help) },
+        onForBusiness = { navController.navigate(Routes.ForBusiness) }
       )
     }
     composable(Routes.About) {
@@ -86,6 +107,18 @@ fun VoxeraNavHost(
     }
     composable(Routes.Help) {
       HelpScreen()
+    }
+    composable(Routes.ForBusiness) {
+      ForBusinessScreen(
+        onFillQuestionnaire = { navController.navigate(Routes.ForBusinessQuestionnaire) }
+      )
+    }
+    composable(Routes.ForBusinessQuestionnaire) {
+      ForBusinessQuestionnaireScreen(
+        onSubmit = {
+          navController.popBackStack(Routes.Settings, inclusive = false)
+        }
+      )
     }
   }
 }

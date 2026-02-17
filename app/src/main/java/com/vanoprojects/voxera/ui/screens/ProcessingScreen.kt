@@ -23,12 +23,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
 fun ProcessingScreen(onDone: () -> Unit) {
   val theme = LocalVoxeraTheme.current
+  val strings = LocalStrings.current
   
   LaunchedEffect(Unit) {
     delay(2000) // 1-2 секунды
@@ -62,14 +64,14 @@ fun ProcessingScreen(onDone: () -> Unit) {
       val colors = theme.colors
       
       Text(
-        text = "Анализируем",
+        text = strings.analyzing,
         style = MaterialTheme.typography.headlineSmall,
         color = colors.backgroundTextPrimary,
         fontWeight = FontWeight.SemiBold
       )
       Spacer(modifier = Modifier.height(8.dp))
       Text(
-        text = "Это займёт несколько секунд",
+        text = strings.analyzingSubtitle,
         style = MaterialTheme.typography.bodyMedium,
         color = colors.backgroundTextSecondary
       )

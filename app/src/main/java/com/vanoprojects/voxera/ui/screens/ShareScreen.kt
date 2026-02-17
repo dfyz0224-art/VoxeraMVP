@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 import com.vanoprojects.voxera.ui.theme.TextWithShadow
 import io.github.fletchmckee.liquid.liquid
@@ -38,6 +39,7 @@ import io.github.fletchmckee.liquid.rememberLiquidState
 fun ShareScreen() {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   val liquidState = rememberLiquidState()
   
   Box(modifier = Modifier.fillMaxSize()) {
@@ -84,7 +86,7 @@ fun ShareScreen() {
         colors.shadowColor
       }
       Text(
-        text = "Поделиться результатом",
+        text = strings.shareResult,
         color = titleColor,
         style = MaterialTheme.typography.headlineMedium.copy(
           fontSize = 42.sp, // Увеличенный размер
@@ -96,7 +98,7 @@ fun ShareScreen() {
       )
       Spacer(modifier = Modifier.height(22.dp))
       Text(
-        text = "Публикуется только краткая карточка без деталей",
+        text = strings.shareOnlyBrief,
         color = colors.backgroundTextSecondary,
         style = MaterialTheme.typography.bodyLarge.copy(
           fontSize = 18.sp, // Увеличенный размер
@@ -108,7 +110,7 @@ fun ShareScreen() {
       Spacer(modifier = Modifier.height(32.dp))
 
       // Preview card в стиле ModeSelect - большая карточка
-      SharePreviewCard()
+      SharePreviewCard(strings = strings)
 
       Spacer(modifier = Modifier.weight(1f))
 
@@ -142,7 +144,7 @@ fun ShareScreen() {
           gradientIndex = 2
         )
         ShareButton(
-          label = "Ссылка",
+          label = strings.link,
           iconRes = R.drawable.ic_link,
           liquidState = liquidState,
           onClick = { },
@@ -153,7 +155,7 @@ fun ShareScreen() {
 
       Spacer(modifier = Modifier.height(18.dp))
       ThemedFilledButton(
-        text = "Ещё…",
+        text = strings.more,
         onClick = { },
         modifier = Modifier.fillMaxWidth()
       )
@@ -163,7 +165,7 @@ fun ShareScreen() {
 }
 
 @Composable
-private fun SharePreviewCard() {
+private fun SharePreviewCard(strings: com.vanoprojects.voxera.ui.strings.Strings = LocalStrings.current) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   
@@ -179,13 +181,13 @@ private fun SharePreviewCard() {
         )
       Spacer(modifier = Modifier.height(16.dp))
       TextWithShadow(
-        text = "Состояние",
+        text = strings.state,
         color = colors.textSecondary,
         style = MaterialTheme.typography.bodySmall
       )
       Spacer(modifier = Modifier.height(4.dp))
       TextWithShadow(
-        text = "Стабильнее, лёгкое напряжение",
+        text = strings.stableLightTension,
         color = colors.textPrimary,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Normal

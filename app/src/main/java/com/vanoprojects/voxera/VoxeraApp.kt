@@ -15,6 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.nav.VoxeraNavHost
+import com.vanoprojects.voxera.ui.strings.AppLanguage
+import com.vanoprojects.voxera.ui.strings.LocalStrings
+import com.vanoprojects.voxera.ui.strings.Strings
 import com.vanoprojects.voxera.ui.theme.ThemeType
 import com.vanoprojects.voxera.ui.theme.VoxeraTheme
 
@@ -24,23 +27,32 @@ fun VoxeraApp() {
   val scope = rememberCoroutineScope()
   val prefsManager = remember { PreferencesManager(context) }
   val themeType by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
+  val appLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
   val consentGiven by prefsManager.consentGiven.collectAsState(initial = false)
   val onboardingCompleted by prefsManager.onboardingCompleted.collectAsState(initial = false)
-  
+  val strings = when (appLanguage) {
+    AppLanguage.RU -> Strings.Ru
+    AppLanguage.EN -> Strings.En
+    AppLanguage.ZH -> Strings.Zh
+    AppLanguage.KZ -> Strings.Kz
+  }
+
   VoxeraTheme(themeType = themeType) {
-    val backgroundColor = when (themeType) {
-      ThemeType.LIGHT -> Color.Transparent // Прозрачный для светлой темы, чтобы был виден bg_light
-      else -> Color.Black
-    }
-    Surface(modifier = Modifier.fillMaxSize(), color = backgroundColor) {
-      val navController = rememberNavController()
-      VoxeraNavHost(
-        navController = navController,
-        consentGiven = consentGiven,
-        onConsentGiven = { prefsManager.setConsentGiven(true) },
-        onboardingCompleted = onboardingCompleted,
-        onOnboardingComplete = { scope.launch { prefsManager.setOnboardingCompleted(true) } }
-      )
+    androidx.compose.runtime.CompositionLocalProvider(LocalStrings provides strings) {
+      val backgroundColor = when (themeType) {
+        ThemeType.LIGHT -> Color.Transparent
+        else -> Color.Black
+      }
+      Surface(modifier = Modifier.fillMaxSize(), color = backgroundColor) {
+        val navController = rememberNavController()
+        VoxeraNavHost(
+          navController = navController,
+          prefsManager = prefsManager,
+          consentGiven = consentGiven,
+          onConsentGiven = { prefsManager.setConsentGiven(true) },
+          onboardingCompleted = onboardingCompleted
+        )
+      }
     }
   }
 }

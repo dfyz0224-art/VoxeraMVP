@@ -11,12 +11,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 
 @Composable
 fun HelpScreen() {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   
   Box(modifier = Modifier.fillMaxSize()) {
     if (theme.type == ThemeType.LIGHT) {
@@ -36,11 +38,11 @@ fun HelpScreen() {
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = "Помощь")
+      TopBar(title = strings.helpTitle)
       Spacer(modifier = Modifier.height(18.dp))
 
       Text(
-        text = "Как пользоваться:\n\n1) Выберите режим\n2) Дайте согласие\n3) Запишите 15–30 секунд голоса\n4) Получите карточку результата\n\nЕсли что-то пошло не так — попробуйте запись в более тихом месте.",
+        text = strings.helpContent,
         color = colors.backgroundTextPrimary,
         style = MaterialTheme.typography.bodyMedium
       )

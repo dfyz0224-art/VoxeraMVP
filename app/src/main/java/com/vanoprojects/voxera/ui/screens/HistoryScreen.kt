@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 import com.vanoprojects.voxera.ui.theme.TextWithShadow
 
@@ -27,6 +28,7 @@ import com.vanoprojects.voxera.ui.theme.TextWithShadow
 fun HistoryScreen() {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   
   // Фон: для светлой темы - белый, для остальных - VoxeraBackground
   Box(modifier = Modifier.fillMaxSize()) {
@@ -47,14 +49,14 @@ fun HistoryScreen() {
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = "История")
+      TopBar(title = strings.historyTitle)
       Spacer(modifier = Modifier.height(14.dp))
 
-      HistoryItem(date = "Сегодня", state = "Лёгкое напряжение", stress = "Средний", gradientIndex = 0)
+      HistoryItem(date = strings.today, state = strings.lightTension, stress = strings.medium, gradientIndex = 0)
       Spacer(modifier = Modifier.height(10.dp))
-      HistoryItem(date = "Вчера", state = "Стабильное", stress = "Низкий", gradientIndex = 1)
+      HistoryItem(date = strings.yesterday, state = strings.stable, stress = strings.low, gradientIndex = 1)
       Spacer(modifier = Modifier.height(10.dp))
-      HistoryItem(date = "2 дня назад", state = "Перегруз", stress = "Высокий", gradientIndex = 2)
+      HistoryItem(date = strings.twoDaysAgo, state = strings.overload, stress = strings.high, gradientIndex = 2)
     }
   }
 }
@@ -63,6 +65,7 @@ fun HistoryScreen() {
 private fun HistoryItem(date: String, state: String, stress: String, gradientIndex: Int) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   
   ThemedCard(gradientIndex = gradientIndex) {
     Column {
@@ -80,7 +83,7 @@ private fun HistoryItem(date: String, state: String, stress: String, gradientInd
     )
     Spacer(modifier = Modifier.height(4.dp))
       TextWithShadow(
-        text = "Стресс: $stress",
+        text = "${strings.stressLabel}: $stress",
         color = colors.textSecondary,
       style = MaterialTheme.typography.bodyMedium
     )

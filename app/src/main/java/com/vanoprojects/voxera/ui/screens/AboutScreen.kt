@@ -14,12 +14,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 
 @Composable
 fun AboutScreen() {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   
   Box(modifier = Modifier.fillMaxSize()) {
     if (theme.type == ThemeType.LIGHT) {
@@ -40,7 +42,7 @@ fun AboutScreen() {
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = "О приложении")
+      TopBar(title = strings.aboutTitle)
       Spacer(modifier = Modifier.height(30.dp))
       Image(
         painter = painterResource(R.drawable.ic_voxera_x_glow),
@@ -59,7 +61,7 @@ fun AboutScreen() {
       )
       Spacer(modifier = Modifier.height(8.dp))
       Text(
-        "Экспериментальный анализ состояния по голосу. Не является медицинским диагнозом.",
+        strings.aboutDescription,
         color = colors.backgroundTextSecondary,
         style = MaterialTheme.typography.bodyMedium
       )

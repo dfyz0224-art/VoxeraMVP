@@ -1,6 +1,8 @@
 package com.vanoprojects.voxera.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,24 +26,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.PreferencesManager
+import com.vanoprojects.voxera.ui.strings.AppLanguage
+import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 import com.vanoprojects.voxera.ui.theme.TextWithShadow
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
   onAbout: () -> Unit,
-  onHelp: () -> Unit
+  onHelp: () -> Unit,
+  onForBusiness: () -> Unit
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   val context = LocalContext.current
   val prefsManager = remember { PreferencesManager(context) }
   val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
+  val currentLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
   val scope = rememberCoroutineScope()
   
   var keepHistory by remember { mutableStateOf(true) }
   var shareMinimal by remember { mutableStateOf(true) }
+  var showLanguageSheet by remember { mutableStateOf(false) }
+  val languageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
   // Фон: для светлой темы - белый, для остальных - VoxeraBackground
   Box(modifier = Modifier.fillMaxSize()) {
@@ -59,23 +69,22 @@ fun SettingsScreen(
     Column(
       modifier = Modifier
         .fillMaxSize()
+        .verticalScroll(rememberScrollState())
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = "Настройки")
-      Spacer(modifier = Modifier.height(16.dp))
 
       SettingCard(
-        title = "Сохранять историю",
-        subtitle = "Хранить результаты локально на устройстве",
+        title = strings.keepHistory,
+        subtitle = strings.keepHistorySubtitle,
         checked = keepHistory,
         onChecked = { keepHistory = it },
         gradientIndex = 0
       )
       Spacer(modifier = Modifier.height(16.dp))
       SettingCard(
-        title = "Делиться только кратко",
-        subtitle = "Без деталей и чувствительных данных",
+        title = strings.shareBriefOnly,
+        subtitle = strings.shareBriefSubtitle,
         checked = shareMinimal,
         onChecked = { shareMinimal = it },
         gradientIndex = 1
@@ -91,19 +100,72 @@ fun SettingsScreen(
         }
       )
 
+      Spacer(modifier = Modifier.height(16.dp))
+      LanguageSelectorCard(
+        currentLanguage = currentLanguage,
+        strings = strings,
+        onOpenSheet = { showLanguageSheet = true }
+      )
+
       Spacer(modifier = Modifier.height(18.dp))
       ThemedOutlinedButton(
-        text = "О приложении",
+        text = strings.about,
         onClick = onAbout,
         modifier = Modifier.fillMaxWidth()
       )
 
       Spacer(modifier = Modifier.height(8.dp))
       ThemedOutlinedButton(
-        text = "Помощь",
+        text = strings.help,
         onClick = onHelp,
         modifier = Modifier.fillMaxWidth()
       )
+      Spacer(modifier = Modifier.height(8.dp))
+      ThemedOutlinedButton(
+        text = strings.forBusiness,
+        onClick = onForBusiness,
+        modifier = Modifier.fillMaxWidth()
+      )
+      Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    if (showLanguageSheet) {
+      ModalBottomSheet(
+        onDismissRequest = { showLanguageSheet = false },
+        sheetState = languageSheetState
+      ) {
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+        ) {
+          Text(
+            text = strings.selectLanguage,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
+          )
+          Spacer(modifier = Modifier.height(16.dp))
+          listOf(
+            AppLanguage.RU to strings.languageRu,
+            AppLanguage.EN to strings.languageEn,
+            AppLanguage.ZH to strings.languageZh,
+            AppLanguage.KZ to strings.languageKz
+          ).forEach { (lang, label) ->
+            TextButton(
+              onClick = {
+                scope.launch {
+                  prefsManager.setAppLanguage(lang)
+                  showLanguageSheet = false
+                }
+              },
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Text(label)
+            }
+          }
+          Spacer(modifier = Modifier.height(24.dp))
+        }
+      }
     }
   }
 }
@@ -154,13 +216,14 @@ private fun ThemeSelectorCard(
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
+  val strings = LocalStrings.current
   
   ThemedCard(modifier = Modifier.height(240.dp), gradientIndex = 2) {
     Column(
       modifier = Modifier.fillMaxSize()
     ) {
       TextWithShadow(
-        text = "Тема оформления",
+        text = strings.themeTitle,
         style = MaterialTheme.typography.titleMedium,
         color = colors.textPrimary,
         fontWeight = FontWeight.SemiBold
@@ -168,25 +231,65 @@ private fun ThemeSelectorCard(
       Spacer(modifier = Modifier.height(16.dp))
       
       ThemeOption(
-        title = "Стеклянная",
+        title = strings.themeGlass,
         themeType = ThemeType.GLASS,
         isSelected = currentTheme == ThemeType.GLASS,
         onClick = { onThemeSelected(ThemeType.GLASS) }
       )
       Spacer(modifier = Modifier.height(16.dp))
       ThemeOption(
-        title = "Светлая",
+        title = strings.themeLight,
         themeType = ThemeType.LIGHT,
         isSelected = currentTheme == ThemeType.LIGHT,
         onClick = { onThemeSelected(ThemeType.LIGHT) }
       )
       Spacer(modifier = Modifier.height(16.dp))
       ThemeOption(
-        title = "Темная",
+        title = strings.themeDark,
         themeType = ThemeType.DARK,
         isSelected = currentTheme == ThemeType.DARK,
         onClick = { onThemeSelected(ThemeType.DARK) }
       )
+    }
+  }
+}
+
+@Composable
+private fun LanguageSelectorCard(
+  currentLanguage: AppLanguage,
+  strings: com.vanoprojects.voxera.ui.strings.Strings,
+  onOpenSheet: () -> Unit
+) {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+
+  val currentLangLabel = when (currentLanguage) {
+    AppLanguage.RU -> strings.languageRu
+    AppLanguage.EN -> strings.languageEn
+    AppLanguage.ZH -> strings.languageZh
+    AppLanguage.KZ -> strings.languageKz
+  }
+
+  ThemedCard(gradientIndex = 3) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      TextWithShadow(
+        text = strings.language,
+        style = MaterialTheme.typography.titleMedium,
+        color = colors.textPrimary,
+        fontWeight = FontWeight.SemiBold
+      )
+      Spacer(modifier = Modifier.height(16.dp))
+      OutlinedButton(
+        onClick = onOpenSheet,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+          contentColor = colors.textPrimary,
+          containerColor = colors.buttonBackground.copy(alpha = 0.5f)
+        )
+      ) {
+        Text(currentLangLabel)
+      }
     }
   }
 }
