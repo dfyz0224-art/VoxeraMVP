@@ -164,6 +164,15 @@ fun RecordingScreen(
                 )
                 
                 if (textAlpha > 0.01f || isRecording) {
+                    val blinkAlpha by rememberInfiniteTransition(label = "recordingBlink").animateFloat(
+                        initialValue = 0.6f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1200, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "blink"
+                    )
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -180,10 +189,12 @@ fun RecordingScreen(
                             ThemeType.DARK -> Color(0xFF0A1628)
                             else -> Color.White
                         }
-                        val alpha = if (isRecording) 1f else textAlpha
+                        val titleAlpha = if (isRecording) blinkAlpha else textAlpha
+                        val descAlpha = if (isRecording) 1f else textAlpha
+                        val titleText = if (isRecording) strings.recordingInProgress else strings.voiceRecording
                         Text(
-                            text = strings.voiceRecording,
-                            color = titleColor.copy(alpha = alpha),
+                            text = titleText,
+                            color = titleColor.copy(alpha = titleAlpha),
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 fontSize = 40.sp,
                                 fontWeight = FontWeight.Normal,
@@ -200,49 +211,32 @@ fun RecordingScreen(
                         }
                         Text(
                             text = descriptionText,
-                            color = descriptionColor.copy(alpha = alpha),
+                            color = descriptionColor.copy(alpha = descAlpha),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Normal,
                                 lineHeight = 24.sp
                             ),
-                            modifier = Modifier.padding(bottom = 100.dp),
+                            modifier = Modifier.padding(bottom = 24.dp),
                             textAlign = TextAlign.Center
                         )
+                        if (isRecording && !timerExpired) {
+                            Text(
+                                text = "${timerSeconds} ${strings.secondsShort}",
+                                color = titleColor,
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontSize = 32.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                modifier = Modifier.padding(bottom = 60.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.weight(1f))
-
-            // Таймер при записи (пока не истёк) или подсказка "15–30 секунд"
-            val timeTextColor = when (theme.type) {
-                ThemeType.LIGHT -> Color(0xFF1A2F4A)
-                ThemeType.DARK -> Color(0xFF1A2F4A)
-                else -> Color.White
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(28.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isRecording && !timerExpired) {
-                    Text(
-                        text = "${timerSeconds} ${strings.secondsShort}",
-                        color = timeTextColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp)
-                    )
-                } else if (!isRecording) {
-                    Text(
-                        text = strings.durationHint,
-                        color = timeTextColor,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
         }
     }
 }

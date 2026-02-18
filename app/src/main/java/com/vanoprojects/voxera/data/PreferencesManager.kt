@@ -33,11 +33,11 @@ class PreferencesManager(private val context: Context) {
     }
     
     val themeType: Flow<ThemeType> = context.dataStore.data.map { preferences ->
-        val themeName = preferences[THEME_TYPE_KEY] ?: ThemeType.GLASS.name
+        val themeName = preferences[THEME_TYPE_KEY] ?: ThemeType.LIGHT.name
         try {
             ThemeType.valueOf(themeName)
         } catch (e: IllegalArgumentException) {
-            ThemeType.GLASS
+            ThemeType.LIGHT
         }
     }
     

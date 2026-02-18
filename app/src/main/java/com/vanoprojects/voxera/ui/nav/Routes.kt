@@ -15,4 +15,5 @@ object Routes {
   const val Help = "help"
   const val ForBusiness = "for_business"
   const val ForBusinessQuestionnaire = "for_business_questionnaire"
+  const val Profile = "profile"
 }

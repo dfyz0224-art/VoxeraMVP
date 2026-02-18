@@ -19,6 +19,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -37,14 +38,15 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
   onAbout: () -> Unit,
   onHelp: () -> Unit,
-  onForBusiness: () -> Unit
+  onForBusiness: () -> Unit,
+  onProfile: () -> Unit = {}
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
   val context = LocalContext.current
   val prefsManager = remember { PreferencesManager(context) }
-  val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
+  val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.LIGHT)
   val currentLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
   val scope = rememberCoroutineScope()
   
@@ -73,6 +75,11 @@ fun SettingsScreen(
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
+
+      ProfileCard(
+        onClick = onProfile
+      )
+      Spacer(modifier = Modifier.height(16.dp))
 
       SettingCard(
         title = strings.keepHistory,
@@ -165,6 +172,50 @@ fun SettingsScreen(
           }
           Spacer(modifier = Modifier.height(24.dp))
         }
+      }
+    }
+  }
+}
+
+@Composable
+private fun ProfileCard(
+  onClick: () -> Unit
+) {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+  val strings = LocalStrings.current
+
+  ThemedCard(
+    gradientIndex = 0,
+    height = 100.dp,
+    onClick = onClick
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Image(
+        painter = painterResource(R.drawable.ic_profile),
+        contentDescription = null,
+        modifier = Modifier
+          .size(30.dp)
+          .clip(RoundedCornerShape(20.dp)),
+        colorFilter = ColorFilter.tint(colors.textPrimary)
+      )
+      Spacer(modifier = Modifier.width(26.dp))
+      Column(modifier = Modifier.weight(1f)) {
+        TextWithShadow(
+          text = strings.profile,
+          style = MaterialTheme.typography.titleMedium,
+          color = colors.textPrimary,
+          fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TextWithShadow(
+          text = strings.manageSubscriptions,
+          style = MaterialTheme.typography.bodyMedium,
+          color = colors.textSecondary
+        )
       }
     }
   }

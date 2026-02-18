@@ -121,7 +121,7 @@ fun ModeSelectScreen(
       Spacer(modifier = Modifier.height(12.dp))
 
       // Карточки с фиксированной высотой (одинаковый размер для всех)
-      val modeCardHeight = 165.dp
+      val modeCardHeight = 150.dp
       ModeCard(
         iconRes = R.drawable.ic_mother,
         title = strings.parentMode,

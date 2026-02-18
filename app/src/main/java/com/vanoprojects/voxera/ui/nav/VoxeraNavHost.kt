@@ -24,10 +24,16 @@ fun VoxeraNavHost(
   val startDestination = if (onboardingCompleted) Routes.Mode else Routes.Onboarding
 
   LaunchedEffect(onboardingCompleted) {
-    if (onboardingCompleted && navController.currentBackStackEntry?.destination?.route == Routes.Onboarding) {
-      navController.navigate(Routes.Mode) {
-        popUpTo(Routes.Onboarding) { inclusive = true }
-      }
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    when {
+      onboardingCompleted && currentRoute == Routes.Onboarding ->
+        navController.navigate(Routes.Mode) {
+          popUpTo(Routes.Onboarding) { inclusive = true }
+        }
+      !onboardingCompleted && currentRoute == Routes.Mode ->
+        navController.navigate(Routes.Onboarding) {
+          popUpTo(Routes.Mode) { inclusive = true }
+        }
     }
   }
 
@@ -84,7 +90,7 @@ fun VoxeraNavHost(
     }
     composable(Routes.Result) {
       ResultScreen(
-        onNewAnalysis = { navController.navigate(Routes.Recording) { popUpTo(Routes.Result) { inclusive = true } } },
+        onNewAnalysis = { navController.navigate(Routes.Mode) { popUpTo(Routes.Result) { inclusive = true } } },
         onShare = { navController.navigate(Routes.Share) },
         onHistory = { navController.navigate(Routes.History) }
       )
@@ -99,6 +105,12 @@ fun VoxeraNavHost(
       SettingsScreen(
         onAbout = { navController.navigate(Routes.About) },
         onHelp = { navController.navigate(Routes.Help) },
+        onForBusiness = { navController.navigate(Routes.ForBusiness) },
+        onProfile = { navController.navigate(Routes.Profile) }
+      )
+    }
+    composable(Routes.Profile) {
+      ProfileScreen(
         onForBusiness = { navController.navigate(Routes.ForBusiness) }
       )
     }
