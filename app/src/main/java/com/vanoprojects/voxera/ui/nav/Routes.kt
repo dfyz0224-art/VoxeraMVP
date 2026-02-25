@@ -3,6 +3,7 @@ package com.vanoprojects.voxera.ui.nav
 object Routes {
   const val Splash = "splash"
   const val Onboarding = "onboarding"
+  const val Auth = "auth"
   const val Mode = "mode"
   const val Consent = "consent"
   const val Recording = "recording"

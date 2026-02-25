@@ -1,36 +1,36 @@
 package com.vanoprojects.voxera.ui.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.data.HistoryEntry
+import com.vanoprojects.voxera.data.HistoryRepository
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
-import com.vanoprojects.voxera.ui.theme.TextWithShadow
+import java.util.concurrent.TimeUnit
 
 @Composable
-fun HistoryScreen() {
+fun HistoryScreen(
+  historyRepository: HistoryRepository,
+  onItemClick: (HistoryEntry) -> Unit
+) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
-  
-  // Фон: для светлой темы - белый, для остальных - VoxeraBackground
+  val entries by historyRepository.entries.collectAsState(initial = emptyList())
+
   Box(modifier = Modifier.fillMaxSize()) {
     if (theme.type == ThemeType.LIGHT) {
       Image(
@@ -42,51 +42,89 @@ fun HistoryScreen() {
     } else {
       VoxeraBackground {}
     }
-    
+
     Column(
       modifier = Modifier
         .fillMaxSize()
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = strings.historyTitle)
-      Spacer(modifier = Modifier.height(14.dp))
 
-      HistoryItem(date = strings.today, state = strings.lightTension, stress = strings.medium, gradientIndex = 0)
-      Spacer(modifier = Modifier.height(10.dp))
-      HistoryItem(date = strings.yesterday, state = strings.stable, stress = strings.low, gradientIndex = 1)
-      Spacer(modifier = Modifier.height(10.dp))
-      HistoryItem(date = strings.twoDaysAgo, state = strings.overload, stress = strings.high, gradientIndex = 2)
+      if (entries.isEmpty()) {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f),
+          contentAlignment = Alignment.Center
+        ) {
+          TextWithShadow(
+            text = strings.historyEmpty,
+            color = colors.textSecondary,
+            style = MaterialTheme.typography.bodyLarge
+          )
+        }
+      } else {
+        LazyColumn(
+          modifier = Modifier.fillMaxSize(),
+          verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+          itemsIndexed(entries) { index, entry ->
+            HistoryItem(
+              entry = entry,
+              gradientIndex = index % 4,
+              onClick = { onItemClick(entry) }
+            )
+          }
+        }
+      }
     }
   }
 }
 
+private fun formatDateLabel(timestamp: Long, strings: com.vanoprojects.voxera.ui.strings.Strings): String {
+  val now = System.currentTimeMillis()
+  val diffMs = now - timestamp
+  val diffDays = TimeUnit.MILLISECONDS.toDays(diffMs)
+  return when {
+    diffDays == 0L -> strings.today
+    diffDays == 1L -> strings.yesterday
+    diffDays == 2L -> strings.twoDaysAgo
+    else -> "$diffDays ${strings.daysAgo}"
+  }
+}
+
+private fun formatAnalysisType(analysisType: String, strings: com.vanoprojects.voxera.ui.strings.Strings): String =
+  when (analysisType) {
+    "psytype" -> strings.historyTypePsytype
+    else -> strings.historyTypeEmostate
+  }
+
 @Composable
-private fun HistoryItem(date: String, state: String, stress: String, gradientIndex: Int) {
+private fun HistoryItem(
+  entry: HistoryEntry,
+  gradientIndex: Int,
+  onClick: () -> Unit
+) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
-  
-  ThemedCard(gradientIndex = gradientIndex) {
+  val dateLabel = formatDateLabel(entry.timestamp, strings)
+  val typeLabel = formatAnalysisType(entry.analysisType, strings)
+
+  ThemedCard(gradientIndex = gradientIndex, onClick = onClick) {
     Column {
       TextWithShadow(
-        text = date,
+        text = dateLabel,
         color = colors.textSecondary,
-      style = MaterialTheme.typography.bodySmall
-    )
+        style = MaterialTheme.typography.bodySmall
+      )
       Spacer(modifier = Modifier.height(6.dp))
       TextWithShadow(
-        text = state,
+        text = typeLabel,
         color = colors.textPrimary,
-      style = MaterialTheme.typography.titleMedium,
-      fontWeight = FontWeight.SemiBold
-    )
-    Spacer(modifier = Modifier.height(4.dp))
-      TextWithShadow(
-        text = "${strings.stressLabel}: $stress",
-        color = colors.textSecondary,
-      style = MaterialTheme.typography.bodyMedium
-    )
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold
+      )
     }
   }
 }

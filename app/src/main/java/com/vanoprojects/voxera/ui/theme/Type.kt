@@ -2,14 +2,21 @@ package com.vanoprojects.voxera.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.em
+import com.vanoprojects.voxera.R
 
-// Типографика согласно ТЗ (iOS SF Pro -> Android SansSerif для более современного вида)
-// Используем SansSerif для более похожего на SF Pro вида
-val VoxeraFontFamily = FontFamily.SansSerif
+// Inter — современный шрифт с отличной читаемостью
+val VoxeraFontFamily = FontFamily(
+    Font(R.font.inter, FontWeight.Light),
+    Font(R.font.inter, FontWeight.Normal),
+    Font(R.font.inter, FontWeight.Medium),
+    Font(R.font.inter, FontWeight.SemiBold),
+    Font(R.font.inter, FontWeight.Bold)
+)
 
 val Typography = Typography(
   // H1: 28/34 Semibold

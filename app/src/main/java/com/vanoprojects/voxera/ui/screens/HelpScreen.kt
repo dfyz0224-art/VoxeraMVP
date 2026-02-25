@@ -38,8 +38,6 @@ fun HelpScreen() {
         .padding(20.dp)
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = strings.helpTitle)
-      Spacer(modifier = Modifier.height(18.dp))
 
       Text(
         text = strings.helpContent,

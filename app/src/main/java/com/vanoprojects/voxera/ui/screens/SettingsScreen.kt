@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.strings.AppLanguage
@@ -36,6 +39,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+  prefsManager: PreferencesManager,
   onAbout: () -> Unit,
   onHelp: () -> Unit,
   onForBusiness: () -> Unit,
@@ -44,13 +48,10 @@ fun SettingsScreen(
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
-  val context = LocalContext.current
-  val prefsManager = remember { PreferencesManager(context) }
+  val scope = rememberCoroutineScope()
   val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.LIGHT)
   val currentLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
-  val scope = rememberCoroutineScope()
-  
-  var keepHistory by remember { mutableStateOf(true) }
+  val keepHistory by prefsManager.keepHistory.collectAsState(initial = true)
   var shareMinimal by remember { mutableStateOf(true) }
   var showLanguageSheet by remember { mutableStateOf(false) }
   val languageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -77,6 +78,7 @@ fun SettingsScreen(
       Spacer(modifier = Modifier.height(10.dp))
 
       ProfileCard(
+        prefsManager = prefsManager,
         onClick = onProfile
       )
       Spacer(modifier = Modifier.height(16.dp))
@@ -85,7 +87,7 @@ fun SettingsScreen(
         title = strings.keepHistory,
         subtitle = strings.keepHistorySubtitle,
         checked = keepHistory,
-        onChecked = { keepHistory = it },
+        onChecked = { scope.launch { prefsManager.setKeepHistory(it) } },
         gradientIndex = 0
       )
       Spacer(modifier = Modifier.height(16.dp))
@@ -179,11 +181,23 @@ fun SettingsScreen(
 
 @Composable
 private fun ProfileCard(
+  prefsManager: PreferencesManager,
   onClick: () -> Unit
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
+  val firebaseUser = FirebaseAuth.getInstance().currentUser
+  val profilePhotoPath by prefsManager.profilePhotoPath.collectAsState(initial = null)
+  val displayName = firebaseUser?.displayName
+    ?: firebaseUser?.email?.substringBefore("@")
+    ?: strings.profileGuestName
+  val hasCustomPhoto = !profilePhotoPath.isNullOrBlank()
+  val photoUrl = when {
+    hasCustomPhoto -> "file://$profilePhotoPath"
+    firebaseUser?.photoUrl != null -> firebaseUser.photoUrl!!.toString()
+    else -> null
+  }
 
   ThemedCard(
     gradientIndex = 0,
@@ -194,15 +208,25 @@ private fun ProfileCard(
       modifier = Modifier.fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically
     ) {
-      Image(
-        painter = painterResource(R.drawable.ic_profile),
-        contentDescription = null,
-        modifier = Modifier
-          .size(30.dp)
-          .clip(RoundedCornerShape(20.dp)),
-        colorFilter = ColorFilter.tint(colors.textPrimary)
-      )
-      Spacer(modifier = Modifier.width(26.dp))
+      if (photoUrl != null) {
+        AsyncImage(
+          model = photoUrl,
+          contentDescription = null,
+          modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+        )
+      } else {
+        Image(
+          painter = painterResource(R.drawable.ic_profile),
+          contentDescription = null,
+          modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape),
+          colorFilter = ColorFilter.tint(colors.textPrimary)
+        )
+      }
+      Spacer(modifier = Modifier.width(20.dp))
       Column(modifier = Modifier.weight(1f)) {
         TextWithShadow(
           text = strings.profile,
@@ -212,7 +236,7 @@ private fun ProfileCard(
         )
         Spacer(modifier = Modifier.height(4.dp))
         TextWithShadow(
-          text = strings.manageSubscriptions,
+          text = displayName,
           style = MaterialTheme.typography.bodyMedium,
           color = colors.textSecondary
         )

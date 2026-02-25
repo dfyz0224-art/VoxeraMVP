@@ -2,11 +2,18 @@ package com.vanoprojects.voxera.ui.nav
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.vanoprojects.voxera.data.AnalysisSession
+import com.vanoprojects.voxera.data.HistoryRepository
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.screens.*
 import kotlinx.coroutines.launch
@@ -17,32 +24,78 @@ fun VoxeraNavHost(
   prefsManager: PreferencesManager,
   consentGiven: Boolean = false,
   onConsentGiven: suspend () -> Unit = {},
-  onboardingCompleted: Boolean = false,
+  onboardingCompleted: Boolean? = null,
+  authCompleted: Boolean = false,
   onOnboardingComplete: () -> Unit = {}
 ) {
   val scope = rememberCoroutineScope()
-  val startDestination = if (onboardingCompleted) Routes.Mode else Routes.Onboarding
+  val context = LocalContext.current
+  val historyRepository = remember { HistoryRepository(context) }
+  val startDestination = Routes.Splash
+  var splashComplete by remember { mutableStateOf(false) }
 
-  LaunchedEffect(onboardingCompleted) {
+  LaunchedEffect(splashComplete, onboardingCompleted, authCompleted) {
+    if (!splashComplete || onboardingCompleted == null) return@LaunchedEffect
     val currentRoute = navController.currentBackStackEntry?.destination?.route
+    if (currentRoute != Routes.Splash) return@LaunchedEffect
     when {
-      onboardingCompleted && currentRoute == Routes.Onboarding ->
-        navController.navigate(Routes.Mode) {
-          popUpTo(Routes.Onboarding) { inclusive = true }
-        }
+      !onboardingCompleted -> navController.navigate(Routes.Onboarding) {
+        popUpTo(Routes.Splash) { inclusive = true }
+      }
+      !authCompleted -> navController.navigate(Routes.Auth) {
+        popUpTo(Routes.Splash) { inclusive = true }
+      }
+      else -> navController.navigate(Routes.Mode) {
+        popUpTo(Routes.Splash) { inclusive = true }
+      }
+    }
+  }
+
+  LaunchedEffect(onboardingCompleted, authCompleted) {
+    if (onboardingCompleted == null) return@LaunchedEffect
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    if (currentRoute == Routes.Splash) return@LaunchedEffect
+    when {
       !onboardingCompleted && currentRoute == Routes.Mode ->
         navController.navigate(Routes.Onboarding) {
           popUpTo(Routes.Mode) { inclusive = true }
+        }
+      onboardingCompleted && !authCompleted && currentRoute == Routes.Mode ->
+        navController.navigate(Routes.Auth) {
+          popUpTo(Routes.Mode) { inclusive = true }
+        }
+      onboardingCompleted && authCompleted && currentRoute == Routes.Onboarding ->
+        navController.navigate(Routes.Mode) {
+          popUpTo(Routes.Onboarding) { inclusive = true }
+        }
+      onboardingCompleted && authCompleted && currentRoute == Routes.Auth ->
+        navController.navigate(Routes.Mode) {
+          popUpTo(Routes.Auth) { inclusive = true }
         }
     }
   }
 
   NavHost(navController = navController, startDestination = startDestination) {
+    composable(Routes.Splash) {
+      AppSplashScreen(
+        onComplete = { splashComplete = true }
+      )
+    }
     composable(Routes.Onboarding) {
       OnboardingScreen(
         onComplete = {
-          navController.navigate(Routes.Mode) {
+          navController.navigate(Routes.Auth) {
             popUpTo(Routes.Onboarding) { inclusive = true }
+          }
+        },
+        prefsManager = prefsManager
+      )
+    }
+    composable(Routes.Auth) {
+      AuthScreen(
+        onComplete = {
+          navController.navigate(Routes.Mode) {
+            popUpTo(Routes.Auth) { inclusive = true }
           }
         },
         prefsManager = prefsManager
@@ -55,12 +108,15 @@ fun VoxeraNavHost(
           if (mode == "history") {
             navController.navigate(Routes.History)
           } else {
-            // Если согласие уже дано, идём сразу на запись
+            AnalysisSession.analysisType = when (mode) {
+              "quick" -> "psytype"
+              else -> "emostate"
+            }
             if (consentGiven) {
               navController.navigate(Routes.Recording)
             } else {
               navController.navigate(Routes.Consent)
-      }
+            }
           }
         },
         onOpenSettings = { navController.navigate(Routes.Settings) }
@@ -85,6 +141,8 @@ fun VoxeraNavHost(
     }
     composable(Routes.Processing) {
       ProcessingScreen(
+        prefsManager = prefsManager,
+        historyRepository = historyRepository,
         onDone = { navController.navigate(Routes.Result) { popUpTo(Routes.Recording) { inclusive = false } } }
       )
     }
@@ -99,10 +157,20 @@ fun VoxeraNavHost(
       ShareScreen()
     }
     composable(Routes.History) {
-      HistoryScreen()
+      HistoryScreen(
+        historyRepository = historyRepository,
+        onItemClick = { entry ->
+          AnalysisSession.lastAnalysisResponse = entry.toAnalysisResponse()
+          AnalysisSession.analysisType = entry.analysisType
+          AnalysisSession.lastResultJson = entry.responseJson
+          AnalysisSession.lastRawApiResponse = entry.rawApiResponse
+          navController.navigate(Routes.Result)
+        }
+      )
     }
     composable(Routes.Settings) {
       SettingsScreen(
+        prefsManager = prefsManager,
         onAbout = { navController.navigate(Routes.About) },
         onHelp = { navController.navigate(Routes.Help) },
         onForBusiness = { navController.navigate(Routes.ForBusiness) },
@@ -111,6 +179,7 @@ fun VoxeraNavHost(
     }
     composable(Routes.Profile) {
       ProfileScreen(
+        prefsManager = prefsManager,
         onForBusiness = { navController.navigate(Routes.ForBusiness) }
       )
     }

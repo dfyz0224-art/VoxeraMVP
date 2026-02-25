@@ -22,18 +22,77 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.util.Log
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.data.AnalysisSession
+import com.vanoprojects.voxera.data.HistoryRepository
+import com.vanoprojects.voxera.data.PreferencesManager
+import com.vanoprojects.voxera.data.api.VoxeraApiClient
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @Composable
-fun ProcessingScreen(onDone: () -> Unit) {
+fun ProcessingScreen(
+  prefsManager: PreferencesManager,
+  historyRepository: HistoryRepository,
+  onDone: () -> Unit
+) {
   val theme = LocalVoxeraTheme.current
   val strings = LocalStrings.current
   
   LaunchedEffect(Unit) {
-    delay(2000) // 1-2 секунды
+    val file = AnalysisSession.lastRecordedFile
+    val analysisType = AnalysisSession.analysisType
+
+    if (file == null || !file.exists()) {
+      AnalysisSession.lastAnalysisResponse = null
+      AnalysisSession.lastRawApiResponse = null
+      AnalysisSession.lastResultJson = "Ошибка: Нет записанного аудио"
+      onDone()
+      return@LaunchedEffect
+    }
+
+    try {
+      val result = withContext(Dispatchers.IO) {
+        val requestFile = file.asRequestBody("audio/ogg".toMediaTypeOrNull())
+        val audioPart = MultipartBody.Part.createFormData("audio", file.name, requestFile)
+        val analysisTypeBody = analysisType.toRequestBody("text/plain".toMediaTypeOrNull())
+        VoxeraApiClient.api.analyze(audioPart, analysisTypeBody)
+      }
+
+      if (result.isSuccessful) {
+        val body = result.body()
+        Log.d("ProcessingScreen", "Success: body=${body != null}, lastRawApiResponse=${AnalysisSession.lastRawApiResponse != null}, result.description=${body?.result?.description?.length ?: 0}")
+        AnalysisSession.lastAnalysisResponse = body
+        AnalysisSession.lastResultJson = body?.let {
+          com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(it)
+        } ?: AnalysisSession.lastRawApiResponse ?: result.raw().toString()
+        if (body != null && prefsManager.keepHistory.first()) {
+          historyRepository.addEntry(
+            analysisType = AnalysisSession.analysisType,
+            response = body,
+            rawApiResponse = AnalysisSession.lastRawApiResponse
+          )
+        }
+      } else {
+        AnalysisSession.lastAnalysisResponse = null
+        AnalysisSession.lastRawApiResponse = null
+        AnalysisSession.lastResultJson = "Ошибка API: ${result.code()} ${result.message()}"
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      AnalysisSession.lastAnalysisResponse = null
+      AnalysisSession.lastRawApiResponse = null
+      AnalysisSession.lastResultJson = "Ошибка: ${e.message}\n\n${e.stackTraceToString()}"
+    }
     onDone()
   }
 

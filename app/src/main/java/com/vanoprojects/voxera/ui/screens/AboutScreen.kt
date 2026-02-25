@@ -42,7 +42,6 @@ fun AboutScreen() {
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Spacer(modifier = Modifier.height(10.dp))
-      TopBar(title = strings.aboutTitle)
       Spacer(modifier = Modifier.height(30.dp))
       Image(
         painter = painterResource(R.drawable.ic_voxera_x_glow),

@@ -20,6 +20,10 @@ class PreferencesManager(private val context: Context) {
         private val THEME_TYPE_KEY = stringPreferencesKey("theme_type")
         private val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
         private val LANGUAGE_KEY = stringPreferencesKey("language")
+        private val AUTH_COMPLETED_KEY = booleanPreferencesKey("auth_completed")
+        private val PROFILE_PHOTO_PATH_KEY = stringPreferencesKey("profile_photo_path")
+        private val PROFILE_PHONE_KEY = stringPreferencesKey("profile_phone")
+        private val KEEP_HISTORY_KEY = booleanPreferencesKey("keep_history")
     }
 
     val consentGiven: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -69,6 +73,48 @@ class PreferencesManager(private val context: Context) {
     suspend fun setAppLanguage(lang: AppLanguage) {
         context.dataStore.edit { preferences ->
             preferences[LANGUAGE_KEY] = lang.name
+        }
+    }
+
+    val authCompleted: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[AUTH_COMPLETED_KEY] ?: false
+    }
+
+    suspend fun setAuthCompleted(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[AUTH_COMPLETED_KEY] = value
+        }
+    }
+
+    val profilePhotoPath: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[PROFILE_PHOTO_PATH_KEY]
+    }
+
+    suspend fun setProfilePhotoPath(path: String?) {
+        context.dataStore.edit { preferences ->
+            if (path != null) preferences[PROFILE_PHOTO_PATH_KEY] = path
+            else preferences.remove(PROFILE_PHOTO_PATH_KEY)
+        }
+    }
+
+    val profilePhone: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[PROFILE_PHONE_KEY]
+    }
+
+    suspend fun setProfilePhone(phone: String?) {
+        context.dataStore.edit { preferences ->
+            if (phone != null) preferences[PROFILE_PHONE_KEY] = phone
+            else preferences.remove(PROFILE_PHONE_KEY)
+        }
+    }
+
+    val keepHistory: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[KEEP_HISTORY_KEY] ?: true
+    }
+
+    suspend fun setKeepHistory(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEEP_HISTORY_KEY] = value
         }
     }
 }

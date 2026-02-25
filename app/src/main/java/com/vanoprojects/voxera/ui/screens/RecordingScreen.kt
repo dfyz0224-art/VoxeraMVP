@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -39,8 +41,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.input.pointer.pointerInput
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import android.widget.Toast
+import com.vanoprojects.voxera.BuildConfig
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.audio.OggRecorder
+import com.vanoprojects.voxera.data.AnalysisSession
 import com.vanoprojects.voxera.ui.theme.VoxeraTheme
 import com.vanoprojects.voxera.ui.theme.VoxeraColors
 import com.vanoprojects.voxera.ui.theme.LocalVoxeraTheme
@@ -55,12 +66,25 @@ import kotlinx.coroutines.delay
 fun RecordingScreen(
     onGoProcessing: () -> Unit, // переход на processing должен быть ПОСЛЕ отпускания
 ) {
+    val context = LocalContext.current
     val liquidState = rememberLiquidState()
 
     var isRecording by remember { mutableStateOf(false) }
     var isTransitioning by remember { mutableStateOf(false) }
     var timerExpired by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(30) }
+    var oggRecorder by remember { mutableStateOf<OggRecorder?>(null) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val file = java.io.File(context.cacheDir, "recording_${System.currentTimeMillis()}.ogg")
+            oggRecorder = OggRecorder(file)
+            oggRecorder?.start()
+            isRecording = true
+        }
+    }
 
     // Breathing эффект - сильнее при удержании
     val breathingIdle by rememberInfiniteTransition(label = "breathingIdle").animateFloat(
@@ -117,7 +141,6 @@ fun RecordingScreen(
                 .liquefiable(liquidState)
         )
 
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -147,11 +170,23 @@ fun RecordingScreen(
                     breathing = breathing,
                     onClick = {
                         if (isRecording) {
+                            val file = oggRecorder?.stop()
+                            oggRecorder = null
                             isRecording = false
                             isTransitioning = true
+                            file?.let { AnalysisSession.lastRecordedFile = it }
                             onGoProcessing()
                         } else {
-                            isRecording = true
+                            when {
+                                ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                                    android.content.pm.PackageManager.PERMISSION_GRANTED -> {
+                                    val file = java.io.File(context.cacheDir, "recording_${System.currentTimeMillis()}.ogg")
+                                    oggRecorder = OggRecorder(file)
+                                    oggRecorder?.start()
+                                    isRecording = true
+                                }
+                                else -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }
                         }
                     }
                 )
@@ -198,7 +233,7 @@ fun RecordingScreen(
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 fontSize = 40.sp,
                                 fontWeight = FontWeight.Normal,
-                                letterSpacing = 0.04.em,
+                                letterSpacing = 0.0.em,
                                 lineHeight = 42.sp,
                             ),
                             modifier = Modifier.padding(bottom = 20.dp),
@@ -237,6 +272,38 @@ fun RecordingScreen(
             }
 
             Spacer(Modifier.weight(1f))
+        }
+
+        // Кнопка «Тест» — использует audio_test.ogg из assets (только в debug). Поверх всего, zIndex чтобы не перекрывали.
+        if (BuildConfig.DEBUG) {
+            TextButton(
+                onClick = {
+                    try {
+                        val outFile = java.io.File(context.cacheDir, "recording_test.ogg")
+                        context.assets.open("audio_test.ogg").use { input ->
+                            java.io.FileOutputStream(outFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        AnalysisSession.lastRecordedFile = outFile
+                        isTransitioning = true
+                        onGoProcessing()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(20.dp)
+                    .sizeIn(minWidth = 80.dp, minHeight = 56.dp)
+                    .zIndex(10f)
+            ) {
+                val testColor = when (theme.type) {
+                    ThemeType.LIGHT, ThemeType.DARK -> Color(0xFF0D1B3A).copy(alpha = 0.9f)
+                    else -> Color.White.copy(alpha = 0.9f)
+                }
+                Text("Тест", color = testColor, style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }
