@@ -52,20 +52,18 @@ private val LightScheme = lightColorScheme(
 
 @Composable
 fun VoxeraTheme(
-    themeType: ThemeType = ThemeType.DARK,
+    themeType: ThemeType = ThemeType.GLASS,
   content: @Composable () -> Unit
 ) {
     val colors = when (themeType) {
-        ThemeType.DARK -> ThemeColors.Dark
         ThemeType.LIGHT -> ThemeColors.Light
         ThemeType.GLASS -> ThemeColors.Glass
     }
     
     val theme = VoxeraTheme(themeType, colors)
     val colorScheme = when (themeType) {
-        ThemeType.DARK -> DarkScheme
         ThemeType.LIGHT -> LightScheme
-        ThemeType.GLASS -> DarkScheme // Glass использует темную схему Material
+        ThemeType.GLASS -> DarkScheme // Glass: тёмная Material-схема
     }
     
     CompositionLocalProvider(LocalVoxeraTheme provides theme) {

@@ -30,7 +30,7 @@ fun VoxeraApp() {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val prefsManager = remember { PreferencesManager(context) }
-  val themeType by prefsManager.themeType.collectAsState(initial = ThemeType.LIGHT)
+  val themeType by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
   val appLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
   val consentGiven by prefsManager.consentGiven.collectAsState(initial = false)
   val onboardingCompleted by prefsManager.onboardingCompleted.collectAsState(initial = null)

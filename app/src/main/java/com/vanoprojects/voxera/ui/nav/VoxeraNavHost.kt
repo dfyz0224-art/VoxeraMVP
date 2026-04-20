@@ -88,6 +88,7 @@ fun VoxeraNavHost(
             popUpTo(Routes.Onboarding) { inclusive = true }
           }
         },
+        onOpenPrivacyPolicy = { navController.navigate(Routes.PrivacyPolicy) },
         prefsManager = prefsManager
       )
     }
@@ -124,6 +125,7 @@ fun VoxeraNavHost(
     }
     composable(Routes.Consent) {
       ConsentScreen(
+        onOpenFullPrivacyPolicy = { navController.navigate(Routes.PrivacyPolicy) },
         onAccept = {
           scope.launch {
             onConsentGiven()
@@ -134,6 +136,9 @@ fun VoxeraNavHost(
         }
       )
     }
+    composable(Routes.PrivacyPolicy) {
+      PrivacyPolicyScreen(onBack = { navController.popBackStack() })
+    }
     composable(Routes.Recording) {
       RecordingScreen(
         onGoProcessing = { navController.navigate(Routes.Processing) }
@@ -141,7 +146,6 @@ fun VoxeraNavHost(
     }
     composable(Routes.Processing) {
       ProcessingScreen(
-        prefsManager = prefsManager,
         historyRepository = historyRepository,
         onDone = { navController.navigate(Routes.Result) { popUpTo(Routes.Recording) { inclusive = false } } }
       )
@@ -172,6 +176,7 @@ fun VoxeraNavHost(
       SettingsScreen(
         prefsManager = prefsManager,
         onAbout = { navController.navigate(Routes.About) },
+        onPrivacyPolicy = { navController.navigate(Routes.PrivacyPolicy) },
         onHelp = { navController.navigate(Routes.Help) },
         onForBusiness = { navController.navigate(Routes.ForBusiness) },
         onProfile = { navController.navigate(Routes.Profile) }
@@ -184,7 +189,12 @@ fun VoxeraNavHost(
       )
     }
     composable(Routes.About) {
-      AboutScreen()
+      AboutScreen(
+        onOpenFullDescription = { navController.navigate(Routes.AboutFullDescription) }
+      )
+    }
+    composable(Routes.AboutFullDescription) {
+      AboutFullDescriptionScreen(onBack = { navController.popBackStack() })
     }
     composable(Routes.Help) {
       HelpScreen()

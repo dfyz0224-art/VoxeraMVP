@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
   prefsManager: PreferencesManager,
   onAbout: () -> Unit,
+  onPrivacyPolicy: () -> Unit,
   onHelp: () -> Unit,
   onForBusiness: () -> Unit,
   onProfile: () -> Unit = {}
@@ -49,10 +50,8 @@ fun SettingsScreen(
   val colors = theme.colors
   val strings = LocalStrings.current
   val scope = rememberCoroutineScope()
-  val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.LIGHT)
+  val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
   val currentLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
-  val keepHistory by prefsManager.keepHistory.collectAsState(initial = true)
-  var shareMinimal by remember { mutableStateOf(true) }
   var showLanguageSheet by remember { mutableStateOf(false) }
   val languageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -82,24 +81,6 @@ fun SettingsScreen(
         onClick = onProfile
       )
       Spacer(modifier = Modifier.height(16.dp))
-
-      SettingCard(
-        title = strings.keepHistory,
-        subtitle = strings.keepHistorySubtitle,
-        checked = keepHistory,
-        onChecked = { scope.launch { prefsManager.setKeepHistory(it) } },
-        gradientIndex = 0
-      )
-      Spacer(modifier = Modifier.height(16.dp))
-      SettingCard(
-        title = strings.shareBriefOnly,
-        subtitle = strings.shareBriefSubtitle,
-        checked = shareMinimal,
-        onChecked = { shareMinimal = it },
-        gradientIndex = 1
-      )
-
-      Spacer(modifier = Modifier.height(16.dp))
       ThemeSelectorCard(
         currentTheme = currentTheme,
         onThemeSelected = { themeType ->
@@ -120,6 +101,13 @@ fun SettingsScreen(
       ThemedOutlinedButton(
         text = strings.about,
         onClick = onAbout,
+        modifier = Modifier.fillMaxWidth()
+      )
+
+      Spacer(modifier = Modifier.height(8.dp))
+      ThemedOutlinedButton(
+        text = strings.privacyPolicyShortLink,
+        onClick = onPrivacyPolicy,
         modifier = Modifier.fillMaxWidth()
       )
 
@@ -237,7 +225,7 @@ private fun ProfileCard(
         Spacer(modifier = Modifier.height(4.dp))
         TextWithShadow(
           text = displayName,
-          style = MaterialTheme.typography.bodyMedium,
+          style = cardParagraphTextStyle(),
           color = colors.textSecondary
         )
       }
@@ -272,13 +260,14 @@ private fun SettingCard(
         Spacer(modifier = Modifier.height(6.dp))
         TextWithShadow(
           text = subtitle,
-          style = MaterialTheme.typography.bodyMedium,
+          style = cardParagraphTextStyle(),
           color = colors.textSecondary
         )
       }
       Switch(
         checked = checked,
-        onCheckedChange = onChecked
+        onCheckedChange = onChecked,
+        colors = voxeraSwitchColors()
       )
     }
   }
@@ -293,7 +282,7 @@ private fun ThemeSelectorCard(
   val colors = theme.colors
   val strings = LocalStrings.current
   
-  ThemedCard(modifier = Modifier.height(240.dp), gradientIndex = 2) {
+  ThemedCard(modifier = Modifier.height(200.dp), gradientIndex = 2) {
     Column(
       modifier = Modifier.fillMaxSize()
     ) {
@@ -317,13 +306,6 @@ private fun ThemeSelectorCard(
         themeType = ThemeType.LIGHT,
         isSelected = currentTheme == ThemeType.LIGHT,
         onClick = { onThemeSelected(ThemeType.LIGHT) }
-      )
-      Spacer(modifier = Modifier.height(16.dp))
-      ThemeOption(
-        title = strings.themeDark,
-        themeType = ThemeType.DARK,
-        isSelected = currentTheme == ThemeType.DARK,
-        onClick = { onThemeSelected(ThemeType.DARK) }
       )
     }
   }
@@ -397,7 +379,8 @@ private fun ThemeOption(
     TextWithShadow(
       text = title,
       color = colors.textPrimary,
-      style = MaterialTheme.typography.bodyMedium
+      style = cardParagraphTextStyle(),
+      modifier = Modifier.weight(1f)
     )
   }
 }

@@ -1,5 +1,11 @@
 package com.vanoprojects.voxera.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -41,17 +47,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.input.pointer.pointerInput
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import android.widget.Toast
+import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.BuildConfig
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.audio.OggRecorder
 import com.vanoprojects.voxera.data.AnalysisSession
+import com.vanoprojects.voxera.audio.AudioUploadHelper
+import com.vanoprojects.voxera.ui.theme.ThemedOutlinedButton
 import com.vanoprojects.voxera.ui.theme.VoxeraTheme
 import com.vanoprojects.voxera.ui.theme.VoxeraColors
 import com.vanoprojects.voxera.ui.theme.LocalVoxeraTheme
@@ -60,31 +64,21 @@ import com.vanoprojects.voxera.ui.theme.ThemeType
 import io.github.fletchmckee.liquid.liquid
 import io.github.fletchmckee.liquid.liquefiable
 import io.github.fletchmckee.liquid.rememberLiquidState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun RecordingScreen(
     onGoProcessing: () -> Unit, // переход на processing должен быть ПОСЛЕ отпускания
 ) {
-    val context = LocalContext.current
     val liquidState = rememberLiquidState()
 
     var isRecording by remember { mutableStateOf(false) }
     var isTransitioning by remember { mutableStateOf(false) }
     var timerExpired by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(30) }
-    var oggRecorder by remember { mutableStateOf<OggRecorder?>(null) }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            val file = java.io.File(context.cacheDir, "recording_${System.currentTimeMillis()}.ogg")
-            oggRecorder = OggRecorder(file)
-            oggRecorder?.start()
-            isRecording = true
-        }
-    }
 
     // Breathing эффект - сильнее при удержании
     val breathingIdle by rememberInfiniteTransition(label = "breathingIdle").animateFloat(
@@ -110,6 +104,101 @@ fun RecordingScreen(
     val breathing = if (isRecording) breathingHold else breathingIdle
     val theme = LocalVoxeraTheme.current
     val strings = LocalStrings.current
+    val context = LocalContext.current
+
+    var oggRecorder by remember { mutableStateOf<OggRecorder?>(null) }
+
+    val startMicRecording: () -> Unit = {
+        try {
+            val file = java.io.File(context.cacheDir, "recording.ogg")
+            file.delete()
+            val ogg = OggRecorder(file)
+            ogg.start()
+            oggRecorder = ogg
+            isRecording = true
+        } catch (e: Exception) {
+            Log.e("RecordingScreen", "start recording failed", e)
+            Toast.makeText(
+                context,
+                "${strings.recordingStartFailed}: ${e.message ?: e.javaClass.simpleName}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            startMicRecording()
+        } else {
+            Toast.makeText(context, strings.micPermissionRequired, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            try {
+                oggRecorder?.stop()
+            } catch (_: Exception) {
+            }
+            oggRecorder = null
+        }
+    }
+
+    val scope = rememberCoroutineScope()
+
+    val pickAudioLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                AudioUploadHelper.copyToCache(context, uri)
+            }
+            if (result != null) {
+                val (file, mime) = result
+                if (file.exists() && file.length() > 0L) {
+                    AnalysisSession.lastRecordedFile = file
+                    AnalysisSession.lastAudioMimeType = mime
+                    isTransitioning = true
+                    onGoProcessing()
+                } else {
+                    Toast.makeText(context, strings.uploadAudioError, Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(context, strings.uploadAudioError, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val onRecordTap: () -> Unit = {
+        if (isRecording) {
+            val file = try {
+                oggRecorder?.stop()
+            } catch (e: Exception) {
+                Log.e("RecordingScreen", "stop recording failed", e)
+                null
+            }
+            oggRecorder = null
+            isRecording = false
+            AnalysisSession.lastRecordedFile = file
+            AnalysisSession.lastAudioMimeType = null
+            isTransitioning = true
+            if (file != null && file.exists() && file.length() > 0L) {
+                onGoProcessing()
+            } else {
+                isTransitioning = false
+                Toast.makeText(context, strings.recordingEmptyFile, Toast.LENGTH_LONG).show()
+            }
+        } else {
+            when {
+                ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                    PackageManager.PERMISSION_GRANTED -> startMicRecording()
+                else -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
 
     // Таймер 30 сек при записи
     LaunchedEffect(isRecording) {
@@ -130,7 +219,6 @@ fun RecordingScreen(
         val backgroundRes = when (theme.type) {
             ThemeType.GLASS -> R.drawable.bg_stars
             ThemeType.LIGHT -> R.drawable.bg_light_reverse
-            ThemeType.DARK -> R.drawable.bg_clean
         }
         Image(
             painter = painterResource(backgroundRes),
@@ -141,13 +229,14 @@ fun RecordingScreen(
                 .liquefiable(liquidState)
         )
 
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(24.dp))
 
             // Центр экрана — кнопка (на том же месте)
             Spacer(Modifier.weight(1f))
@@ -168,27 +257,7 @@ fun RecordingScreen(
                     liquidState = liquidState,
                     isRecording = isRecording,
                     breathing = breathing,
-                    onClick = {
-                        if (isRecording) {
-                            val file = oggRecorder?.stop()
-                            oggRecorder = null
-                            isRecording = false
-                            isTransitioning = true
-                            file?.let { AnalysisSession.lastRecordedFile = it }
-                            onGoProcessing()
-                        } else {
-                            when {
-                                ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
-                                    android.content.pm.PackageManager.PERMISSION_GRANTED -> {
-                                    val file = java.io.File(context.cacheDir, "recording_${System.currentTimeMillis()}.ogg")
-                                    oggRecorder = OggRecorder(file)
-                                    oggRecorder?.start()
-                                    isRecording = true
-                                }
-                                else -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            }
-                        }
-                    }
+                    onClick = onRecordTap
                 )
                 
                 // Заголовок и текст над кнопкой — при записи показываем другой текст
@@ -211,21 +280,20 @@ fun RecordingScreen(
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(y = (-200).dp),
+                            .offset(y = (-236).dp)
+                            .zIndex(2f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val titleColor = when (theme.type) {
                             ThemeType.LIGHT -> Color(0xFF0D1B3A)
-                            ThemeType.DARK -> Color(0xFF0D1B3A)
-                            else -> Color.White
+                            ThemeType.GLASS -> Color.White
                         }
                         val descriptionColor = when (theme.type) {
                             ThemeType.LIGHT -> Color(0xFF0A1628)
-                            ThemeType.DARK -> Color(0xFF0A1628)
-                            else -> Color.White
+                            ThemeType.GLASS -> Color.White
                         }
                         val titleAlpha = if (isRecording) blinkAlpha else textAlpha
-                        val descAlpha = if (isRecording) 1f else textAlpha
+                        val descAlpha = textAlpha
                         val titleText = if (isRecording) strings.recordingInProgress else strings.voiceRecording
                         Text(
                             text = titleText,
@@ -233,28 +301,51 @@ fun RecordingScreen(
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 fontSize = 40.sp,
                                 fontWeight = FontWeight.Normal,
-                                letterSpacing = 0.0.em,
+                                letterSpacing = 0.04.em,
                                 lineHeight = 42.sp,
                             ),
                             modifier = Modifier.padding(bottom = 20.dp),
                             textAlign = TextAlign.Center
                         )
-                        val descriptionText = when {
-                            !isRecording -> strings.tapToStart
-                            timerExpired -> strings.tapToStop
-                            else -> strings.saySentences
+                        when {
+                            !isRecording -> {
+                                Text(
+                                    text = strings.tapToStart,
+                                    color = descriptionColor.copy(alpha = descAlpha),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        lineHeight = 24.sp
+                                    ),
+                                    modifier = Modifier.padding(bottom = 12.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = strings.saySentences,
+                                    color = descriptionColor.copy(alpha = descAlpha),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        lineHeight = 24.sp
+                                    ),
+                                    modifier = Modifier.padding(bottom = 24.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                            timerExpired -> {
+                                Text(
+                                    text = strings.tapToStop,
+                                    color = descriptionColor.copy(alpha = 1f),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        lineHeight = 24.sp
+                                    ),
+                                    modifier = Modifier.padding(bottom = 24.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
-                        Text(
-                            text = descriptionText,
-                            color = descriptionColor.copy(alpha = descAlpha),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Normal,
-                                lineHeight = 24.sp
-                            ),
-                            modifier = Modifier.padding(bottom = 24.dp),
-                            textAlign = TextAlign.Center
-                        )
                         if (isRecording && !timerExpired) {
                             Text(
                                 text = "${timerSeconds} ${strings.secondsShort}",
@@ -263,7 +354,7 @@ fun RecordingScreen(
                                     fontSize = 32.sp,
                                     fontWeight = FontWeight.SemiBold
                                 ),
-                                modifier = Modifier.padding(bottom = 60.dp),
+                                modifier = Modifier.padding(top = 8.dp, bottom = 48.dp),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -272,9 +363,18 @@ fun RecordingScreen(
             }
 
             Spacer(Modifier.weight(1f))
+
+            ThemedOutlinedButton(
+                text = strings.uploadAudio,
+                onClick = { pickAudioLauncher.launch("audio/*") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                enabled = !isRecording && !isTransitioning
+            )
         }
 
-        // Кнопка «Тест» — использует audio_test.ogg из assets (только в debug). Поверх всего, zIndex чтобы не перекрывали.
+        // Кнопка «Тест» — audio_test.ogg из assets (только debug). Поверх контента.
         if (BuildConfig.DEBUG) {
             TextButton(
                 onClick = {
@@ -299,8 +399,8 @@ fun RecordingScreen(
                     .zIndex(10f)
             ) {
                 val testColor = when (theme.type) {
-                    ThemeType.LIGHT, ThemeType.DARK -> Color(0xFF0D1B3A).copy(alpha = 0.9f)
-                    else -> Color.White.copy(alpha = 0.9f)
+                    ThemeType.LIGHT -> Color(0xFF0D1B3A).copy(alpha = 0.9f)
+                    ThemeType.GLASS -> Color.White.copy(alpha = 0.9f)
                 }
                 Text("Тест", color = testColor, style = MaterialTheme.typography.titleMedium)
             }

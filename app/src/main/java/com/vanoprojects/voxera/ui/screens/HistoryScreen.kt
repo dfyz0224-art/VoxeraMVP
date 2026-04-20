@@ -5,21 +5,26 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.HistoryEntry
 import com.vanoprojects.voxera.data.HistoryRepository
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
-import java.util.concurrent.TimeUnit
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @Composable
 fun HistoryScreen(
@@ -51,12 +56,26 @@ fun HistoryScreen(
       Spacer(modifier = Modifier.height(10.dp))
 
       if (entries.isEmpty()) {
-        Box(
+        Column(
           modifier = Modifier
             .fillMaxWidth()
-            .weight(1f),
-          contentAlignment = Alignment.Center
+            .fillMaxSize()
         ) {
+          Text(
+            text = strings.historyTitle,
+            style = MaterialTheme.typography.headlineSmall.copy(
+              fontWeight = FontWeight.SemiBold,
+              fontSize = 24.sp
+            ),
+            color = if (theme.type == ThemeType.LIGHT) {
+              colors.backgroundTextPrimary
+            } else {
+              colors.textPrimary
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Start
+          )
+          Spacer(modifier = Modifier.height(12.dp))
           TextWithShadow(
             text = strings.historyEmpty,
             color = colors.textSecondary,
@@ -81,16 +100,11 @@ fun HistoryScreen(
   }
 }
 
-private fun formatDateLabel(timestamp: Long, strings: com.vanoprojects.voxera.ui.strings.Strings): String {
-  val now = System.currentTimeMillis()
-  val diffMs = now - timestamp
-  val diffDays = TimeUnit.MILLISECONDS.toDays(diffMs)
-  return when {
-    diffDays == 0L -> strings.today
-    diffDays == 1L -> strings.yesterday
-    diffDays == 2L -> strings.twoDaysAgo
-    else -> "$diffDays ${strings.daysAgo}"
-  }
+/** Дата и время анализа в локали пользователя (короткий формат). */
+private fun formatHistoryDateTime(timestamp: Long): String {
+  val zoned = Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault())
+  val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)
+  return zoned.format(formatter)
 }
 
 private fun formatAnalysisType(analysisType: String, strings: com.vanoprojects.voxera.ui.strings.Strings): String =
@@ -108,7 +122,7 @@ private fun HistoryItem(
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
-  val dateLabel = formatDateLabel(entry.timestamp, strings)
+  val dateLabel = formatHistoryDateTime(entry.timestamp)
   val typeLabel = formatAnalysisType(entry.analysisType, strings)
 
   ThemedCard(gradientIndex = gradientIndex, onClick = onClick) {
@@ -116,7 +130,7 @@ private fun HistoryItem(
       TextWithShadow(
         text = dateLabel,
         color = colors.textSecondary,
-        style = MaterialTheme.typography.bodySmall
+        style = MaterialTheme.typography.bodyMedium
       )
       Spacer(modifier = Modifier.height(6.dp))
       TextWithShadow(

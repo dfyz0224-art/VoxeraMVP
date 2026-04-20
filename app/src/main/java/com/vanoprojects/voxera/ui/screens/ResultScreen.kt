@@ -2,14 +2,23 @@ package com.vanoprojects.voxera.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,7 +35,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import android.os.Build
+import android.text.Layout
+import android.text.method.LinkMovementMethod
 import android.util.Log
+import android.view.ViewGroup
 import androidx.core.text.HtmlCompat
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.AnalysisSession
@@ -125,14 +139,6 @@ fun ResultScreen(
           modifier = Modifier.fillMaxSize()
         )
       }
-      ThemeType.DARK -> {
-        Image(
-          painter = painterResource(R.drawable.bg_reverse_stars),
-          contentDescription = null,
-          contentScale = ContentScale.Crop,
-          modifier = Modifier.fillMaxSize()
-        )
-      }
     }
 
     val titleColor = if (theme.type == ThemeType.LIGHT) Color.White else colors.backgroundTextPrimary
@@ -184,7 +190,7 @@ fun ResultScreen(
           Spacer(modifier = Modifier.height(24.dp))
           Text(
             text = resultJson,
-            style = MaterialTheme.typography.bodyMedium,
+            style = cardParagraphTextStyle(),
             color = titleColor,
             modifier = Modifier
               .weight(1f)
@@ -222,54 +228,33 @@ private fun EmostateResultContent(
   theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
   strings: com.vanoprojects.voxera.ui.strings.Strings
 ) {
+  var hintSheet by remember { mutableStateOf<Pair<String, String>?>(null) }
   val scrollState = rememberScrollState()
-  val emoScales = response.result?.emoScales ?: emptyList()
+  val emoScales = (response.result?.emoScales ?: emptyList())
+    .sortedByDescending { it.value }
   val fromModel = response.result?.description.orEmpty()
   val description = fromModel.ifEmpty { extractDescriptionFromRawJson() }
   Log.d("DescriptionExtract", "Emostate: fromModel=${fromModel.length}, final description=${description.length}, showCard=${description.isNotEmpty()}")
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .verticalScroll(scrollState)
-  ) {
-    Text(
-      text = strings.emostateResultTitle,
-      style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
-      color = titleColor,
-      fontWeight = FontWeight.SemiBold,
-      modifier = Modifier.fillMaxWidth(),
-      textAlign = TextAlign.Center
-    )
-
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Text(
-      text = "${strings.emostateParameters}:",
-      style = MaterialTheme.typography.titleMedium,
-      color = titleColor,
-      fontWeight = FontWeight.Medium,
-      modifier = Modifier.fillMaxWidth()
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    emoScales.forEach { scale ->
-      EmoScaleCard(
-        name = translateEmoScaleName(scale.name),
-        value = scale.value,
-        textColor = cardTextColor,
-        secondaryColor = secondaryColor,
-        theme = theme
-      )
-      Spacer(modifier = Modifier.height(10.dp))
-    }
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    if (description.isNotEmpty()) {
+  Box(modifier = Modifier.fillMaxSize()) {
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .verticalScroll(scrollState)
+    ) {
       Text(
-        text = strings.emostateReportTitle,
+        text = strings.emostateResultTitle,
+        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
+        color = titleColor,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center
+      )
+
+      Spacer(modifier = Modifier.height(20.dp))
+
+      Text(
+        text = "${strings.emostateParameters}:",
         style = MaterialTheme.typography.titleMedium,
         color = titleColor,
         fontWeight = FontWeight.Medium,
@@ -278,15 +263,52 @@ private fun EmostateResultContent(
 
       Spacer(modifier = Modifier.height(12.dp))
 
-      DescriptionCard(
-        description = description,
-        textColor = cardTextColor,
-        secondaryColor = secondaryColor,
-        theme = theme
-      )
+      emoScales.forEach { scale ->
+        EmoScaleCard(
+          name = translateEmoScaleName(scale.name),
+          value = scale.value,
+          textColor = cardTextColor,
+          theme = theme,
+          onInfoClick = {
+            hintSheet = emostateMetricHintTitleBody(scale.name, strings)
+          }
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+      }
 
       Spacer(modifier = Modifier.height(24.dp))
+
+      if (description.isNotEmpty()) {
+        Text(
+          text = strings.emostateReportTitle,
+          style = MaterialTheme.typography.titleMedium,
+          color = titleColor,
+          fontWeight = FontWeight.Medium,
+          modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        DescriptionCard(
+          description = description,
+          textColor = cardTextColor,
+          secondaryColor = secondaryColor,
+          theme = theme,
+          onInfoClick = {
+            hintSheet = strings.emostateReportInfoSheetTitle to emostateDescriptionInterpretationBody(strings)
+          }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+      }
     }
+
+    ResultHintBottomSheet(
+      data = hintSheet,
+      theme = theme,
+      cardTextColor = cardTextColor,
+      onDismiss = { hintSheet = null }
+    )
   }
 }
 
@@ -496,8 +518,8 @@ private fun EmoScaleCard(
   name: String,
   value: Int,
   textColor: Color,
-  secondaryColor: Color,
-  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme
+  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
+  onInfoClick: () -> Unit
 ) {
   val cardShape = RoundedCornerShape(12.dp)
   val progress = (value / 100f).coerceIn(0f, 1f)
@@ -515,16 +537,15 @@ private fun EmoScaleCard(
       .fillMaxWidth()
       .clip(cardShape)
       .background(brush = Brush.linearGradient(cardGradient))
-      .then(
-        if (theme.type == ThemeType.LIGHT) {
-          Modifier
-        } else {
-          Modifier
-        }
-      )
       .padding(16.dp)
   ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    // Запас справа под кнопку «i» (36dp круг + отступы), чтобы цифры и шкала не прижимались
+    val endClearanceForInfo = 52.dp
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(end = endClearanceForInfo)
+    ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -534,13 +555,15 @@ private fun EmoScaleCard(
           text = "$name:",
           style = MaterialTheme.typography.bodyLarge,
           color = textColor,
-          fontWeight = FontWeight.Medium
+          fontWeight = FontWeight.Medium,
+          modifier = Modifier.weight(1f, fill = false)
         )
         Text(
           text = value.toString(),
           style = MaterialTheme.typography.titleMedium,
           color = textColor,
-          fontWeight = FontWeight.SemiBold
+          fontWeight = FontWeight.SemiBold,
+          modifier = Modifier.padding(end = 4.dp)
         )
       }
       Spacer(modifier = Modifier.height(8.dp))
@@ -560,6 +583,118 @@ private fun EmoScaleCard(
         )
       }
     }
+    MetricInfoButton(
+      onClick = onInfoClick,
+      contentColor = textColor,
+      modifier = Modifier
+        .align(Alignment.TopEnd)
+        .padding(top = 2.dp, end = 2.dp)
+    )
+  }
+}
+
+@Composable
+private fun MetricInfoButton(
+  onClick: () -> Unit,
+  contentColor: Color,
+  modifier: Modifier = Modifier
+) {
+  Box(
+    modifier = modifier
+      .padding(2.dp)
+      .size(36.dp)
+      .clip(CircleShape)
+      .background(contentColor.copy(alpha = 0.2f))
+      .clickable(onClick = onClick),
+    contentAlignment = Alignment.Center
+  ) {
+    Text(
+      text = "i",
+      style = MaterialTheme.typography.titleSmall.copy(
+        fontSize = 17.sp,
+        lineHeight = 18.sp,
+        fontStyle = FontStyle.Italic,
+        fontWeight = FontWeight.Bold
+      ),
+      color = contentColor
+    )
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ResultHintBottomSheet(
+  data: Pair<String, String>?,
+  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
+  cardTextColor: Color,
+  onDismiss: () -> Unit
+) {
+  if (data == null) return
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+  val scroll = rememberScrollState()
+  val cardShape = RoundedCornerShape(16.dp)
+  val cardGradient = when (theme.type) {
+    ThemeType.LIGHT -> listOf(
+      Color(0xFF003A8C).copy(alpha = 0.94f),
+      Color(0xFF0055BD).copy(alpha = 0.94f)
+    )
+    ThemeType.GLASS -> listOf(
+      Color(0xFF1A2436),
+      Color(0xFF243149)
+    )
+  }
+  val (title, body) = data
+  ModalBottomSheet(
+    onDismissRequest = onDismiss,
+    sheetState = sheetState,
+    containerColor = Color.Transparent,
+    tonalElevation = 0.dp,
+    dragHandle = {
+      Box(
+        modifier = Modifier
+          .padding(vertical = 10.dp)
+          .width(40.dp)
+          .height(4.dp)
+          .clip(RoundedCornerShape(2.dp))
+          .background(cardTextColor.copy(alpha = 0.35f))
+      )
+    }
+  ) {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp)
+        .padding(bottom = 32.dp)
+    ) {
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(cardShape)
+          .background(brush = Brush.linearGradient(cardGradient))
+      ) {
+        Column(
+          modifier = Modifier
+            .padding(20.dp)
+            .verticalScroll(scroll)
+        ) {
+          if (title.isNotBlank()) {
+            Text(
+              text = title,
+              style = MaterialTheme.typography.titleMedium,
+              color = cardTextColor,
+              fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+          }
+          Text(
+            text = body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = cardTextColor.copy(alpha = 0.94f),
+            lineHeight = 22.sp
+          )
+        }
+      }
+    }
   }
 }
 
@@ -568,7 +703,8 @@ private fun DescriptionCard(
   description: String,
   textColor: Color,
   secondaryColor: Color,
-  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme
+  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
+  onInfoClick: (() -> Unit)? = null
 ) {
   val cardShape = RoundedCornerShape(12.dp)
 
@@ -586,22 +722,45 @@ private fun DescriptionCard(
       .wrapContentHeight()
       .clip(cardShape)
       .background(brush = Brush.linearGradient(cardGradient))
-      .padding(16.dp)
   ) {
     AndroidView(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()
+        .padding(horizontal = 20.dp, vertical = 18.dp),
       factory = { ctx ->
         android.widget.TextView(ctx).apply {
+          layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+          )
           setTextColor(textColor.toArgb())
-          textSize = 16f
-          setLineSpacing(6f, 1.2f)
+          textSize = 17f
+          setLineSpacing(10f, 1.25f)
+          letterSpacing = 0f
+          isSingleLine = false
+          movementMethod = LinkMovementMethod.getInstance()
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            justificationMode = Layout.JUSTIFICATION_MODE_NONE
+            hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NONE
+          }
         }
       },
       update = { textView ->
         textView.text = HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_LEGACY)
         textView.setTextColor(textColor.toArgb())
+        textView.requestLayout()
       }
     )
+    onInfoClick?.let { click ->
+      MetricInfoButton(
+        onClick = click,
+        contentColor = textColor,
+        modifier = Modifier
+          .align(Alignment.TopEnd)
+          .padding(top = 8.dp, end = 8.dp)
+      )
+    }
   }
 }
 

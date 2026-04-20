@@ -23,7 +23,6 @@ class PreferencesManager(private val context: Context) {
         private val AUTH_COMPLETED_KEY = booleanPreferencesKey("auth_completed")
         private val PROFILE_PHOTO_PATH_KEY = stringPreferencesKey("profile_photo_path")
         private val PROFILE_PHONE_KEY = stringPreferencesKey("profile_phone")
-        private val KEEP_HISTORY_KEY = booleanPreferencesKey("keep_history")
     }
 
     val consentGiven: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -37,11 +36,12 @@ class PreferencesManager(private val context: Context) {
     }
     
     val themeType: Flow<ThemeType> = context.dataStore.data.map { preferences ->
-        val themeName = preferences[THEME_TYPE_KEY] ?: ThemeType.LIGHT.name
-        try {
-            ThemeType.valueOf(themeName)
-        } catch (e: IllegalArgumentException) {
-            ThemeType.LIGHT
+        val themeName = preferences[THEME_TYPE_KEY] ?: ThemeType.GLASS.name
+        when (themeName) {
+            ThemeType.LIGHT.name -> ThemeType.LIGHT
+            ThemeType.GLASS.name -> ThemeType.GLASS
+            "DARK" -> ThemeType.GLASS // ранее сохранённая тёмная тема
+            else -> ThemeType.GLASS
         }
     }
     
@@ -108,13 +108,4 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val keepHistory: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[KEEP_HISTORY_KEY] ?: true
-    }
-
-    suspend fun setKeepHistory(value: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEEP_HISTORY_KEY] = value
-        }
-    }
 }

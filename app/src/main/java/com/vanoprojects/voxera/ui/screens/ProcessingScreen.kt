@@ -24,16 +24,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import android.util.Log
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.audio.AudioUploadHelper
 import com.vanoprojects.voxera.data.AnalysisSession
 import com.vanoprojects.voxera.data.HistoryRepository
-import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.data.api.VoxeraApiClient
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -41,7 +41,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 @Composable
 fun ProcessingScreen(
-  prefsManager: PreferencesManager,
   historyRepository: HistoryRepository,
   onDone: () -> Unit
 ) {
@@ -62,7 +61,14 @@ fun ProcessingScreen(
 
     try {
       val result = withContext(Dispatchers.IO) {
-        val requestFile = file.asRequestBody("audio/ogg".toMediaTypeOrNull())
+        val mime = AudioUploadHelper.resolveMimeForApi(file, AnalysisSession.lastAudioMimeType)
+        Log.d(
+          "ProcessingScreen",
+          "analyze upload name=${file.name} size=${file.length()} mime=$mime"
+        )
+        val requestFile = file.asRequestBody(
+          mime.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType()
+        )
         val audioPart = MultipartBody.Part.createFormData("audio", file.name, requestFile)
         val analysisTypeBody = analysisType.toRequestBody("text/plain".toMediaTypeOrNull())
         VoxeraApiClient.api.analyze(audioPart, analysisTypeBody)
@@ -75,7 +81,7 @@ fun ProcessingScreen(
         AnalysisSession.lastResultJson = body?.let {
           com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(it)
         } ?: AnalysisSession.lastRawApiResponse ?: result.raw().toString()
-        if (body != null && prefsManager.keepHistory.first()) {
+        if (body != null) {
           historyRepository.addEntry(
             analysisType = AnalysisSession.analysisType,
             response = body,
@@ -85,7 +91,14 @@ fun ProcessingScreen(
       } else {
         AnalysisSession.lastAnalysisResponse = null
         AnalysisSession.lastRawApiResponse = null
-        AnalysisSession.lastResultJson = "Ошибка API: ${result.code()} ${result.message()}"
+        val errBody = try {
+          result.errorBody()?.string()?.takeIf { it.isNotBlank() }
+        } catch (_: Exception) {
+          null
+        }
+        val detail = errBody?.let { "\n\n$it" } ?: ""
+        AnalysisSession.lastResultJson =
+          "Ошибка API: ${result.code()} ${result.message()}$detail"
       }
     } catch (e: Exception) {
       e.printStackTrace()
@@ -97,11 +110,9 @@ fun ProcessingScreen(
   }
 
   Box(modifier = Modifier.fillMaxSize()) {
-    // Фон: для стеклянной темы - bg_stars, для светлой - bg_light_reverse, для темной - bg_clean
     val backgroundRes = when (theme.type) {
       ThemeType.GLASS -> R.drawable.bg_stars
       ThemeType.LIGHT -> R.drawable.bg_light_reverse
-      ThemeType.DARK -> R.drawable.bg_clean
     }
     Image(
       painter = painterResource(backgroundRes),
