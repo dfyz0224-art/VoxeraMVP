@@ -1,0 +1,128 @@
+package com.vanoprojects.voxera.legal
+
+/**
+ * Full Privacy Policy (English) for in-app display.
+ * Company: VOICElab Limited, Kazakhstan. Aligned for international users (GDPR where applicable, plus general wording).
+ */
+fun privacyPolicyFullTextEn(): String = """
+Privacy Policy and Personal Data Processing (for International Users)
+
+This Privacy Policy and Personal Data Processing Policy (the "Policy") is issued by Private company VOICElab Limited, BIN 260240901034, Z05H9M1, Dostyk St., 5, Yesil District, Astana, Kazakhstan (the "Company", "we", "us", or "our"), acting as a data controller for personal data described below.
+
+This Policy describes how we collect, use, store, and protect personal data in connection with the Voxera mobile application, our websites (if any), and related products and services (together, the "Services").
+
+We are committed to a high standard of personal data protection and to complying with applicable laws, including, where they apply:
+
+• Regulation (EU) 2016/679 (General Data Protection Regulation, "GDPR") if you are located in the European Union (EU) or the European Economic Area (EEA), or if the GDPR otherwise applies to our processing of your data;
+
+• The California Consumer Privacy Act (CCPA), as amended by the California Privacy Rights Act (CPRA), for California residents where applicable;
+
+• Other national or regional privacy and data protection laws that may apply depending on your location.
+
+1. GENERAL PROVISIONS AND LEGAL BASIS
+
+We process personal data only where we have a lawful basis. Under the GDPR, typical bases include:
+
+• Your consent (Art. 6(1)(a) GDPR) — e.g. optional marketing, certain cookies or similar technologies on the web, or specific optional features you activate.
+
+• Performance of a contract or steps at your request before a contract (Art. 6(1)(b) GDPR) — to provide the Services, manage your account, and respond to requests.
+
+• Legal obligation (Art. 6(1)(c) GDPR) — e.g. tax, accounting, or regulatory requirements where applicable.
+
+• Legitimate interests (Art. 6(1)(f) GDPR) — e.g. IT security, fraud prevention, service improvement, and limited direct marketing where permitted and subject to your rights (including the right to object where applicable).
+
+2. WHAT DATA WE COLLECT AND PROCESS
+
+Depending on how you use the Services, we may process:
+
+• Identification and contact data: name, job title, organization, email, phone number (e.g. if you contact us or register).
+
+• Account and contract-related data: order or subscription details, payment-related information processed by payment partners, and contact persons.
+
+• Interaction data: correspondence, feedback, support tickets, event participation.
+
+• Voice and audio data: recordings or audio files you upload or record in the app for analysis, and related metadata (e.g. duration, format), as necessary to provide voice-based analysis features.
+
+• Technical data: IP address, device type, operating system, app version, diagnostic logs, approximate location derived from IP (if collected), and similar identifiers. In mobile apps, advertising or analytics SDKs (if used) may collect device identifiers in line with their policies and your settings.
+
+• Data you voluntarily provide: text of messages, inquiries, and comments.
+
+We do not seek to collect special categories of personal data as defined in the GDPR (such as data revealing racial or ethnic origin, political opinions, health data in the special-category sense, etc.). Voice audio is processed for the stated analysis purposes; it is not intended to constitute a medical diagnosis.
+
+3. PURPOSES OF PROCESSING
+
+We process personal data for purposes including:
+
+• Providing, operating, securing, and improving the Services.
+
+• Communicating with you, including support, technical notices, updates, and security alerts.
+
+• Managing customer relationships and interaction history (e.g. CRM) where applicable.
+
+• Processing payments and fulfilling contracts with the help of payment processors.
+
+• Marketing communications where permitted by law and, where required, based on your consent or opt-in, with an option to unsubscribe.
+
+• Events, webinars, or conferences you sign up for.
+
+• Complying with legal obligations.
+
+• Fraud prevention, abuse detection, and network security.
+
+4. SHARING OF PERSONAL DATA
+
+We may share personal data with:
+
+• Affiliates and group companies for internal administration and consistent service delivery.
+
+• Service providers (processors) who assist us under our instructions and agreements (e.g. hosting, cloud infrastructure, analytics, payment processing, email delivery, customer support tools). We require appropriate confidentiality and security commitments.
+
+• Professional advisers (lawyers, auditors) when necessary.
+
+• Government authorities when required by applicable law.
+
+International transfers: The Company is established in Kazakhstan. If you access the Services from the EU/EEA, the UK, or other regions, your data may be transferred to and processed in Kazakhstan and in other countries where we or our processors operate (for example the United States or the EU for cloud regions). Where the GDPR applies, we rely on appropriate safeguards such as the European Commission’s Standard Contractual Clauses (SCCs) and supplementary measures as needed, or other lawful transfer mechanisms under Chapter V GDPR. Where other laws apply, we comply with applicable cross-border transfer requirements.
+
+We take steps designed to protect personal data during international transfers.
+
+5. DATA RETENTION
+
+We retain personal data only as long as necessary for the purposes described in this Policy, unless a longer period is required or permitted by law. After that, we delete or anonymize data in line with our retention schedules.
+
+6. YOUR RIGHTS
+
+Depending on where you live, you may have rights regarding your personal data, such as:
+
+• Access, rectification, erasure, restriction of processing, data portability, and objection to certain processing (including direct marketing).
+
+• Withdrawal of consent where processing is based on consent, without affecting the lawfulness of processing before withdrawal.
+
+• For California residents: rights under the CCPA/CPRA, including to know, delete, and opt out of certain “sales” or “sharing” of personal information as defined by California law (we do not sell personal information in the conventional sense of selling lists for money; any sharing with analytics or advertising partners is described in our practices and your device settings).
+
+• The right to lodge a complaint with a supervisory authority in your country of residence, place of work, or place of an alleged infringement (in particular in the EU/EEA).
+
+To exercise your rights, contact us at: info@avoice.tech or voice.lab.ltd@gmail.com
+
+We may need to verify your identity before fulfilling your request.
+
+7. SECURITY
+
+We implement appropriate technical and organizational measures (such as encryption where appropriate, access controls, and security assessments) to protect personal data. No method of transmission over the Internet or electronic storage is completely secure.
+
+8. CHANGES TO THIS POLICY
+
+We may update this Policy from time to time. The current version is shown in the app with the “Last updated” date below. For material changes, we will provide notice as required by applicable law (for example via in-app notice or, where we hold your email address, by email).
+
+9. CONTACT INFORMATION
+
+Private company VOICElab Limited
+BIN 260240901034
+Z05H9M1, Dostyk St., 5, Yesil District, Astana, Kazakhstan
+Email: voice.lab.ltd@gmail.com
+Data protection inquiries: info@avoice.tech
+
+EU representative (Art. 27 GDPR), where required:
+[To be appointed. Contact details will be published here once appointed.]
+
+Last updated: 14 February 2026
+""".trimIndent()
