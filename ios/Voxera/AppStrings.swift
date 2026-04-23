@@ -82,6 +82,11 @@ struct AppStrings: Equatable {
   let historyTypeEmostate: String
   let historyTypePsytype: String
   let historyEmpty: String
+  let statisticsButton: String
+  let statisticsTitle: String
+  let statisticsPeriodWeek: String
+  let statisticsPeriodMonth: String
+  let statisticsNoData: String
   let settingsTitle: String
   let themeTitle: String
   let themeGlass: String

@@ -1,7 +1,14 @@
 package com.vanoprojects.voxera.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +36,7 @@ import java.time.format.FormatStyle
 @Composable
 fun HistoryScreen(
   historyRepository: HistoryRepository,
+  onOpenStatistics: () -> Unit,
   onItemClick: (HistoryEntry) -> Unit
 ) {
   val theme = LocalVoxeraTheme.current
@@ -55,27 +63,34 @@ fun HistoryScreen(
     ) {
       Spacer(modifier = Modifier.height(10.dp))
 
+      Text(
+        text = strings.historyTitle,
+        style = MaterialTheme.typography.headlineSmall.copy(
+          fontWeight = FontWeight.SemiBold,
+          fontSize = 24.sp
+        ),
+        color = if (theme.type == ThemeType.LIGHT) {
+          colors.backgroundTextPrimary
+        } else {
+          colors.textPrimary
+        },
+        textAlign = TextAlign.Start,
+        modifier = Modifier.fillMaxWidth()
+      )
+      Spacer(modifier = Modifier.height(10.dp))
+      ThemedOutlinedButton(
+        text = strings.statisticsButton,
+        onClick = onOpenStatistics,
+        modifier = Modifier.fillMaxWidth()
+      )
+      Spacer(modifier = Modifier.height(8.dp))
+
       if (entries.isEmpty()) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
-            .fillMaxSize()
+            .weight(1f, fill = true)
         ) {
-          Text(
-            text = strings.historyTitle,
-            style = MaterialTheme.typography.headlineSmall.copy(
-              fontWeight = FontWeight.SemiBold,
-              fontSize = 24.sp
-            ),
-            color = if (theme.type == ThemeType.LIGHT) {
-              colors.backgroundTextPrimary
-            } else {
-              colors.textPrimary
-            },
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Start
-          )
-          Spacer(modifier = Modifier.height(12.dp))
           TextWithShadow(
             text = strings.historyEmpty,
             color = colors.textSecondary,

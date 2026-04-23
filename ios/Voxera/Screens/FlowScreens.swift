@@ -112,13 +112,9 @@ struct RecordingView: View {
             Circle()
               .fill(.ultraThinMaterial)
               .frame(width: 200, height: 200)
-            Group {
-              if UIImage(named: "ic_mic_2") != nil {
-                Image("ic_mic_2")
-              } else {
-                Image(systemName: "mic.circle.fill")
-              }
-            }
+            (UIImage(named: "ic_mic_2") != nil
+              ? Image("ic_mic_2")
+              : Image(systemName: "mic.circle.fill"))
               .resizable()
               .scaledToFit()
               .frame(width: 120, height: 120)

@@ -28,10 +28,19 @@ struct HistoryView: View {
       BackgroundImageName()
       ScrollView {
         VStack(alignment: .leading, spacing: 12) {
-          if history.entries.isEmpty {
+          HStack(alignment: .firstTextBaseline) {
             Text(s.historyTitle)
               .font(.title2.bold())
               .foregroundColor(titleColor)
+            Spacer()
+            Button { path.append(AppRoute.statistics) } label: {
+              Text(s.statisticsButton)
+                .font(.subheadline.weight(.semibold))
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(secondaryColor)
+          }
+          if history.entries.isEmpty {
             Text(s.historyEmpty).foregroundColor(secondaryColor)
           } else {
             ForEach(Array(history.entries.enumerated()), id: \.element.id) { index, entry in

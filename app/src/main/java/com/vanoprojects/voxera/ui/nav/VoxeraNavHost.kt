@@ -163,6 +163,7 @@ fun VoxeraNavHost(
     composable(Routes.History) {
       HistoryScreen(
         historyRepository = historyRepository,
+        onOpenStatistics = { navController.navigate(Routes.Statistics) },
         onItemClick = { entry ->
           AnalysisSession.lastAnalysisResponse = entry.toAnalysisResponse()
           AnalysisSession.analysisType = entry.analysisType
@@ -170,6 +171,12 @@ fun VoxeraNavHost(
           AnalysisSession.lastRawApiResponse = entry.rawApiResponse
           navController.navigate(Routes.Result)
         }
+      )
+    }
+    composable(Routes.Statistics) {
+      MoodStatisticsScreen(
+        historyRepository = historyRepository,
+        onBack = { navController.popBackStack() }
       )
     }
     composable(Routes.Settings) {
