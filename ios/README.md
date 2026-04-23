@@ -15,6 +15,10 @@ open Voxera.xcodeproj
 
 После `git pull`, если в проект добавлялись или удалялись `.swift` под `Voxera/`, снова выполните `xcodegen generate` в каталоге `ios`, иначе Xcode может не увидеть новые файлы и ругаться (например, `Cannot find 'StatisticsView' in scope`).
 
+**API:** без `Voxera/Secrets.xcconfig` (см. `Secrets.xcconfig.example`) запросы вернут `noToken`. В **Debug** можно задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables** без пересборки `Secrets.xcconfig`.
+
+**Debug:** кнопка **«Тест»** на экране записи копирует `Resources/audio_test.ogg` (как Android `assets/audio_test.ogg`) и сразу идёт в анализ.
+
 Или создайте в Xcode новый проект **iOS App** и перетащите папку `Voxera/` с теми же таргет‑настройками, что в `project.yml`.
 
 ## Секреты

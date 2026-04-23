@@ -13,8 +13,8 @@ struct ModeSelectView: View {
     ZStack {
       BackgroundImageName()
       ScrollView {
-        VStack(spacing: 16) {
-          Spacer().frame(height: 36)
+        VStack(spacing: 10) {
+          Spacer().frame(height: 24)
           Group {
             if UIImage(named: "ic_voxera_logo_text") != nil {
               Image("ic_voxera_logo_text").resizable().scaledToFit()
@@ -28,27 +28,30 @@ struct ModeSelectView: View {
             .font(.title3.bold())
             .foregroundColor(prefs.themeType == .light ? .white : .white)
             .frame(maxWidth: .infinity)
-          modeCard(
-            title: s.parentMode,
-            subtitle: s.parentModeSubtitle,
-            asset: "parent_2",
-            tag: "mom",
-            gradient: 0
-          )
-          modeCard(
-            title: s.universalMode,
-            subtitle: s.universalModeSubtitle,
-            asset: "universal_2",
-            tag: "teen",
-            gradient: 1
-          )
-          modeCard(
-            title: s.deepAnalysis,
-            subtitle: s.deepAnalysisSubtitle,
-            asset: "deep_2",
-            tag: "quick",
-            gradient: 2
-          )
+            .padding(.bottom, 2)
+          VStack(spacing: 8) {
+            modeCard(
+              title: s.parentMode,
+              subtitle: s.parentModeSubtitle,
+              asset: "parent_2",
+              tag: "mom",
+              gradient: 0
+            )
+            modeCard(
+              title: s.universalMode,
+              subtitle: s.universalModeSubtitle,
+              asset: "universal_2",
+              tag: "teen",
+              gradient: 1
+            )
+            modeCard(
+              title: s.deepAnalysis,
+              subtitle: s.deepAnalysisSubtitle,
+              asset: "deep_2",
+              tag: "quick",
+              gradient: 2
+            )
+          }
           HStack(spacing: 12) {
             navButton(s.history) {
               path.append(AppRoute.history)
@@ -80,10 +83,12 @@ struct ModeSelectView: View {
     }) {
       HStack(alignment: .top, spacing: 12) {
         Image(asset)
+          .renderingMode(.template)
           .resizable()
           .scaledToFit()
-          .frame(width: 72, height: 72)
-        VStack(alignment: .leading, spacing: 6) {
+          .frame(width: 64, height: 64)
+          .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 4) {
           Text(title)
             .font(.headline)
             .foregroundColor(.white)
@@ -92,9 +97,9 @@ struct ModeSelectView: View {
             .foregroundColor(.white.opacity(0.88))
         }
       }
-      .padding(.vertical, 8)
+      .padding(.vertical, 6)
     }
-    .frame(minHeight: 162)
+    .frame(minHeight: 128)
   }
 
   private func navButton(_ title: String, action: @escaping () -> Void) -> some View {

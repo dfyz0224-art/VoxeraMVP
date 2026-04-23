@@ -74,6 +74,7 @@ struct PrivacyPolicyView: View {
 struct RecordingView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var session: AnalysisSession
+  @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
   @StateObject private var recorder = AudioRecorderService()
   @State private var timerSec = 30
@@ -84,7 +85,7 @@ struct RecordingView: View {
   var s: AppStrings { locale.strings }
 
   var body: some View {
-    ZStack {
+    ZStack(alignment: .top) {
       BackgroundImageName()
       VStack(spacing: 24) {
         Spacer()
@@ -127,6 +128,21 @@ struct RecordingView: View {
         Spacer()
       }
       .padding()
+      #if DEBUG
+      HStack {
+        Spacer()
+        Button {
+          useTestBundleAudio()
+        } label: {
+          Text("Тест")
+            .font(.title3.weight(.semibold))
+            .foregroundColor(recordingTestButtonColor)
+        }
+        .buttonStyle(.plain)
+        .padding(20)
+        .frame(minWidth: 80, minHeight: 44)
+      }
+      #endif
     }
     .fileImporter(
       isPresented: $showImporter,
@@ -177,6 +193,30 @@ struct RecordingView: View {
       timerSec = 30
     } catch {}
   }
+
+  #if DEBUG
+  private var recordingTestButtonColor: Color {
+    switch prefs.themeType {
+    case .light:
+      return Color(red: 0.05, green: 0.11, blue: 0.23)
+    case .glass:
+      return .white.opacity(0.9)
+    }
+  }
+
+  /// `audio_test.ogg` в bundle (как Android debug).
+  private func useTestBundleAudio() {
+    guard let src = Bundle.main.url(forResource: "audio_test", withExtension: "ogg") else { return }
+    let dest = FileManager.default.temporaryDirectory.appendingPathComponent("recording_test.ogg")
+    try? FileManager.default.removeItem(at: dest)
+    do {
+      try FileManager.default.copyItem(at: src, to: dest)
+      session.recordedFileURL = dest
+      session.lastAudioMimeType = "audio/ogg"
+      path.append(AppRoute.processing)
+    } catch {}
+  }
+  #endif
 }
 
 struct ProcessingView: View {
@@ -233,7 +273,15 @@ struct ProcessingView: View {
     } catch {
       session.lastAnalysisResponse = nil
       session.lastRawApiResponse = nil
-      session.lastResultJson = "Ошибка: \(error)"
+      if let err = error as? VoxeraAPIError, case .noToken = err {
+        session.lastResultJson = """
+          Ошибка: нет API-токена (noToken).
+          1) Скопируйте ios/Voxera/Secrets.xcconfig.example → Secrets.xcconfig и укажите VOXERA_API_TOKEN (как в Android secrets.properties), пересоберите.
+          2) Либо в Debug: Product → Scheme → Edit Scheme… → Run → Environment Variables: VOXERA_API_TOKEN = <ваш_токен>
+          """
+      } else {
+        session.lastResultJson = "Ошибка: \(error)"
+      }
       path.append(AppRoute.result)
     }
   }
