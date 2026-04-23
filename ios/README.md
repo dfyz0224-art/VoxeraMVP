@@ -13,6 +13,8 @@ xcodegen generate
 open Voxera.xcodeproj
 ```
 
+После `git pull`, если в проект добавлялись или удалялись `.swift` под `Voxera/`, снова выполните `xcodegen generate` в каталоге `ios`, иначе Xcode может не увидеть новые файлы и ругаться (например, `Cannot find 'StatisticsView' in scope`).
+
 Или создайте в Xcode новый проект **iOS App** и перетащите папку `Voxera/` с теми же таргет‑настройками, что в `project.yml`.
 
 ## Секреты
