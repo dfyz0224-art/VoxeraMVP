@@ -74,3 +74,8 @@ struct VoxeraRootView: View {
     }
   }
 }
+
+// Старые экраны/кнопки: `path.append(AppRoute.statistics)` — тот же стек, что и `.history` (график настроения).
+extension AppRoute {
+  static var statistics: AppRoute { .history }
+}

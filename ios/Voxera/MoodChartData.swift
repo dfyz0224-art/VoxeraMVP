@@ -18,13 +18,6 @@ struct MoodChartResult {
   let windowEndMs: TimeInterval?
 }
 
-enum HistoryMoodPeriod: Equatable {
-  case last24
-  case week
-  case month
-  case customFromTo(from: Date, to: Date)
-}
-
 // MARK: - Build (aligned with Android MoodTimeSeries)
 
 enum MoodTimeSeriesBuild {
