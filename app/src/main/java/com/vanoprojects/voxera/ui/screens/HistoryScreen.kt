@@ -4,11 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,7 +42,6 @@ import java.time.format.FormatStyle
 @Composable
 fun HistoryScreen(
   historyRepository: HistoryRepository,
-  onOpenStatistics: () -> Unit,
   onItemClick: (HistoryEntry) -> Unit
 ) {
   val theme = LocalVoxeraTheme.current
@@ -56,59 +61,60 @@ fun HistoryScreen(
       VoxeraBackground {}
     }
 
-    Column(
+    LazyColumn(
       modifier = Modifier
         .fillMaxSize()
-        .padding(20.dp)
+        .windowInsetsPadding(WindowInsets.statusBars),
+      contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 20.dp, top = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-      Spacer(modifier = Modifier.height(10.dp))
-
-      Text(
-        text = strings.historyTitle,
-        style = MaterialTheme.typography.headlineSmall.copy(
-          fontWeight = FontWeight.SemiBold,
-          fontSize = 24.sp
-        ),
-        color = if (theme.type == ThemeType.LIGHT) {
-          colors.backgroundTextPrimary
-        } else {
-          colors.textPrimary
-        },
-        textAlign = TextAlign.Start,
-        modifier = Modifier.fillMaxWidth()
-      )
-      Spacer(modifier = Modifier.height(10.dp))
-      ThemedOutlinedButton(
-        text = strings.statisticsButton,
-        onClick = onOpenStatistics,
-        modifier = Modifier.fillMaxWidth()
-      )
-      Spacer(modifier = Modifier.height(8.dp))
-
+      item {
+        Text(
+          text = strings.historyTitle,
+          style = MaterialTheme.typography.headlineSmall.copy(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 24.sp,
+            shadow = if (theme.type == ThemeType.LIGHT) {
+              Shadow(
+                color = Color.Black.copy(alpha = 0.4f),
+                offset = Offset(0f, 1.5f),
+                blurRadius = 5f
+              )
+            } else {
+              Shadow()
+            }
+          ),
+          color = if (theme.type == ThemeType.LIGHT) {
+            Color.White
+          } else {
+            colors.textPrimary
+          },
+          textAlign = TextAlign.Start,
+          modifier = Modifier.fillMaxWidth()
+        )
+      }
+      item {
+        HistoryMoodChartCard(entries = entries)
+      }
       if (entries.isEmpty()) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f, fill = true)
-        ) {
+        item {
           TextWithShadow(
             text = strings.historyEmpty,
-            color = colors.textSecondary,
+            color = if (theme.type == ThemeType.LIGHT) {
+              colors.backgroundTextSecondary
+            } else {
+              colors.textSecondary
+            },
             style = MaterialTheme.typography.bodyLarge
           )
         }
       } else {
-        LazyColumn(
-          modifier = Modifier.fillMaxSize(),
-          verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          itemsIndexed(entries) { index, entry ->
-            HistoryItem(
-              entry = entry,
-              gradientIndex = index % 4,
-              onClick = { onItemClick(entry) }
-            )
-          }
+        itemsIndexed(entries) { index, entry ->
+          HistoryItem(
+            entry = entry,
+            gradientIndex = index % 4,
+            onClick = { onItemClick(entry) }
+          )
         }
       }
     }

@@ -15,7 +15,6 @@ enum AppRoute: Hashable {
   case forBusiness
   case questionnaire
   case profile
-  case statistics
 }
 
 struct VoxeraRootView: View {
@@ -55,7 +54,6 @@ struct VoxeraRootView: View {
           case .forBusiness: ForBusinessView(path: $path)
           case .questionnaire: QuestionnaireView(path: $path)
           case .profile: ProfileView(path: $path)
-          case .statistics: StatisticsView(path: $path)
           }
         }
       }

@@ -775,7 +775,7 @@ private fun ResultScreenEmostatePreview() {
         psyTypes = null,
         emoScales = listOf(
           EmoScale(1, "ability_to_attract", 87),
-          EmoScale(2, "expressivity", 68),
+          EmoScale(2, "energy_level", 68),
           EmoScale(3, "authority", 65),
           EmoScale(4, "kindness", 47),
           EmoScale(5, "stress_tolerance", 20)

@@ -12,7 +12,6 @@ object Routes {
   const val Result = "result"
   const val Share = "share"
   const val History = "history"
-  const val Statistics = "statistics"
   const val Settings = "settings"
   const val About = "about"
   const val AboutFullDescription = "about_full_description"

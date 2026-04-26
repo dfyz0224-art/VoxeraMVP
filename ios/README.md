@@ -13,7 +13,7 @@ xcodegen generate
 open Voxera.xcodeproj
 ```
 
-После `git pull`, если в проект добавлялись или удалялись `.swift` под `Voxera/`, снова выполните `xcodegen generate` в каталоге `ios`, иначе Xcode может не увидеть новые файлы и ругаться (например, `Cannot find 'StatisticsView' in scope`).
+После `git pull`, если в проект добавлялись или удалялись `.swift` под `Voxera/`, снова выполните `xcodegen generate` в каталоге `ios`, иначе Xcode может не увидеть новые файлы и ругаться (например, `Cannot find 'HistoryView' in scope`).
 
 **API:** без `Voxera/Secrets.xcconfig` (см. `Secrets.xcconfig.example`) запросы вернут `noToken`. В **Debug** можно задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables** без пересборки `Secrets.xcconfig`.
 

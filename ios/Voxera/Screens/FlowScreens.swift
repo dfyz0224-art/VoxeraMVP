@@ -81,69 +81,120 @@ struct RecordingView: View {
   @State private var isRecording = false
   @State private var timerExpired = false
   @State private var showImporter = false
+  @State private var breathScale: CGFloat = 1.0
+  #if DEBUG
+  @State private var testAudioError: String?
+  #endif
 
   var s: AppStrings { locale.strings }
+
+  private var titleColor: Color {
+    let c = prefs.themeType.colors()
+    return c.backgroundTextPrimary
+  }
+
+  private var secondaryOnBackground: Color {
+    prefs.themeType.colors().backgroundTextSecondary
+  }
 
   var body: some View {
     ZStack(alignment: .top) {
       BackgroundImageName()
-      VStack(spacing: 24) {
-        Spacer()
-        Text(isRecording ? s.recordingInProgress : s.voiceRecording)
-          .font(.title2.bold())
-          .foregroundColor(.white)
-          .multilineTextAlignment(.center)
-          .padding(.horizontal)
-        if isRecording {
-          if timerExpired {
-            Text(s.tapToStop).foregroundColor(.white).multilineTextAlignment(.center)
+      RecordingBreathReader(isRecording: isRecording)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+      VStack(spacing: 0) {
+        Spacer(minLength: 8)
+        VStack(spacing: 12) {
+          Text(isRecording ? s.recordingInProgress : s.voiceRecording)
+            .font(.system(size: 32, weight: .regular, design: .default))
+            .foregroundColor(titleColor)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal)
+          if isRecording {
+            if timerExpired {
+              Text(s.tapToStop)
+                .font(.body)
+                .foregroundColor(secondaryOnBackground)
+                .multilineTextAlignment(.center)
+            } else {
+              Text("\(timerSec) \(s.secondsShort)")
+                .font(.system(size: 32, weight: .semibold, design: .default))
+                .foregroundColor(titleColor)
+            }
           } else {
-            Text("\(timerSec) \(s.secondsShort)")
-              .font(.largeTitle.bold())
-              .foregroundColor(.white)
-          }
-        } else {
-          Text(s.tapToStart).foregroundColor(.white.opacity(0.95)).multilineTextAlignment(.center)
-          Text(s.saySentences).font(.callout).foregroundColor(.white.opacity(0.88)).multilineTextAlignment(.center)
-        }
-        Button {
-          Task { await toggleRecord() }
-        } label: {
-          ZStack {
-            Circle()
-              .fill(.ultraThinMaterial)
-              .frame(width: 200, height: 200)
-            (UIImage(named: "ic_mic_2") != nil
-              ? Image("ic_mic_2")
-              : Image(systemName: "mic.circle.fill"))
-              .resizable()
-              .scaledToFit()
-              .frame(width: 120, height: 120)
+            Text(s.tapToStart)
+              .font(.body)
+              .foregroundColor(secondaryOnBackground)
+              .multilineTextAlignment(.center)
+            Text(s.saySentences)
+              .font(.body)
+              .foregroundColor(secondaryOnBackground)
+              .multilineTextAlignment(.center)
           }
         }
-        .padding(.vertical, 24)
-        Button(s.uploadAudio) { showImporter = true }
-          .foregroundColor(.white)
-          .disabled(isRecording)
         Spacer()
+        ZStack {
+          if isRecording {
+            GeometryReader { g in
+              let c = CGPoint(x: g.size.width / 2, y: g.size.height / 2)
+              RecordingWaterRings(
+                isActive: isRecording,
+                center: c,
+                buttonRadius: RecordingVisualTokens.recordButtonSize / 2
+              )
+            }
+            .allowsHitTesting(false)
+          }
+          LiquidGlassRecordButton(
+            isRecording: isRecording,
+            breathScale: breathScale
+          ) {
+            Task { await toggleRecord() }
+          }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 320)
+        .padding(.vertical, 8)
+        Spacer()
+        Button(s.uploadAudio) { showImporter = true }
+          .foregroundColor(titleColor)
+          .padding(.vertical, 8)
+          .disabled(isRecording)
+        Spacer(minLength: 8)
       }
       .padding()
-      #if DEBUG
-      HStack {
-        Spacer()
-        Button {
-          useTestBundleAudio()
-        } label: {
-          Text("Тест")
-            .font(.title3.weight(.semibold))
-            .foregroundColor(recordingTestButtonColor)
-        }
-        .buttonStyle(.plain)
-        .padding(20)
-        .frame(minWidth: 80, minHeight: 44)
-      }
-      #endif
     }
+    .onPreferenceChange(RecordingBreathKey.self) { breathScale = $0 }
+    #if DEBUG
+    .overlay(alignment: .topTrailing) {
+      Button {
+        useTestBundleAudio()
+      } label: {
+        Text("Тест")
+          .font(.body.weight(.semibold))
+          .foregroundColor(recordingTestButtonColor)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 8)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.borderless)
+      .padding(.top, 6)
+      .padding(.trailing, 4)
+      .zIndex(99)
+      .accessibilityLabel("Test audio (debug)")
+    }
+    .alert("Тест: аудио", isPresented: Binding(
+      get: { testAudioError != nil },
+      set: { if !$0 { testAudioError = nil } }
+    )) {
+      Button("OK", role: .cancel) { testAudioError = nil }
+    } message: {
+      if let testAudioError {
+        Text(testAudioError)
+      }
+    }
+    #endif
     .fileImporter(
       isPresented: $showImporter,
       allowedContentTypes: [.mpeg4Audio, .mp3, .wav, .audio],
@@ -173,12 +224,17 @@ struct RecordingView: View {
 
   private func toggleRecord() async {
     if isRecording {
-      if let url = recorder.stopRecording() {
-        session.recordedFileURL = url
-        session.lastAudioMimeType = nil
-        isRecording = false
-        timerExpired = false
-        path.append(AppRoute.processing)
+      let url = recorder.stopRecording()
+      isRecording = false
+      timerExpired = false
+      if let url, FileManager.default.fileExists(atPath: url.path) {
+        let attrs = (try? FileManager.default.attributesOfItem(atPath: url.path)) as? [FileAttributeKey: Any]
+        let size = attrs?[.size] as? Int64 ?? 0
+        if size > 0 {
+          session.recordedFileURL = url
+          session.lastAudioMimeType = nil
+          path.append(AppRoute.processing)
+        }
       }
       return
     }
@@ -204,17 +260,37 @@ struct RecordingView: View {
     }
   }
 
-  /// `audio_test.ogg` в bundle (как Android debug).
+  /// Debug: bundle audio (as `android:copy from assets`); tries several known filenames.
   private func useTestBundleAudio() {
-    guard let src = Bundle.main.url(forResource: "audio_test", withExtension: "ogg") else { return }
-    let dest = FileManager.default.temporaryDirectory.appendingPathComponent("recording_test.ogg")
-    try? FileManager.default.removeItem(at: dest)
+    let candidates: [(name: String, ext: String, mime: String)] = [
+      ("audio_test", "ogg", "audio/ogg"),
+      ("audio_test_2", "ogg", "audio/ogg"),
+      ("test", "wav", "audio/wav")
+    ]
+    for c in candidates {
+      if let u = Bundle.main.url(forResource: c.name, withExtension: c.ext) {
+        tryRunTestCopy(
+          from: u, mime: c.mime, tried: candidates.map { "\($0.name).\($0.ext)" })
+        return
+      }
+    }
+    testAudioError =
+      "В bundle нет тестового файла. Добавьте `audio_test.ogg` в Voxera/Resources (или `test.wav`) и сгенерируйте проект."
+  }
+
+  private func tryRunTestCopy(from src: URL, mime: String, tried: [String]) {
+    testAudioError = nil
+    let ext = src.pathExtension.isEmpty ? "ogg" : src.pathExtension
+    let dest = FileManager.default.temporaryDirectory.appendingPathComponent("recording_test.\(ext)")
     do {
+      try? FileManager.default.removeItem(at: dest)
       try FileManager.default.copyItem(at: src, to: dest)
       session.recordedFileURL = dest
-      session.lastAudioMimeType = "audio/ogg"
+      session.lastAudioMimeType = mime
       path.append(AppRoute.processing)
-    } catch {}
+    } catch {
+      testAudioError = "Не удалось скопировать тест: \(error.localizedDescription). Проверьте, что в Copy Bundle Resources есть: \(tried.joined(separator: ", "))."
+    }
   }
   #endif
 }

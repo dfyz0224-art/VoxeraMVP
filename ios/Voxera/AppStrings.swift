@@ -86,6 +86,10 @@ struct AppStrings: Equatable {
   let statisticsTitle: String
   let statisticsPeriodWeek: String
   let statisticsPeriodMonth: String
+  let statisticsPeriod24h: String
+  let statisticsPeriodCustom: String
+  let statisticsDateFrom: String
+  let statisticsDateTo: String
   let statisticsNoData: String
   let settingsTitle: String
   let themeTitle: String
