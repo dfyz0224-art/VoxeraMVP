@@ -1,0 +1,505 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0BB1DFDF4F3CBE59A296FFF1 /* VoxeraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F86A8F56112BDA8FBA5C92 /* VoxeraApp.swift */; };
+		116416C8E6B1A7AE6456B48C /* AnalysisModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EBF95D2CC6149593C61E6A /* AnalysisModels.swift */; };
+		1585A072D713C8F10BF7C7F6 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A158E27421353584CCDC0AFF /* AppLanguage.swift */; };
+		2E1299B63254FFADFA6F8050 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CB739D7742354D19B0125241 /* Assets.xcassets */; };
+		2FA08539A83EE845C644097E /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5013032A96D4A7E838E0B6 /* AuthView.swift */; };
+		3E869F0632431D07C8786F2A /* Secrets.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC4FB764A0C16824F50729C /* Secrets.generated.swift */; };
+		5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D1A128C58FCA6A50AB90C91 /* HistoryStore.swift */; };
+		6A8A750D4C20098DD2BC2021 /* LocaleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322FD2758394C3FF13EA1056 /* LocaleStore.swift */; };
+		6C56E086F9D693DFC9B08DB1 /* StringPackRU.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */; };
+		6CBC8161EE72E16762462520 /* SecondaryScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB38EF60E2450679F313EA9 /* SecondaryScreens.swift */; };
+		70F7F86CC00ADAB715E66785 /* PrivacyPolicyFull.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3CEC570EAB51795E451C80DE /* PrivacyPolicyFull.txt */; };
+		7E5DAF758BFB2DCB287F5644 /* ResearchLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4134BA44A2D502F5B4EB75B /* ResearchLinks.swift */; };
+		851B168513FB4441D67A7592 /* PrivacyPolicyFullEN.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57734EB2F7D81911ECF837E /* PrivacyPolicyFullEN.swift */; };
+		8A666AB741C40D17C055CA75 /* AnalysisSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77233FA8CCA9DCEDAB8D9656 /* AnalysisSession.swift */; };
+		93518FC832D2275276892074 /* AppStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F3E5CB652591729F1042F9 /* AppStrings.swift */; };
+		9DE11EA1967C1E803EF690FB /* StringPackKZ.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BCE99317A9E0BED368F14B /* StringPackKZ.swift */; };
+		9EE16E4C5328F55255494444 /* VoxeraTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E2A88640C73C608F39DDBF7 /* VoxeraTheme.swift */; };
+		CE581B75F4E8DA2C5A1D14B5 /* StringPackEN.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC564971443F9590B2C3EBB /* StringPackEN.swift */; };
+		D20AE8F955310A980492380C /* ModeSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9AFCA967A653514358E710 /* ModeSelectView.swift */; };
+		D448079ED4A8564DA4BA5CC8 /* StringPackZH.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64086F5CC755D307A03B4EC /* StringPackZH.swift */; };
+		E2C43FA33A5D2C7D56FA1A27 /* AboutContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A498BE1D2E89D1C9AF7A066C /* AboutContent.swift */; };
+		E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */; };
+		EE2AD5773859DE9E1A94F3C8 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 058B7141F74A14C38A021234 /* OnboardingView.swift */; };
+		F008E350D80714CD46539BAF /* AudioRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1015339070C0F45AA03216 /* AudioRecorderService.swift */; };
+		F375F3452F9E4F3100F7E148 /* HistoryMoodPeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */; };
+		FB4FDFCC31306DCBC2A391A4 /* VoxeraAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BADCC0A3A4EE173FBEDE62 /* VoxeraAPI.swift */; };
+		FD7E012339A7458679617B52 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDE78D0BA8CD11DB3394391 /* SplashView.swift */; };
+		FE43AB9C5AABF36E865E59B0 /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512D8D0A412C425B40AF7FDC /* PreferencesStore.swift */; };
+		FEF7CBF7C425385D4C408545 /* VoxeraRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */; };
+		FF1AEB9BB29902212DA50BFC /* Secrets.xcconfig.example in Resources */ = {isa = PBXBuildFile; fileRef = 0C40B68329527405A9E8306F /* Secrets.xcconfig.example */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		058B7141F74A14C38A021234 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		0C40B68329527405A9E8306F /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
+		0F1015339070C0F45AA03216 /* AudioRecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderService.swift; sourceTree = "<group>"; };
+		1FDE78D0BA8CD11DB3394391 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		26EBF95D2CC6149593C61E6A /* AnalysisModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisModels.swift; sourceTree = "<group>"; };
+		322FD2758394C3FF13EA1056 /* LocaleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleStore.swift; sourceTree = "<group>"; };
+		36F86A8F56112BDA8FBA5C92 /* VoxeraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraApp.swift; sourceTree = "<group>"; };
+		3A9AFCA967A653514358E710 /* ModeSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeSelectView.swift; sourceTree = "<group>"; };
+		3CEC570EAB51795E451C80DE /* PrivacyPolicyFull.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = PrivacyPolicyFull.txt; sourceTree = "<group>"; };
+		512D8D0A412C425B40AF7FDC /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
+		63BADCC0A3A4EE173FBEDE62 /* VoxeraAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraAPI.swift; sourceTree = "<group>"; };
+		63BCE99317A9E0BED368F14B /* StringPackKZ.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackKZ.swift; sourceTree = "<group>"; };
+		6E2A88640C73C608F39DDBF7 /* VoxeraTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraTheme.swift; sourceTree = "<group>"; };
+		74F3E5CB652591729F1042F9 /* AppStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
+		77233FA8CCA9DCEDAB8D9656 /* AnalysisSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisSession.swift; sourceTree = "<group>"; };
+		7CB38EF60E2450679F313EA9 /* SecondaryScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondaryScreens.swift; sourceTree = "<group>"; };
+		9D1A128C58FCA6A50AB90C91 /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
+		A158E27421353584CCDC0AFF /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
+		A498BE1D2E89D1C9AF7A066C /* AboutContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutContent.swift; sourceTree = "<group>"; };
+		A7773004CC9FA74FFC95A4F3 /* Voxera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Voxera.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF5013032A96D4A7E838E0B6 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		BFC564971443F9590B2C3EBB /* StringPackEN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackEN.swift; sourceTree = "<group>"; };
+		C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowScreens.swift; sourceTree = "<group>"; };
+		CA57270AF50EC7B77BD8B807 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		CB739D7742354D19B0125241 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraRootView.swift; sourceTree = "<group>"; };
+		D57734EB2F7D81911ECF837E /* PrivacyPolicyFullEN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyFullEN.swift; sourceTree = "<group>"; };
+		E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackRU.swift; sourceTree = "<group>"; };
+		E4134BA44A2D502F5B4EB75B /* ResearchLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResearchLinks.swift; sourceTree = "<group>"; };
+		E64086F5CC755D307A03B4EC /* StringPackZH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackZH.swift; sourceTree = "<group>"; };
+		EAC4FB764A0C16824F50729C /* Secrets.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.generated.swift; sourceTree = "<group>"; };
+		F24C7A32F48037E39DF099C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryMoodPeriod.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0FCA5F89D30C94BE493B23B0 /* About */ = {
+			isa = PBXGroup;
+			children = (
+				A498BE1D2E89D1C9AF7A066C /* AboutContent.swift */,
+				E4134BA44A2D502F5B4EB75B /* ResearchLinks.swift */,
+			);
+			path = About;
+			sourceTree = "<group>";
+		};
+		40FA9C0D779C230795B0D559 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3CEC570EAB51795E451C80DE /* PrivacyPolicyFull.txt */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		520979B05319473B77B401C6 /* Voxera */ = {
+			isa = PBXGroup;
+			children = (
+				A158E27421353584CCDC0AFF /* AppLanguage.swift */,
+				74F3E5CB652591729F1042F9 /* AppStrings.swift */,
+				CB739D7742354D19B0125241 /* Assets.xcassets */,
+				CA57270AF50EC7B77BD8B807 /* Config.xcconfig */,
+				F24C7A32F48037E39DF099C4 /* Info.plist */,
+				322FD2758394C3FF13EA1056 /* LocaleStore.swift */,
+				EAC4FB764A0C16824F50729C /* Secrets.generated.swift */,
+				0C40B68329527405A9E8306F /* Secrets.xcconfig.example */,
+				36F86A8F56112BDA8FBA5C92 /* VoxeraApp.swift */,
+				0FCA5F89D30C94BE493B23B0 /* About */,
+				C2E2CD913073627B323EA2D1 /* Generated */,
+				5662184C03443BAA549A8EEB /* Legal */,
+				E704193D1A2A857CC6384542 /* Models */,
+				632858362E53C2D4C7DE7E27 /* Navigation */,
+				40FA9C0D779C230795B0D559 /* Resources */,
+				64110EBF79B5D826F6365332 /* Screens */,
+				C68A7EA58B79E4E28FF0AA85 /* Services */,
+				9FA0949242350B0722524DFF /* Theme */,
+			);
+			path = Voxera;
+			sourceTree = "<group>";
+		};
+		5662184C03443BAA549A8EEB /* Legal */ = {
+			isa = PBXGroup;
+			children = (
+				D57734EB2F7D81911ECF837E /* PrivacyPolicyFullEN.swift */,
+			);
+			path = Legal;
+			sourceTree = "<group>";
+		};
+		632858362E53C2D4C7DE7E27 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		64110EBF79B5D826F6365332 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				AF5013032A96D4A7E838E0B6 /* AuthView.swift */,
+				C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */,
+				3A9AFCA967A653514358E710 /* ModeSelectView.swift */,
+				058B7141F74A14C38A021234 /* OnboardingView.swift */,
+				7CB38EF60E2450679F313EA9 /* SecondaryScreens.swift */,
+				F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */,
+				1FDE78D0BA8CD11DB3394391 /* SplashView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		6763055F5B2E4DA561570FF6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A7773004CC9FA74FFC95A4F3 /* Voxera.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9FA0949242350B0722524DFF /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				6E2A88640C73C608F39DDBF7 /* VoxeraTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		C2E2CD913073627B323EA2D1 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				BFC564971443F9590B2C3EBB /* StringPackEN.swift */,
+				63BCE99317A9E0BED368F14B /* StringPackKZ.swift */,
+				E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */,
+				E64086F5CC755D307A03B4EC /* StringPackZH.swift */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		C68A7EA58B79E4E28FF0AA85 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				0F1015339070C0F45AA03216 /* AudioRecorderService.swift */,
+				9D1A128C58FCA6A50AB90C91 /* HistoryStore.swift */,
+				512D8D0A412C425B40AF7FDC /* PreferencesStore.swift */,
+				63BADCC0A3A4EE173FBEDE62 /* VoxeraAPI.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E704193D1A2A857CC6384542 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				26EBF95D2CC6149593C61E6A /* AnalysisModels.swift */,
+				77233FA8CCA9DCEDAB8D9656 /* AnalysisSession.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F98E9C30C75071AD35EC9043 = {
+			isa = PBXGroup;
+			children = (
+				520979B05319473B77B401C6 /* Voxera */,
+				6763055F5B2E4DA561570FF6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		654F9DDFB67EFC04568D3598 /* Voxera */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C147E8A4A77AF087FAFBE848 /* Build configuration list for PBXNativeTarget "Voxera" */;
+			buildPhases = (
+				C698BD23743CFA1ADDE9B0F3 /* Sources */,
+				2DA406BAD7B865BC133BEAD5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Voxera;
+			packageProductDependencies = (
+			);
+			productName = Voxera;
+			productReference = A7773004CC9FA74FFC95A4F3 /* Voxera.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BC608BCE48409ADB288968BE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					654F9DDFB67EFC04568D3598 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 988EF92D75F926236D9DEEB5 /* Build configuration list for PBXProject "Voxera" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F98E9C30C75071AD35EC9043;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6763055F5B2E4DA561570FF6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				654F9DDFB67EFC04568D3598 /* Voxera */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2DA406BAD7B865BC133BEAD5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2E1299B63254FFADFA6F8050 /* Assets.xcassets in Resources */,
+				70F7F86CC00ADAB715E66785 /* PrivacyPolicyFull.txt in Resources */,
+				FF1AEB9BB29902212DA50BFC /* Secrets.xcconfig.example in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C698BD23743CFA1ADDE9B0F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2C43FA33A5D2C7D56FA1A27 /* AboutContent.swift in Sources */,
+				116416C8E6B1A7AE6456B48C /* AnalysisModels.swift in Sources */,
+				8A666AB741C40D17C055CA75 /* AnalysisSession.swift in Sources */,
+				F375F3452F9E4F3100F7E148 /* HistoryMoodPeriod.swift in Sources */,
+				1585A072D713C8F10BF7C7F6 /* AppLanguage.swift in Sources */,
+				93518FC832D2275276892074 /* AppStrings.swift in Sources */,
+				F008E350D80714CD46539BAF /* AudioRecorderService.swift in Sources */,
+				2FA08539A83EE845C644097E /* AuthView.swift in Sources */,
+				E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */,
+				5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */,
+				6A8A750D4C20098DD2BC2021 /* LocaleStore.swift in Sources */,
+				D20AE8F955310A980492380C /* ModeSelectView.swift in Sources */,
+				EE2AD5773859DE9E1A94F3C8 /* OnboardingView.swift in Sources */,
+				FE43AB9C5AABF36E865E59B0 /* PreferencesStore.swift in Sources */,
+				851B168513FB4441D67A7592 /* PrivacyPolicyFullEN.swift in Sources */,
+				7E5DAF758BFB2DCB287F5644 /* ResearchLinks.swift in Sources */,
+				6CBC8161EE72E16762462520 /* SecondaryScreens.swift in Sources */,
+				3E869F0632431D07C8786F2A /* Secrets.generated.swift in Sources */,
+				FD7E012339A7458679617B52 /* SplashView.swift in Sources */,
+				CE581B75F4E8DA2C5A1D14B5 /* StringPackEN.swift in Sources */,
+				9DE11EA1967C1E803EF690FB /* StringPackKZ.swift in Sources */,
+				6C56E086F9D693DFC9B08DB1 /* StringPackRU.swift in Sources */,
+				D448079ED4A8564DA4BA5CC8 /* StringPackZH.swift in Sources */,
+				FB4FDFCC31306DCBC2A391A4 /* VoxeraAPI.swift in Sources */,
+				0BB1DFDF4F3CBE59A296FFF1 /* VoxeraApp.swift in Sources */,
+				FEF7CBF7C425385D4C408545 /* VoxeraRootView.swift in Sources */,
+				9EE16E4C5328F55255494444 /* VoxeraTheme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		19DEAB9F917E6B0BC584FF83 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		23AC27000CC2902A3CA5C85C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		789C2F72E1AD0FCCBC26041D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CA57270AF50EC7B77BD8B807 /* Config.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Voxera/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanoprojects.voxera;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		94AFED80700FA722BFA11586 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CA57270AF50EC7B77BD8B807 /* Config.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Voxera/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanoprojects.voxera;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		988EF92D75F926236D9DEEB5 /* Build configuration list for PBXProject "Voxera" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				19DEAB9F917E6B0BC584FF83 /* Debug */,
+				23AC27000CC2902A3CA5C85C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C147E8A4A77AF087FAFBE848 /* Build configuration list for PBXNativeTarget "Voxera" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				789C2F72E1AD0FCCBC26041D /* Debug */,
+				94AFED80700FA722BFA11586 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BC608BCE48409ADB288968BE /* Project object */;
+}
