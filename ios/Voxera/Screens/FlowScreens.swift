@@ -444,3 +444,5 @@ struct ShareView: View {
     }
   }
 }
+
+// Экран записи: LiquidGlassRecordButton, кольца и т.д. — в RecordingVisuals.swift (тот же target, что и FlowScreens).
