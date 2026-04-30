@@ -105,7 +105,7 @@ struct ModeSelectView: View {
   private func navButton(_ title: String, action: @escaping () -> Void) -> some View {
     let stroke = prefs.themeType == .light
       ? Color(red: 0.04, green: 0.09, blue: 0.16).opacity(0.35) : Color.clear
-    Button(action: action) {
+    return Button(action: action) {
       Text(title)
         .font(.headline)
         .foregroundColor(prefs.themeType == .light ? Color(red: 0.04, green: 0.09, blue: 0.16) : .white)
