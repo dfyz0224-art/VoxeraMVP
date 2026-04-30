@@ -1,7 +1,9 @@
 import Foundation
 import SwiftUI
 
-private func themedOutlineButton(_ title: String, fg: Color = .white, action: @escaping () -> Void) -> some View {
+private func themedOutlineButton(
+  _ title: String, fg: Color = .white, lightStroke: Color? = nil, action: @escaping () -> Void
+) -> some View {
   Button(action: action) {
     Text(title)
       .font(.headline)
@@ -12,6 +14,10 @@ private func themedOutlineButton(_ title: String, fg: Color = .white, action: @e
   }
   .buttonStyle(.plain)
   .foregroundColor(fg)
+  .overlay(
+    RoundedRectangle(cornerRadius: 12, style: .continuous)
+      .stroke(lightStroke ?? .clear, lineWidth: lightStroke != nil ? 1.5 : 0)
+  )
 }
 
 // MARK: - History
@@ -288,10 +294,10 @@ struct SettingsView: View {
           profileCard
           themeCard
           languageCard
-          themedOutlineButton(s.about, fg: outlineFg) { path.append(AppRoute.about) }
-          themedOutlineButton(s.privacyPolicyShortLink, fg: outlineFg) { path.append(AppRoute.privacyPolicy) }
-          themedOutlineButton(s.help, fg: outlineFg) { path.append(AppRoute.help) }
-          themedOutlineButton(s.forBusiness, fg: outlineFg) { path.append(AppRoute.forBusiness) }
+          themedOutlineButton(s.about, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.about) }
+          themedOutlineButton(s.privacyPolicyShortLink, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.privacyPolicy) }
+          themedOutlineButton(s.help, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.help) }
+          themedOutlineButton(s.forBusiness, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.forBusiness) }
         }
         .padding(20)
       }
@@ -414,7 +420,7 @@ struct AboutView: View {
             .font(.system(size: 72))
             .padding(.bottom, 4)
             .foregroundColor(prefs.themeType == .light ? prefs.themeType.colors().backgroundTextPrimary : .white)
-          themedOutlineButton(s.aboutFullDescriptionButton, fg: titleOnBackground) {
+          themedOutlineButton(s.aboutFullDescriptionButton, fg: titleOnBackground, lightStroke: prefs.themeType == .light ? titleOnBackground.opacity(0.4) : nil) {
             path.append(AppRoute.aboutFull)
           }
           Text(s.aboutBriefSectionTitle)
@@ -844,7 +850,10 @@ struct ProfileView: View {
       BackgroundImageName()
       ScrollView {
         VStack(alignment: .leading, spacing: 16) {
-          ThemedCard(gradientIndex: 0) {
+          ThemedCard(gradientIndex: 0, onTap: {
+            prefs.setAuthCompleted(false)
+            path = NavigationPath()
+          }) {
             VStack(alignment: .center, spacing: 16) {
               Text(s.profileGuestTitle)
                 .font(.title3.bold())
@@ -868,6 +877,13 @@ struct ProfileView: View {
               .background(Color.white.opacity(0.15))
               .cornerRadius(12)
           }
+          .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+              .stroke(
+                prefs.themeType == .light ? Color.white.opacity(0.5) : Color.clear,
+                lineWidth: prefs.themeType == .light ? 1.5 : 0
+              )
+          )
         }
         .padding(20)
       }

@@ -63,7 +63,7 @@ enum MoodTimeSeriesBuild {
       for s in scales {
         let raw = s.name.lowercased()
         m[raw] = s.value
-        let energyAliases = ["жизнерадостность", "cheerfulness", "vitality", "energy level"]
+        let energyAliases = ["жизнерадостность", "cheerfulness", "vitality", "energy level", "expressivity"]
         if energyAliases.contains(raw), m["energy_level"] == nil {
           m["energy_level"] = s.value
         }
@@ -421,6 +421,93 @@ struct MoodLineChartView: View {
 
 enum MoodStatisticsData {
   static var scaleKeys: [String] { MoodTimeSeriesBuild.scaleKeys }
+
+  /// Имя из API → канонический ключ (как Android `MoodTimeSeries` / алиасы).
+  static func canonicalEmoKey(_ raw: String) -> String {
+    let s = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+    let aliases: [String: String] = [
+      "expressivity": "energy_level",
+      "жизнерадостность": "energy_level",
+      "cheerfulness": "energy_level",
+      "vitality": "energy_level",
+      "energy level": "energy_level",
+      "ability to attract": "ability_to_attract",
+      "openness to new": "openness_to_new",
+      "emotional confidence": "emotional_confidence",
+      "stress tolerance": "stress_tolerance",
+      "person manifestation": "person_manifestation",
+      "person harmonicity": "person_harmonicity",
+      "ability to set goals": "ability_to_set_goals",
+      "ability to assert": "ability_to_assert",
+      "self control": "self_control",
+      "emo engage": "emo_engage"
+    ]
+    if let c = aliases[s] { return c }
+    return s.replacingOccurrences(of: " ", with: "_")
+  }
+
+  /// Подпись для экрана результата по языку приложения.
+  static func emoScaleDisplayName(apiName: String, language: AppLanguage) -> String {
+    if apiName.unicodeScalars.contains(where: { (0x0400...0x04FF).contains($0.value) }) {
+      return apiName
+    }
+    let key = canonicalEmoKey(apiName)
+    let sixPack = label(forKey: key, language: language)
+    if sixPack != key { return sixPack }
+    if let e = extendedLabel(key: key, language: language) { return e }
+    return apiName.replacingOccurrences(of: "_", with: " ")
+  }
+
+  private static func extendedLabel(key: String, language: AppLanguage) -> String? {
+    let k = key.lowercased()
+    switch language {
+    case .ru: return extraRu[k]
+    case .en: return extraEn[k]
+    case .zh: return extraZh[k] ?? extraEn[k]
+    case .kz: return extraKz[k] ?? extraEn[k]
+    }
+  }
+
+  private static let extraRu: [String: String] = [
+    "ability_to_attract": "Притягательность",
+    "expressivity": "Экспрессивность",
+    "person_manifestation": "Демонстративность",
+    "kindness": "Дружелюбие",
+    "openness_to_new": "Открытость к опыту",
+    "ability_to_set_goals": "Реализованность",
+    "ability_to_assert": "Независимость",
+    "emotional_confidence": "Эмоциональность"
+  ]
+  private static let extraEn: [String: String] = [
+    "ability_to_attract": "Ability to attract",
+    "expressivity": "Expressivity",
+    "person_manifestation": "Demonstration",
+    "kindness": "Friendliness",
+    "openness_to_new": "Openness to experience",
+    "ability_to_set_goals": "Goal achievement",
+    "ability_to_assert": "Assertiveness",
+    "emotional_confidence": "Emotionality"
+  ]
+  private static let extraZh: [String: String] = [
+    "ability_to_attract": "吸引力",
+    "expressivity": "表现力",
+    "person_manifestation": "外显性",
+    "kindness": "亲和力",
+    "openness_to_new": "对新体验的开放度",
+    "ability_to_set_goals": "目标实现",
+    "ability_to_assert": "自信坚持",
+    "emotional_confidence": "情绪表达"
+  ]
+  private static let extraKz: [String: String] = [
+    "ability_to_attract": "Тартылымдылық",
+    "expressivity": "Экспрессивтілік",
+    "person_manifestation": "Демонстративтілік",
+    "kindness": "Жақындық",
+    "openness_to_new": "Жаңа тәжірибеге ашықтық",
+    "ability_to_set_goals": "Мақсатқа жету",
+    "ability_to_assert": "Бәсекелестік",
+    "emotional_confidence": "Эмоционалдылық"
+  ]
 
   static func label(forKey key: String, language: AppLanguage) -> String {
     let k = key.lowercased()

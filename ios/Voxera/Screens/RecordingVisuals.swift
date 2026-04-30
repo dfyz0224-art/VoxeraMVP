@@ -97,8 +97,8 @@ struct RecordingBreathReader: View {
       let elapsed = context.date.timeIntervalSince(t0)
       let phase = elapsed / period * 2 * .pi
       let scale: CGFloat = isRecording
-        ? 1.0 + 0.06 * sin(phase)
-        : 1.0 + 0.02 * sin(phase)
+        ? 0.94 + 0.12 * (0.5 + 0.5 * sin(phase))
+        : 0.98 + 0.04 * (0.5 + 0.5 * sin(phase))
       Color.clear
         .preference(key: RecordingBreathKey.self, value: scale)
     }
@@ -181,6 +181,20 @@ struct LiquidGlassRecordButton: View {
       }
       .frame(width: RecordingVisualTokens.recordButtonSize, height: RecordingVisualTokens.recordButtonSize)
       .scaleEffect(breathScale)
+      .overlay {
+        Circle()
+          .stroke(
+            LinearGradient(
+              colors: [
+                glow.opacity(voxeraTheme == .light ? 0.75 : 0.5),
+                Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.55 : 0.35)
+              ],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            ),
+            lineWidth: voxeraTheme == .light ? 2.4 : 1.6
+          )
+      }
       .shadow(
         color: glow.opacity(isRecording ? 0.32 : 0.18),
         radius: isRecording ? 32 : 20,

@@ -363,59 +363,305 @@ struct ProcessingView: View {
   }
 }
 
+// MARK: - Result helpers (parity with Android ResultScreen)
+
+private func formatPsyTypeNameIOS(_ name: String) -> String {
+  guard let f = name.first else { return name }
+  return String(f).uppercased() + name.dropFirst().lowercased()
+}
+
+private func stripHtmlTagsIOS(_ html: String) -> String {
+  html.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+    .replacingOccurrences(of: "&nbsp;", with: " ")
+    .replacingOccurrences(of: " &lt; ", with: "<")
+    .trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+private func extractDescriptionFromSession(_ session: AnalysisSession) -> String {
+  let fromModel = session.lastAnalysisResponse?.result?.description?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+  if !fromModel.isEmpty { return fromModel }
+  if let raw = session.lastRawApiResponse, let d = extractDescFromJsonString(raw), !d.isEmpty { return d }
+  if let j = session.lastResultJson, j.hasPrefix("{"), let d = extractDescFromJsonString(j), !d.isEmpty { return d }
+  return ""
+}
+
+private func extractDescFromJsonString(_ jsonStr: String) -> String? {
+  guard let data = jsonStr.data(using: .utf8),
+    let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+  else { return nil }
+  if let result = obj["result"] as? [String: Any], let desc = result["description"] as? String { return desc }
+  if let desc = obj["description"] as? String { return desc }
+  return nil
+}
+
 struct ResultView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var session: AnalysisSession
   @EnvironmentObject private var locale: LocaleStore
+  @EnvironmentObject private var prefs: PreferencesStore
 
   var s: AppStrings { locale.strings }
+
+  private var lang: AppLanguage { prefs.appLanguage }
+  private var themeColors: ThemeColors { prefs.themeType.colors() }
+
+  private var titleColor: Color {
+    prefs.themeType == .light ? .white : themeColors.backgroundTextPrimary
+  }
+
+  private var secondaryColor: Color {
+    prefs.themeType == .light ? Color.white.opacity(0.88) : themeColors.backgroundTextSecondary
+  }
 
   var body: some View {
     ZStack {
       BackgroundImageName()
       ScrollView {
         VStack(alignment: .leading, spacing: 16) {
-          Text(s.result).font(.title.bold()).foregroundColor(.white)
+          Text(s.result)
+            .font(.title.bold())
+            .foregroundColor(titleColor)
+            .frame(maxWidth: .infinity, alignment: .center)
+
           if let r = session.lastAnalysisResponse {
-            if session.analysisType == "psytype" {
-              Text(s.psytypeResultTitle).foregroundColor(.white.opacity(0.9))
-            } else {
-              Text(s.emostateResultTitle).foregroundColor(.white.opacity(0.9))
-            }
-            if let desc = r.result?.description {
-              Text(desc).foregroundColor(.white).padding(.vertical, 8)
-            }
-            if let scales = r.result?.emoScales {
-              ForEach(Array(scales.enumerated()), id: \.offset) { _, sc in
-                HStack {
-                  Text(sc.name)
-                  Spacer()
-                  Text("\(sc.value)")
-                }
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Color.white.opacity(0.08))
-                .cornerRadius(12)
+            if session.analysisType == "psytype", let types = r.result?.psyTypes, !types.isEmpty {
+              psytypeContent(types: types, descriptionRaw: extractDescriptionFromSession(session))
+            } else if session.analysisType == "emostate", let scales = r.result?.emoScales, !scales.isEmpty {
+              emostateContent(scales: scales, descriptionRaw: extractDescriptionFromSession(session))
+            } else if session.analysisType == "psytype" {
+              let desc = stripHtmlTagsIOS(extractDescriptionFromSession(session))
+              if !desc.isEmpty {
+                Text(s.psytypeResultTitle)
+                  .font(.title3.weight(.semibold))
+                  .foregroundColor(titleColor)
+                  .multilineTextAlignment(.center)
+                  .frame(maxWidth: .infinity)
+                Text(desc)
+                  .font(.body)
+                  .foregroundColor(secondaryColor)
+                  .padding(14)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                  .background(
+                    LinearGradient(colors: themeColors.cardGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                  )
+                  .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+              } else if let raw = session.lastResultJson, !raw.isEmpty {
+                Text(raw).font(.system(.body, design: .monospaced)).foregroundColor(titleColor)
+              } else {
+                Text(s.shareNoData).foregroundColor(secondaryColor)
               }
+            } else if let raw = session.lastResultJson, !raw.isEmpty {
+              Text(raw).font(.system(.body, design: .monospaced)).foregroundColor(titleColor)
+            } else {
+              Text(s.shareNoData).foregroundColor(secondaryColor)
             }
-          } else if let err = session.lastResultJson {
-            Text(err).foregroundColor(.white)
-          }
-          HStack {
+
+          HStack(spacing: 12) {
             Button(s.newAnalysis) {
               path = NavigationPath()
             }
             .buttonStyle(.borderedProminent)
-            Spacer()
+            .tint(.white.opacity(0.35))
+            Spacer(minLength: 8)
             Button(s.share) { path.append(AppRoute.share) }
+              .foregroundColor(titleColor)
             Button(s.history) { path.append(AppRoute.history) }
+              .foregroundColor(titleColor)
           }
+          .padding(.top, 8)
         }
         .padding(20)
       }
     }
   }
-}
+
+  @ViewBuilder
+  private func psytypeContent(types: [PsyType], descriptionRaw: String) -> some View {
+    let sorted = types.sorted { $0.value > $1.value }
+    let leading = sorted.first
+    let active = sorted.dropFirst().first
+    let desc = stripHtmlTagsIOS(descriptionRaw)
+
+    Text(s.psytypeResultTitle)
+      .font(.title3.weight(.semibold))
+      .foregroundColor(titleColor)
+      .multilineTextAlignment(.center)
+      .frame(maxWidth: .infinity)
+
+    leadingActivePsyCard(
+      leading: leading.map { (formatPsyTypeNameIOS($0.name), $0.value) },
+      active: active.map { (formatPsyTypeNameIOS($0.name), $0.value) }
+    )
+
+    Text("\(s.psytypeAllTypes):")
+      .font(.headline)
+      .foregroundColor(titleColor)
+      .padding(.top, 8)
+
+    ForEach(Array(sorted.enumerated()), id: \.offset) { _, pt in
+      psyTypeRow(name: formatPsyTypeNameIOS(pt.name), value: pt.value)
+    }
+
+    if !desc.isEmpty {
+      Text(s.psytypeReportTitle)
+        .font(.headline)
+        .foregroundColor(titleColor)
+        .padding(.top, 12)
+      Text(desc)
+        .font(.body)
+        .foregroundColor(secondaryColor)
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+          LinearGradient(colors: themeColors.cardGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+          RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .stroke(themeColors.borderGlass, lineWidth: 1)
+        )
+    }
+  }
+
+  private func leadingActivePsyCard(
+    leading: (String, Double)?,
+    active: (String, Double)?
+  ) -> some View {
+    let l = leading ?? ("—", 0)
+    let a = active ?? ("—", 0)
+    return VStack(alignment: .leading, spacing: 10) {
+      Text("\(s.leadingType): \(l.0) (\(String(format: "%.2f", l.1))%)")
+        .font(.headline)
+        .foregroundColor(themeColors.textPrimary)
+      Text("\(s.activeType): \(a.0) (\(String(format: "%.2f", a.1))%)")
+        .font(.subheadline.weight(.semibold))
+        .foregroundColor(themeColors.textPrimary)
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(
+      LinearGradient(colors: themeColors.cardGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    .overlay(
+      RoundedRectangle(cornerRadius: 14, style: .continuous)
+        .stroke(themeColors.borderGlass, lineWidth: 1)
+    )
+  }
+
+  private func psyTypeRow(name: String, value: Double) -> some View {
+    let progress = CGFloat(min(1, max(0, value / 100)))
+    return VStack(alignment: .leading, spacing: 8) {
+      HStack {
+        Text("\(name):")
+          .font(.body.weight(.medium))
+          .foregroundColor(themeColors.textPrimary)
+        Spacer()
+        Text("\(String(format: "%.2f", value))%")
+          .font(.body.weight(.semibold))
+          .foregroundColor(themeColors.textPrimary)
+      }
+      GeometryReader { g in
+        ZStack(alignment: .leading) {
+          Capsule()
+            .fill(Color.white.opacity(0.22))
+            .frame(height: 6)
+          Capsule()
+            .fill(Color.white.opacity(0.95))
+            .frame(width: max(4, g.size.width * progress), height: 6)
+        }
+      }
+      .frame(height: 6)
+    }
+    .padding(14)
+    .background(
+      LinearGradient(colors: themeColors.cardGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    .overlay(
+      RoundedRectangle(cornerRadius: 14, style: .continuous)
+        .stroke(themeColors.borderGlass, lineWidth: 1)
+    )
+  }
+
+  @ViewBuilder
+  private func emostateContent(scales: [EmoScale], descriptionRaw: String) -> some View {
+    let sorted = scales.sorted { $0.value > $1.value }
+    let desc = stripHtmlTagsIOS(descriptionRaw)
+
+    Text(s.emostateResultTitle)
+      .font(.title3.weight(.semibold))
+      .foregroundColor(titleColor)
+      .multilineTextAlignment(.center)
+      .frame(maxWidth: .infinity)
+
+    Text("\(s.emostateParameters):")
+      .font(.headline)
+      .foregroundColor(titleColor)
+
+    ForEach(Array(sorted.enumerated()), id: \.offset) { _, sc in
+      emoScaleRow(
+        label: MoodStatisticsData.emoScaleDisplayName(apiName: sc.name, language: lang),
+        value: sc.value
+      )
+    }
+
+    if !desc.isEmpty {
+      Text(s.emostateReportTitle)
+        .font(.headline)
+        .foregroundColor(titleColor)
+        .padding(.top, 12)
+      Text(desc)
+        .font(.body)
+        .foregroundColor(secondaryColor)
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+          LinearGradient(colors: themeColors.cardGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+          RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .stroke(themeColors.borderGlass, lineWidth: 1)
+        )
+    }
+  }
+
+  private func emoScaleRow(label: String, value: Int) -> some View {
+    let progress = CGFloat(min(1, max(0, Double(value) / 100)))
+    return VStack(alignment: .leading, spacing: 8) {
+      HStack {
+        Text("\(label):")
+          .font(.body.weight(.medium))
+          .foregroundColor(themeColors.textPrimary)
+        Spacer()
+        Text("\(value)")
+          .font(.body.weight(.semibold))
+          .foregroundColor(themeColors.textPrimary)
+      }
+      GeometryReader { g in
+        ZStack(alignment: .leading) {
+          Capsule()
+            .fill(Color.white.opacity(0.22))
+            .frame(height: 6)
+          Capsule()
+            .fill(Color.white.opacity(0.95))
+            .frame(width: max(4, g.size.width * progress), height: 6)
+        }
+      }
+      .frame(height: 6)
+    }
+    .padding(14)
+    .background(
+      LinearGradient(colors: themeColors.cardGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    .overlay(
+      RoundedRectangle(cornerRadius: 14, style: .continuous)
+        .stroke(themeColors.borderGlass, lineWidth: 1)
+    )
+  }
+
 
 struct ShareView: View {
   @EnvironmentObject private var session: AnalysisSession

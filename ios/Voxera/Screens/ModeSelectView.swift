@@ -103,6 +103,8 @@ struct ModeSelectView: View {
   }
 
   private func navButton(_ title: String, action: @escaping () -> Void) -> some View {
+    let stroke = prefs.themeType == .light
+      ? Color(red: 0.04, green: 0.09, blue: 0.16).opacity(0.35) : Color.clear
     Button(action: action) {
       Text(title)
         .font(.headline)
@@ -112,5 +114,9 @@ struct ModeSelectView: View {
         .background(Color.white.opacity(prefs.themeType == .light ? 0.55 : 0.12))
         .cornerRadius(16)
     }
+    .overlay(
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .stroke(stroke, lineWidth: prefs.themeType == .light ? 1.5 : 0)
+    )
   }
 }
