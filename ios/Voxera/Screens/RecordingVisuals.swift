@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 
+// Вынесено из FlowScreens: подключите файл в Target Membership приложения Voxera (как HistoryMoodPeriod.swift).
 // Mirrors Android `RecordingScreen.kt` — liquid glass, neon rim, water rings, breathing scale.
 
 enum RecordingVisualTokens {
