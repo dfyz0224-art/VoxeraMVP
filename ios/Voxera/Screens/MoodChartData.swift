@@ -1,6 +1,9 @@
 import Foundation
 import SwiftUI
 
+// График настроения для History: MoodLineChartView, MoodTimeSeriesBuild, MoodStatisticsData.
+// Лежит рядом с SecondaryScreens — убедитесь, что файл в Target Membership приложения Voxera.
+
 // MARK: - Models
 
 struct MoodDayModel: Identifiable {
