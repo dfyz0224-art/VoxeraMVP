@@ -455,6 +455,7 @@ struct ResultView: View {
             } else {
               Text(s.shareNoData).foregroundColor(secondaryColor)
             }
+          }
 
           HStack(spacing: 12) {
             Button(s.newAnalysis) {
@@ -661,7 +662,7 @@ struct ResultView: View {
         .stroke(themeColors.borderGlass, lineWidth: 1)
     )
   }
-
+}
 
 struct ShareView: View {
   @EnvironmentObject private var session: AnalysisSession
