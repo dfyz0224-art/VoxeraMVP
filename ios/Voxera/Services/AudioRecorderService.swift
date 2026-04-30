@@ -10,7 +10,10 @@ final class AudioRecorderService: NSObject, ObservableObject {
   private var fileURL: URL?
 
   func requestPermission() async -> Bool {
-    await withCheckedContinuation { cont in
+    if #available(iOS 17.0, *) {
+      return await AVAudioApplication.requestRecordPermission()
+    }
+    return await withCheckedContinuation { cont in
       AVAudioSession.sharedInstance().requestRecordPermission { ok in
         cont.resume(returning: ok)
       }
