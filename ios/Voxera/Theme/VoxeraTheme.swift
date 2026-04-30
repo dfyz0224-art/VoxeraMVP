@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ThemeColors {
   let backgroundTextPrimary: Color
@@ -60,6 +61,42 @@ struct BackgroundImageName: View {
           .ignoresSafeArea()
       }
     }
+  }
+}
+
+/// Как на Android `RecordingScreen`: для светлой темы — `bg_light_reverse` (фон для liquid/blur).
+struct RecordingScreenBackground: View {
+  @Environment(\.voxeraTheme) private var theme
+  var body: some View {
+    Group {
+      switch theme {
+      case .light:
+        Image("bg_light_reverse")
+          .resizable()
+          .ignoresSafeArea()
+      case .glass:
+        Image("bg_stars")
+          .resizable()
+          .ignoresSafeArea()
+      }
+    }
+  }
+}
+
+/// Явный светлый/тёмный `UIBlurEffect`: не зависит от глобального `ColorScheme` так же неоднозначно, как `Material` в SwiftUI.
+struct UIKitBlurMaterialCircle: UIViewRepresentable {
+  var isLight: Bool
+
+  func makeUIView(context: Context) -> UIVisualEffectView {
+    let style: UIBlurEffect.Style = isLight ? .systemUltraThinMaterialLight : .systemUltraThinMaterialDark
+    let v = UIVisualEffectView(effect: UIBlurEffect(style: style))
+    v.clipsToBounds = true
+    return v
+  }
+
+  func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
+    let style: UIBlurEffect.Style = isLight ? .systemUltraThinMaterialLight : .systemUltraThinMaterialDark
+    uiView.effect = UIBlurEffect(style: style)
   }
 }
 

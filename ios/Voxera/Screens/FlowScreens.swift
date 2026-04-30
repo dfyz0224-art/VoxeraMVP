@@ -71,6 +71,75 @@ struct PrivacyPolicyView: View {
   }
 }
 
+private struct RecordingBlinkModifier: ViewModifier {
+  var active: Bool
+
+  func body(content: Content) -> some View {
+    Group {
+      if active {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: false)) { _ in
+          let t = Date().timeIntervalSinceReferenceDate
+          let a = CGFloat(0.6 + 0.4 * (0.5 + 0.5 * sin(t * 2 * .pi / 1.2)))
+          content.opacity(a)
+        }
+      } else {
+        content.opacity(1)
+      }
+    }
+  }
+}
+
+/// Тексты над кнопкой записи — позиция и типографика как в Android `RecordingScreen`.
+private struct RecordingScreenTitleOverlay: View {
+  var isRecording: Bool
+  var timerExpired: Bool
+  var timerSec: Int
+  var titleColor: Color
+  var secondary: Color
+  var s: AppStrings
+
+  var body: some View {
+    VStack(spacing: 0) {
+      Text(isRecording ? s.recordingInProgress : s.voiceRecording)
+        .font(.system(size: 40, weight: .regular))
+        .kerning(1.6)
+        .foregroundColor(titleColor)
+        .multilineTextAlignment(.center)
+        .modifier(RecordingBlinkModifier(active: isRecording))
+        .padding(.bottom, 20)
+
+      if !isRecording {
+        Text(s.tapToStart)
+          .font(.system(size: 20, weight: .regular))
+          .foregroundColor(secondary)
+          .multilineTextAlignment(.center)
+          .padding(.bottom, 12)
+        Text(s.saySentences)
+          .font(.system(size: 20, weight: .regular))
+          .foregroundColor(secondary)
+          .multilineTextAlignment(.center)
+          .padding(.bottom, 24)
+      } else if timerExpired {
+        Text(s.tapToStop)
+          .font(.system(size: 20, weight: .regular))
+          .foregroundColor(secondary)
+          .multilineTextAlignment(.center)
+          .padding(.bottom, 24)
+      }
+
+      if isRecording && !timerExpired {
+        Text("\(timerSec) \(s.secondsShort)")
+          .font(.system(size: 32, weight: .semibold))
+          .foregroundColor(titleColor)
+          .padding(.top, 8)
+          .padding(.bottom, 48)
+      }
+    }
+    .padding(.horizontal, 4)
+    .allowsHitTesting(false)
+  }
+}
+
 struct RecordingView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var session: AnalysisSession
@@ -99,41 +168,13 @@ struct RecordingView: View {
 
   var body: some View {
     ZStack(alignment: .top) {
-      BackgroundImageName()
+      RecordingScreenBackground()
       RecordingBreathReader(isRecording: isRecording)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
       VStack(spacing: 0) {
-        Spacer(minLength: 8)
-        VStack(spacing: 12) {
-          Text(isRecording ? s.recordingInProgress : s.voiceRecording)
-            .font(.system(size: 32, weight: .regular, design: .default))
-            .foregroundColor(titleColor)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal)
-          if isRecording {
-            if timerExpired {
-              Text(s.tapToStop)
-                .font(.body)
-                .foregroundColor(secondaryOnBackground)
-                .multilineTextAlignment(.center)
-            } else {
-              Text("\(timerSec) \(s.secondsShort)")
-                .font(.system(size: 32, weight: .semibold, design: .default))
-                .foregroundColor(titleColor)
-            }
-          } else {
-            Text(s.tapToStart)
-              .font(.body)
-              .foregroundColor(secondaryOnBackground)
-              .multilineTextAlignment(.center)
-            Text(s.saySentences)
-              .font(.body)
-              .foregroundColor(secondaryOnBackground)
-              .multilineTextAlignment(.center)
-          }
-        }
-        Spacer()
+        Spacer(minLength: 24)
+        Spacer(minLength: 0)
         ZStack {
           if isRecording {
             GeometryReader { g in
@@ -152,11 +193,20 @@ struct RecordingView: View {
           ) {
             Task { await toggleRecord() }
           }
+          RecordingScreenTitleOverlay(
+            isRecording: isRecording,
+            timerExpired: timerExpired,
+            timerSec: timerSec,
+            titleColor: titleColor,
+            secondary: secondaryOnBackground,
+            s: s
+          )
+          .offset(y: -128)
         }
         .frame(maxWidth: .infinity)
         .frame(minHeight: 320)
         .padding(.vertical, 8)
-        Spacer()
+        Spacer(minLength: 0)
         Button(s.uploadAudio) { showImporter = true }
           .font(.body.weight(.semibold))
           .foregroundColor(
@@ -166,6 +216,7 @@ struct RecordingView: View {
           )
           .padding(.horizontal, 20)
           .padding(.vertical, 12)
+          .frame(maxWidth: .infinity)
           .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
               .fill(prefs.themeType == .light ? Color.white.opacity(0.92) : Color.white.opacity(0.16))
@@ -181,7 +232,8 @@ struct RecordingView: View {
           .disabled(isRecording)
         Spacer(minLength: 8)
       }
-      .padding()
+      .padding(.horizontal, 20)
+      .padding(.vertical, 16)
     }
     .onPreferenceChange(RecordingBreathKey.self) { breathScale = $0 }
     #if DEBUG
@@ -1097,33 +1149,24 @@ struct LiquidGlassRecordButton: View {
     Button(action: action) {
       ZStack {
         Circle()
-          .fill(.ultraThinMaterial)
+          .fill(Color.clear)
+          .background {
+            UIKitBlurMaterialCircle(isLight: voxeraTheme == .light)
+              .clipShape(Circle())
+          }
         Circle()
           .fill(
             RadialGradient(
               colors: [
-                Color.white.opacity(voxeraTheme == .light ? 0.5 : 0.35),
-                Color.white.opacity(voxeraTheme == .light ? 0.14 : 0.1),
+                Color.white.opacity(isRecording ? 0.06 : 0.03),
                 Color.clear
               ],
-              center: UnitPoint(x: 0.32, y: 0.26),
-              startRadius: 2,
-              endRadius: 108
+              center: UnitPoint(x: 0.3, y: 0.25),
+              startRadius: 0,
+              endRadius: 96
             )
           )
           .blendMode(.plusLighter)
-        Circle()
-          .fill(
-            LinearGradient(
-              colors: [
-                Color.white.opacity(voxeraTheme == .light ? 0.22 : 0.14),
-                Color.clear
-              ],
-              startPoint: .top,
-              endPoint: UnitPoint(x: 0.5, y: 0.55)
-            )
-          )
-          .blendMode(.screen)
         if isRecording {
           Circle()
             .strokeBorder(Color.white.opacity(0.22), lineWidth: 1.2)
@@ -1174,13 +1217,10 @@ struct LiquidGlassRecordButton: View {
     .buttonStyle(FlowScreensRecordingPressStyle())
   }
 
+  /// Как Android: `VoxeraColors.TextPrimary` на иконке микрофона.
   private var micTint: Color {
-    switch voxeraTheme {
-    case .light:
-      return Color(red: 0.1, green: 0.15, blue: 0.22)
-    case .glass:
-      return .white.opacity(isRecording ? 1 : 0.9)
-    }
+    Color(red: 234 / 255, green: 246 / 255, blue: 255 / 255)
+      .opacity(isRecording ? 1 : 0.9)
   }
 }
 
