@@ -158,7 +158,25 @@ struct RecordingView: View {
         .padding(.vertical, 8)
         Spacer()
         Button(s.uploadAudio) { showImporter = true }
-          .foregroundColor(titleColor)
+          .font(.body.weight(.semibold))
+          .foregroundColor(
+            prefs.themeType == .light
+              ? Color(red: 0.04, green: 0.09, blue: 0.16)
+              : titleColor
+          )
+          .padding(.horizontal, 20)
+          .padding(.vertical, 12)
+          .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+              .fill(prefs.themeType == .light ? Color.white.opacity(0.92) : Color.white.opacity(0.16))
+          )
+          .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+              .stroke(
+                prefs.themeType == .light ? Color.black.opacity(0.12) : Color.white.opacity(0.38),
+                lineWidth: 1
+              )
+          )
           .padding(.vertical, 8)
           .disabled(isRecording)
         Spacer(minLength: 8)
@@ -295,6 +313,15 @@ struct RecordingView: View {
   #endif
 }
 
+/// Снимает шаги записи и обработки со стека, чтобы с экрана результата «Назад» вело на главный выбор режима.
+private func popRecordingPipelineFromPath(_ path: inout NavigationPath) {
+  if path.count >= 2 {
+    path.removeLast(2)
+  } else if path.count == 1 {
+    path.removeLast()
+  }
+}
+
 struct ProcessingView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var session: AnalysisSession
@@ -326,6 +353,7 @@ struct ProcessingView: View {
   private func run() async {
     guard let url = session.recordedFileURL else {
       session.lastResultJson = "Ошибка: нет файла"
+      popRecordingPipelineFromPath(&path)
       path.append(AppRoute.result)
       return
     }
@@ -345,6 +373,7 @@ struct ProcessingView: View {
         session.lastResultJson = raw
       }
       history.add(analysisType: session.analysisType, response: resp, rawApi: raw)
+      popRecordingPipelineFromPath(&path)
       path.append(AppRoute.result)
     } catch {
       session.lastAnalysisResponse = nil
@@ -358,6 +387,7 @@ struct ProcessingView: View {
       } else {
         session.lastResultJson = "Ошибка: \(error)"
       }
+      popRecordingPipelineFromPath(&path)
       path.append(AppRoute.result)
     }
   }
@@ -817,30 +847,136 @@ struct ResultView: View {
   }
 }
 
+private func sharePreviewLinesIOS(
+  session: AnalysisSession,
+  s: AppStrings,
+  lang: AppLanguage
+) -> (String, String) {
+  guard let r = session.lastAnalysisResponse, r.success, let result = r.result else {
+    return (s.shareNoData, "")
+  }
+  let analysisType = session.analysisType
+  if analysisType == "psytype" {
+    let types = result.psyTypes ?? []
+    if types.isEmpty { return (s.shareNoData, "") }
+    guard let lead = types.max(by: { $0.value < $1.value }) else { return (s.shareNoData, "") }
+    let line =
+      "\(s.leadingType): \(formatPsyTypeNameIOS(lead.name)) (\(String(format: "%.2f", lead.value))%)"
+    return (s.psytypeResultTitle, line)
+  } else {
+    let scales = result.emoScales ?? []
+    if scales.isEmpty { return (s.shareNoData, "") }
+    let top3 = scales.sorted { $0.value > $1.value }.prefix(3)
+    let subtitle = top3.map { sc in
+      "\(MoodStatisticsData.emoScaleDisplayName(apiName: sc.name, language: lang)): \(sc.value)"
+    }.joined(separator: "\n")
+    return (s.emostateResultTitle, subtitle)
+  }
+}
+
+private struct SharePreviewCardView: View {
+  @Environment(\.voxeraTheme) private var theme
+  let previewTitle: String
+  let previewSubtitle: String
+
+  var body: some View {
+    let colors = theme.colors()
+    ThemedCard(gradientIndex: 0) {
+      VStack(spacing: 0) {
+        Group {
+          if UIImage(named: "ic_voxera_logo_text") != nil {
+            Image("ic_voxera_logo_text")
+              .resizable()
+              .scaledToFit()
+              .frame(height: 44)
+              .frame(maxWidth: .infinity)
+          } else {
+            Text("VOXERA")
+              .font(.title2.weight(.bold))
+              .foregroundColor(colors.textPrimary)
+              .frame(maxWidth: .infinity)
+          }
+        }
+        Spacer().frame(height: 16)
+        Text(previewTitle)
+          .font(.body)
+          .foregroundColor(colors.textSecondary)
+          .multilineTextAlignment(.center)
+          .frame(maxWidth: .infinity)
+        if !previewSubtitle.isEmpty {
+          Spacer().frame(height: 8)
+          Text(previewSubtitle)
+            .font(.title3.weight(.regular))
+            .foregroundColor(colors.textPrimary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+        }
+      }
+      .frame(minHeight: 120)
+    }
+  }
+}
+
 struct ShareView: View {
   @EnvironmentObject private var session: AnalysisSession
   @EnvironmentObject private var locale: LocaleStore
-  @State private var item: [Any] = []
+  @EnvironmentObject private var prefs: PreferencesStore
+
   var s: AppStrings { locale.strings }
+
+  private var headlineColor: Color {
+    prefs.themeType == .glass ? .white : prefs.themeType.colors().backgroundTextPrimary
+  }
+
+  private var preview: (String, String) {
+    sharePreviewLinesIOS(session: session, s: s, lang: prefs.appLanguage)
+  }
 
   var body: some View {
     ZStack {
       BackgroundImageName()
-      VStack(spacing: 16) {
-        Text(s.shareResult).font(.title2.bold()).foregroundColor(.white)
-        if let t = session.lastResultJson {
-          ShareLink(item: t, subject: Text(s.shareSubject)) {
-            Text(s.share)
-              .padding()
-              .frame(maxWidth: .infinity)
-              .background(Color.white.opacity(0.2))
-              .cornerRadius(12)
+      ScrollView {
+        VStack(spacing: 20) {
+          Spacer(minLength: 10)
+          Text(s.shareResult)
+            .font(.system(size: 34, weight: .light))
+            .foregroundColor(headlineColor)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+          SharePreviewCardView(previewTitle: preview.0, previewSubtitle: preview.1)
+          Spacer(minLength: 16)
+          if session.lastResultJson != nil {
+            ShareLink(item: session.lastResultJson ?? "", subject: Text(s.shareSubject)) {
+              Text(s.share)
+                .font(.body.weight(.semibold))
+                .foregroundColor(
+                  prefs.themeType == .glass
+                    ? .white
+                    : prefs.themeType.colors().backgroundTextPrimary
+                )
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                  RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(prefs.themeType == .glass ? Color.white.opacity(0.22) : Color.white.opacity(0.92))
+                )
+                .overlay(
+                  RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(
+                      prefs.themeType == .glass ? Color.white.opacity(0.35) : Color.black.opacity(0.1),
+                      lineWidth: 1
+                    )
+                )
+            }
+          } else {
+            Text(s.shareNoData)
+              .foregroundColor(headlineColor.opacity(0.88))
           }
-        } else {
-          Text(s.shareNoData).foregroundColor(.white)
+          Spacer(minLength: 8)
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 24)
       }
-      .padding(20)
     }
   }
 }
@@ -958,44 +1094,40 @@ struct LiquidGlassRecordButton: View {
 
   var body: some View {
     let glow = RecordingVisualTokens.primaryGlow
-    let tintRecording = Color.white.opacity(0.02)
     Button(action: action) {
       ZStack {
         Circle()
+          .fill(.ultraThinMaterial)
+        Circle()
           .fill(
-            .linearGradient(
+            RadialGradient(
               colors: [
-                Color.white.opacity(voxeraTheme == .light ? 0.42 : 0.22),
-                Color.white.opacity(voxeraTheme == .light ? 0.12 : 0.06)
+                Color.white.opacity(voxeraTheme == .light ? 0.5 : 0.35),
+                Color.white.opacity(voxeraTheme == .light ? 0.14 : 0.1),
+                Color.clear
               ],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
+              center: UnitPoint(x: 0.32, y: 0.26),
+              startRadius: 2,
+              endRadius: 108
             )
           )
-          .background {
-            Circle()
-              .fill(.ultraThinMaterial)
-          }
-          .background {
-            Circle()
-              .fill(
-                .radialGradient(
-                  colors: [
-                    glow.opacity(isRecording ? 0.08 : 0.04),
-                    .clear, .clear
-                  ],
-                  center: .init(x: 0.3, y: 0.25),
-                  startRadius: 0,
-                  endRadius: 120
-                )
-              )
-          }
-          .overlay {
-            if isRecording {
-              Circle()
-                .fill(tintRecording)
-            }
-          }
+          .blendMode(.plusLighter)
+        Circle()
+          .fill(
+            LinearGradient(
+              colors: [
+                Color.white.opacity(voxeraTheme == .light ? 0.22 : 0.14),
+                Color.clear
+              ],
+              startPoint: .top,
+              endPoint: UnitPoint(x: 0.5, y: 0.55)
+            )
+          )
+          .blendMode(.screen)
+        if isRecording {
+          Circle()
+            .strokeBorder(Color.white.opacity(0.22), lineWidth: 1.2)
+        }
         FlowScreensRecordingButtonNeonRings(isRecording: isRecording)
         if UIImage(named: "ic_mic_2") != nil {
           Image("ic_mic_2")
