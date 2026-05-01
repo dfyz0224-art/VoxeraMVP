@@ -132,7 +132,6 @@ private struct RecordingScreenTitleOverlay: View {
           .font(.system(size: 32, weight: .semibold))
           .foregroundColor(titleColor)
           .padding(.top, 8)
-          .padding(.bottom, 48)
       }
     }
     .padding(.horizontal, 4)
@@ -167,73 +166,82 @@ struct RecordingView: View {
   }
 
   var body: some View {
-    ZStack(alignment: .top) {
-      RecordingScreenBackground()
-      RecordingBreathReader(isRecording: isRecording)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .allowsHitTesting(false)
-      VStack(spacing: 0) {
-        Spacer(minLength: 24)
-        RecordingScreenTitleOverlay(
+    GeometryReader { geo in
+      let cx = geo.size.width / 2
+      let cy = geo.size.height / 2
+      let topPad = geo.safeAreaInsets.top
+
+      ZStack {
+        RecordingScreenBackground()
+          .ignoresSafeArea()
+
+        RecordingBreathReader(isRecording: isRecording)
+          .frame(width: geo.size.width, height: geo.size.height)
+          .allowsHitTesting(false)
+
+        if isRecording {
+          RecordingWaterRings(
+            isActive: true,
+            center: CGPoint(x: cx, y: cy),
+            buttonRadius: RecordingVisualTokens.recordButtonSize / 2
+          )
+          .frame(width: geo.size.width, height: geo.size.height)
+          .position(x: cx, y: cy)
+          .allowsHitTesting(false)
+        }
+
+        LiquidGlassRecordButton(
           isRecording: isRecording,
-          timerExpired: timerExpired,
-          timerSec: timerSec,
-          titleColor: titleColor,
-          secondary: secondaryOnBackground,
-          s: s
-        )
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 28)
-        ZStack {
-          if isRecording {
-            GeometryReader { g in
-              let c = CGPoint(x: g.size.width / 2, y: g.size.height / 2)
-              RecordingWaterRings(
-                isActive: isRecording,
-                center: c,
-                buttonRadius: RecordingVisualTokens.recordButtonSize / 2
-              )
-            }
-            .allowsHitTesting(false)
-          }
-          LiquidGlassRecordButton(
+          breathScale: breathScale
+        ) {
+          Task { await toggleRecord() }
+        }
+        .position(x: cx, y: cy)
+
+        VStack(spacing: 0) {
+          RecordingScreenTitleOverlay(
             isRecording: isRecording,
-            breathScale: breathScale
-          ) {
-            Task { await toggleRecord() }
+            timerExpired: timerExpired,
+            timerSec: timerSec,
+            titleColor: titleColor,
+            secondary: secondaryOnBackground,
+            s: s
+          )
+          .padding(.top, max(16, topPad + 8))
+          .padding(.horizontal, 20)
+          Spacer()
+        }
+        .allowsHitTesting(false)
+
+        VStack(spacing: 0) {
+          Spacer()
+          if !isRecording {
+            Button(s.uploadAudio) { showImporter = true }
+              .font(.body.weight(.semibold))
+              .foregroundColor(
+                prefs.themeType == .light
+                  ? Color(red: 0.04, green: 0.09, blue: 0.16)
+                  : titleColor
+              )
+              .padding(.horizontal, 20)
+              .padding(.vertical, 12)
+              .frame(maxWidth: .infinity)
+              .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                  .fill(prefs.themeType == .light ? Color.white.opacity(0.92) : Color.white.opacity(0.16))
+              )
+              .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                  .stroke(
+                    prefs.themeType == .light ? Color.black.opacity(0.12) : Color.white.opacity(0.38),
+                    lineWidth: 1
+                  )
+              )
+              .padding(.horizontal, 20)
+              .padding(.bottom, max(16, geo.safeAreaInsets.bottom + 12))
           }
         }
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: 260)
-        .padding(.vertical, 8)
-        Spacer(minLength: 0)
-        Button(s.uploadAudio) { showImporter = true }
-          .font(.body.weight(.semibold))
-          .foregroundColor(
-            prefs.themeType == .light
-              ? Color(red: 0.04, green: 0.09, blue: 0.16)
-              : titleColor
-          )
-          .padding(.horizontal, 20)
-          .padding(.vertical, 12)
-          .frame(maxWidth: .infinity)
-          .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-              .fill(prefs.themeType == .light ? Color.white.opacity(0.92) : Color.white.opacity(0.16))
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-              .stroke(
-                prefs.themeType == .light ? Color.black.opacity(0.12) : Color.white.opacity(0.38),
-                lineWidth: 1
-              )
-          )
-          .padding(.vertical, 8)
-          .disabled(isRecording)
-        Spacer(minLength: 8)
       }
-      .padding(.horizontal, 20)
-      .padding(.vertical, 16)
     }
     .onPreferenceChange(RecordingBreathKey.self) { breathScale = $0 }
     #if DEBUG
@@ -1054,7 +1062,10 @@ struct RecordingWaterRings: View {
         let ringDuration: Double = 3.5
         let ringGap: Double = 0.2
         let minR = buttonRadius
-        let maxR = max(size.width, size.height) * 1.5
+        let dx = max(center.x, size.width - center.x)
+        let dy = max(center.y, size.height - center.y)
+        let toCorner = hypot(dx, dy)
+        let maxR = toCorner + max(size.width, size.height) * 0.35
 
         for i in 0..<3 {
           let delay = Double(i) * ringGap
@@ -1145,33 +1156,34 @@ struct LiquidGlassRecordButton: View {
   var action: () -> Void
 
   var body: some View {
-    let glow = RecordingVisualTokens.primaryGlow
+    let themeC = voxeraTheme.colors()
+    let cardG: [Color] =
+      voxeraTheme == .glass
+      ? [Color.white.opacity(0.10), Color.white.opacity(0.03)]
+      : themeC.cardGradient
     Button(action: action) {
       ZStack {
         Circle()
-          .fill(Color.clear)
-          .background {
-            UIKitBlurMaterialCircle(isLight: voxeraTheme == .light)
-              .clipShape(Circle())
-          }
-        Circle()
-          .strokeBorder(
-            Color.white.opacity(voxeraTheme == .light ? 0.14 : 0.2),
-            lineWidth: isRecording ? 1.45 : 1
+          .fill(
+            LinearGradient(colors: cardG, startPoint: .topLeading, endPoint: .bottomTrailing)
           )
         Circle()
           .fill(
             RadialGradient(
               colors: [
-                Color.white.opacity(isRecording ? 0.025 : 0.012),
+                Color.white.opacity(isRecording ? 0.14 : 0.1),
                 Color.clear
               ],
-              center: UnitPoint(x: 0.32, y: 0.28),
-              startRadius: 8,
+              center: UnitPoint(x: 0.32, y: 0.22),
+              startRadius: 0,
               endRadius: 88
             )
           )
-          .blendMode(.plusLighter)
+          .blendMode(.screen)
+        if isRecording {
+          Circle()
+            .strokeBorder(Color.white.opacity(0.28), lineWidth: 1)
+        }
         FlowScreensRecordingButtonNeonRings(isRecording: isRecording)
         if UIImage(named: "ic_mic_2") != nil {
           Image("ic_mic_2")
@@ -1192,25 +1204,29 @@ struct LiquidGlassRecordButton: View {
       .scaleEffect(breathScale)
       .overlay {
         Circle()
+          .stroke(themeC.borderGlass, lineWidth: 1)
+      }
+      .overlay {
+        Circle()
           .stroke(
             LinearGradient(
               colors: [
-                glow.opacity(voxeraTheme == .light ? 0.75 : 0.5),
-                Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.55 : 0.35)
+                Color.white.opacity(voxeraTheme == .light ? 0.55 : 0.45),
+                Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.45 : 0.28)
               ],
               startPoint: .topLeading,
               endPoint: .bottomTrailing
             ),
-            lineWidth: voxeraTheme == .light ? 2.4 : 1.6
+            lineWidth: voxeraTheme == .light ? 2.0 : 1.5
           )
       }
       .shadow(
-        color: glow.opacity(isRecording ? 0.16 : 0.08),
-        radius: isRecording ? 24 : 14,
-        y: isRecording ? 7 : 4
+        color: Color.black.opacity(voxeraTheme == .glass ? 0.12 : 0.08),
+        radius: isRecording ? 24 : 16,
+        y: isRecording ? 8 : 5
       )
       .shadow(
-        color: Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.12 : 0.06),
+        color: Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.18 : 0.08),
         radius: isRecording ? 14 : 10,
         y: 3
       )
@@ -1239,11 +1255,11 @@ private struct FlowScreensRecordingButtonNeonRings: View {
     Canvas { c, s in
       let center = CGPoint(x: s.width / 2, y: s.height / 2)
       let baseR = min(s.width, s.height) / 2 - 2
-      let glowAlpha: CGFloat = isRecording ? 0.92 : 0.52
+      let glowAlpha: CGFloat = isRecording ? 1 : 0.8
       for g in 1...3 {
         let r = baseR + CGFloat(g) * 2
         let w = 4 + CGFloat(g) * 2
-        let a = glowAlpha * (0.12 / CGFloat(g))
+        let a = glowAlpha * (0.2 / CGFloat(g))
         c.stroke(
           Path(ellipseIn: CGRect(x: center.x - r, y: center.y - r, width: 2 * r, height: 2 * r)),
           with: .color(glow.opacity(a)),

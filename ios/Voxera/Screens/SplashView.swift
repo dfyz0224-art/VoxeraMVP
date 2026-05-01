@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Как `AppSplashScreen.kt`: `R.drawable.ic_x_white` на чёрном фоне, вспышка — размытое то же изображение крупнее.
+/// Пиксельно по `AppSplashScreen.kt`: `R.drawable.ic_x_white`, чёрный фон, под лого слой вспышки (крупнее + blur), затем исчезновение лого.
 struct SplashView: View {
   var onComplete: () -> Void
   @State private var logoOpacity: CGFloat = 1
@@ -12,19 +12,22 @@ struct SplashView: View {
   var body: some View {
     ZStack {
       Color.black.ignoresSafeArea()
-      Image("ic_x_white")
-        .resizable()
-        .scaledToFit()
-        .frame(width: logoSide, height: logoSide)
-        .opacity(logoOpacity)
+      // Вспышка снизу (как в Box: сначала glow, потом лого)
       if flashOpacity > 0.001 {
         Image("ic_x_white")
           .resizable()
+          .renderingMode(.template)
+          .foregroundStyle(.white)
           .scaledToFit()
           .frame(width: flashSide, height: flashSide)
           .blur(radius: 18)
           .opacity(flashOpacity * 0.9)
       }
+      Image("ic_x_white")
+        .resizable()
+        .scaledToFit()
+        .frame(width: logoSide, height: logoSide)
+        .opacity(logoOpacity)
     }
     .onAppear {
       Task {
