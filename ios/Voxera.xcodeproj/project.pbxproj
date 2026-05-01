@@ -37,6 +37,7 @@
 		FE43AB9C5AABF36E865E59B0 /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512D8D0A412C425B40AF7FDC /* PreferencesStore.swift */; };
 		FEF7CBF7C425385D4C408545 /* VoxeraRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */; };
 		FF1AEB9BB29902212DA50BFC /* Secrets.xcconfig.example in Resources */ = {isa = PBXBuildFile; fileRef = 0C40B68329527405A9E8306F /* Secrets.xcconfig.example */; };
+		A8301B252F9C4D6E7F8091A1 /* LiquidGlass in Frameworks */ = {isa = PBXBuildFile; productRef = E703193B2C7C8C9AA0B12EF6 /* LiquidGlass */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -211,6 +212,7 @@
 			buildConfigurationList = C147E8A4A77AF087FAFBE848 /* Build configuration list for PBXNativeTarget "Voxera" */;
 			buildPhases = (
 				C698BD23743CFA1ADDE9B0F3 /* Sources */,
+				B9202C3630AD5E7F8A9012B2 /* Frameworks */,
 				2DA406BAD7B865BC133BEAD5 /* Resources */,
 			);
 			buildRules = (
@@ -226,6 +228,17 @@
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B9202C3630AD5E7F8A9012B2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A8301B252F9C4D6E7F8091A1 /* LiquidGlass in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXProject section */
 		BC608BCE48409ADB288968BE /* Project object */ = {
