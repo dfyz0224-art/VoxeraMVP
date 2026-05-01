@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+import LiquidGlass
 
 struct ConsentView: View {
   @Binding var path: NavigationPath
@@ -77,9 +78,8 @@ struct RecordingView: View {
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
   @StateObject private var recorder = AudioRecorderService()
-  @State private var timerSec = 30
+  @State private var recordingStartedAt: Date?
   @State private var isRecording = false
-  @State private var timerExpired = false
   @State private var showImporter = false
   @State private var breathScale: CGFloat = 1.0
   #if DEBUG
@@ -95,6 +95,15 @@ struct RecordingView: View {
 
   private var secondaryOnBackground: Color {
     prefs.themeType.colors().backgroundTextSecondary
+  }
+
+  private func recordingRemainingSeconds(at date: Date) -> Int {
+    guard isRecording, let t0 = recordingStartedAt else { return 30 }
+    return max(0, 30 - Int(date.timeIntervalSince(t0)))
+  }
+
+  private func recordingTimerExpired(at date: Date) -> Bool {
+    isRecording && recordingStartedAt != nil && recordingRemainingSeconds(at: date) == 0
   }
 
   var body: some View {
@@ -124,39 +133,41 @@ struct RecordingView: View {
       }
       .frame(width: geo.size.width, height: geo.size.height)
       .overlay(alignment: .top) {
-        ScrollView(.vertical, showsIndicators: false) {
-          VStack(spacing: 12) {
-            Text(isRecording ? s.recordingInProgress : s.voiceRecording)
-              .font(.system(size: 32, weight: .regular, design: .default))
-              .foregroundColor(titleColor)
-              .multilineTextAlignment(.center)
-            if isRecording {
-              if timerExpired {
-                Text(s.tapToStop)
+        TimelineView(.periodic(from: .now, by: 0.2)) { timeline in
+          ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 12) {
+              Text(isRecording ? s.recordingInProgress : s.voiceRecording)
+                .font(.system(size: 32, weight: .regular, design: .default))
+                .foregroundColor(titleColor)
+                .multilineTextAlignment(.center)
+              if isRecording {
+                if recordingTimerExpired(at: timeline.date) {
+                  Text(s.tapToStop)
+                    .font(.body)
+                    .foregroundColor(secondaryOnBackground)
+                    .multilineTextAlignment(.center)
+                } else {
+                  Text("\(recordingRemainingSeconds(at: timeline.date)) \(s.secondsShort)")
+                    .font(.system(size: 32, weight: .semibold, design: .default))
+                    .foregroundColor(titleColor)
+                }
+              } else {
+                Text(s.tapToStart)
                   .font(.body)
                   .foregroundColor(secondaryOnBackground)
                   .multilineTextAlignment(.center)
-              } else {
-                Text("\(timerSec) \(s.secondsShort)")
-                  .font(.system(size: 32, weight: .semibold, design: .default))
-                  .foregroundColor(titleColor)
+                Text(s.saySentences)
+                  .font(.body)
+                  .foregroundColor(secondaryOnBackground)
+                  .multilineTextAlignment(.center)
               }
-            } else {
-              Text(s.tapToStart)
-                .font(.body)
-                .foregroundColor(secondaryOnBackground)
-                .multilineTextAlignment(.center)
-              Text(s.saySentences)
-                .font(.body)
-                .foregroundColor(secondaryOnBackground)
-                .multilineTextAlignment(.center)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, max(2, geo.safeAreaInsets.top - 10))
+            .frame(maxWidth: .infinity)
           }
-          .padding(.horizontal, 20)
-          .padding(.top, geo.safeAreaInsets.top + 6)
-          .frame(maxWidth: .infinity)
+          .frame(maxHeight: max(120, geo.size.height * 0.28), alignment: .top)
         }
-        .frame(maxHeight: max(120, geo.size.height * 0.32), alignment: .top)
       }
       .overlay(alignment: .bottom) {
         Group {
@@ -240,14 +251,8 @@ struct RecordingView: View {
       session.lastAudioMimeType = "audio/m4a"
       path.append(AppRoute.processing)
     }
-    .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-      guard isRecording, timerSec > 0 else { return }
-      timerSec -= 1
-      if timerSec == 0 {
-        timerExpired = true
-      }
-    }
     .onDisappear {
+      recordingStartedAt = nil
       if recorder.isRecording { _ = recorder.stopRecording() }
     }
   }
@@ -256,7 +261,7 @@ struct RecordingView: View {
     if isRecording {
       let url = recorder.stopRecording()
       isRecording = false
-      timerExpired = false
+      recordingStartedAt = nil
       if let url, FileManager.default.fileExists(atPath: url.path) {
         let attrs = (try? FileManager.default.attributesOfItem(atPath: url.path)) as? [FileAttributeKey: Any]
         let size = attrs?[.size] as? Int64 ?? 0
@@ -275,8 +280,7 @@ struct RecordingView: View {
     do {
       try recorder.startRecording(to: url)
       isRecording = true
-      timerExpired = false
-      timerSec = 30
+      recordingStartedAt = Date()
     } catch {}
   }
 
@@ -1105,48 +1109,30 @@ struct LiquidGlassRecordButton: View {
   var breathScale: CGFloat
   var action: () -> Void
 
-  private var themeColors: ThemeColors { voxeraTheme.colors() }
+  private var cornerRadius: CGFloat { RecordingVisualTokens.recordButtonSize / 2 }
+
+  /// Параметры ближе к Android `liquid { frost, refraction, tint }` — сильный blur, слабый тинт.
+  private var glassBlur: CGFloat {
+    switch voxeraTheme {
+    case .light:
+      return isRecording ? 0.54 : 0.48
+    case .glass:
+      return isRecording ? 0.5 : 0.44
+    }
+  }
+
+  private var glassTintAlpha: CGFloat {
+    switch voxeraTheme {
+    case .light:
+      return isRecording ? 0.065 : 0.055
+    case .glass:
+      return isRecording ? 0.048 : 0.04
+    }
+  }
 
   var body: some View {
     Button(action: action) {
       ZStack {
-        Circle()
-          .fill(Color.clear)
-          .background {
-            Circle()
-              .fill(.ultraThinMaterial)
-          }
-          .clipShape(Circle())
-        Circle()
-          .stroke(
-            AngularGradient(
-              colors: [
-                Color.white.opacity(voxeraTheme == .glass ? 0.38 : 0.22),
-                Color.cyan.opacity(0.1),
-                Color.white.opacity(0.28),
-                Color(red: 0.45, green: 0.78, blue: 0.95).opacity(0.12),
-                Color.white.opacity(0.32)
-              ],
-              center: .center,
-              angle: .degrees(-18)
-            ),
-            lineWidth: 1
-          )
-          .blur(radius: 0.45)
-          .opacity(0.85)
-        Circle()
-          .fill(
-            RadialGradient(
-              colors: [
-                Color.white.opacity(voxeraTheme == .glass ? 0.1 : 0.07),
-                Color.clear
-              ],
-              center: UnitPoint(x: 0.3, y: 0.24),
-              startRadius: 2,
-              endRadius: 76
-            )
-          )
-          .blendMode(.plusLighter)
         FlowScreensRecordingButtonNeonRings(isRecording: isRecording)
         if UIImage(named: "ic_mic_2") != nil {
           Image("ic_mic_2")
@@ -1166,29 +1152,25 @@ struct LiquidGlassRecordButton: View {
       .frame(width: RecordingVisualTokens.recordButtonSize, height: RecordingVisualTokens.recordButtonSize)
       .overlay {
         Circle()
-          .stroke(themeColors.borderGlass, lineWidth: 1)
-      }
-      .overlay {
-        Circle()
           .stroke(
             LinearGradient(
               colors: [
-                Color.white.opacity(voxeraTheme == .glass ? 0.42 : 0.32),
-                Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.42 : 0.22)
+                Color.white.opacity(voxeraTheme == .glass ? 0.55 : 0.38),
+                Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.5 : 0.3)
               ],
               startPoint: .topLeading,
               endPoint: .bottomTrailing
             ),
-            lineWidth: isRecording ? 1.9 : 1.25
+            lineWidth: isRecording ? 2 : 1.2
           )
       }
-      .shadow(color: Color.white.opacity(isRecording ? 0.14 : 0.07), radius: isRecording ? 22 : 14, y: 7)
-      .shadow(
-        color: Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.14 : 0.07),
-        radius: isRecording ? 14 : 9,
-        y: 3
-      )
     }
+    .liquidGlassBackground(
+      cornerRadius: cornerRadius,
+      updateMode: .continuous(interval: isRecording ? 0.05 : 0.07),
+      blurScale: glassBlur,
+      tintColor: UIColor.white.withAlphaComponent(glassTintAlpha)
+    )
     .buttonStyle(FlowScreensRecordingPressStyle(breathScale: breathScale))
   }
 

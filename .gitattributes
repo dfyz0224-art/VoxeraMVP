@@ -1,0 +1,6 @@
+# Бинарники: при merge Git не вставляет conflict-маркеры в файл (лучше явно выбрать сторону).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ogg binary
+*.wav binary
