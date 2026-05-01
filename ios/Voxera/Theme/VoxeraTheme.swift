@@ -83,7 +83,7 @@ struct RecordingScreenBackground: View {
   }
 }
 
-/// Явный светлый/тёмный `UIBlurEffect`: не зависит от глобального `ColorScheme` так же неоднозначно, как `Material` в SwiftUI.
+/// Сильнее «стекло», меньше «пластик»: тонкий blur + пониженная непрозрачность слоя (как лёгкая вуаль поверх фона).
 struct UIKitBlurMaterialCircle: UIViewRepresentable {
   var isLight: Bool
 
@@ -91,12 +91,16 @@ struct UIKitBlurMaterialCircle: UIViewRepresentable {
     let style: UIBlurEffect.Style = isLight ? .systemUltraThinMaterialLight : .systemUltraThinMaterialDark
     let v = UIVisualEffectView(effect: UIBlurEffect(style: style))
     v.clipsToBounds = true
+    v.alpha = isLight ? 0.52 : 0.48
+    v.backgroundColor = .clear
     return v
   }
 
   func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
     let style: UIBlurEffect.Style = isLight ? .systemUltraThinMaterialLight : .systemUltraThinMaterialDark
     uiView.effect = UIBlurEffect(style: style)
+    uiView.alpha = isLight ? 0.52 : 0.48
+    uiView.backgroundColor = .clear
   }
 }
 

@@ -1,7 +1,6 @@
 import SwiftUI
-import UIKit
 
-/// Как `AppSplashScreen.kt`: чёрный фон, лого, вспышка размытым «следом» того же маркера, затем исчезновение.
+/// Как `AppSplashScreen.kt`: `R.drawable.ic_x_white` на чёрном фоне, вспышка — размытое то же изображение крупнее.
 struct SplashView: View {
   var onComplete: () -> Void
   @State private var logoOpacity: CGFloat = 1
@@ -13,11 +12,15 @@ struct SplashView: View {
   var body: some View {
     ZStack {
       Color.black.ignoresSafeArea()
-      splashMark
+      Image("ic_x_white")
+        .resizable()
+        .scaledToFit()
         .frame(width: logoSide, height: logoSide)
         .opacity(logoOpacity)
       if flashOpacity > 0.001 {
-        splashMark
+        Image("ic_x_white")
+          .resizable()
+          .scaledToFit()
           .frame(width: flashSide, height: flashSide)
           .blur(radius: 18)
           .opacity(flashOpacity * 0.9)
@@ -34,20 +37,6 @@ struct SplashView: View {
         try? await Task.sleep(nanoseconds: 400_000_000)
         onComplete()
       }
-    }
-  }
-
-  @ViewBuilder
-  private var splashMark: some View {
-    if UIImage(named: "ic_x_white") != nil {
-      Image("ic_x_white")
-        .resizable()
-        .scaledToFit()
-    } else {
-      Image(systemName: "sparkle")
-        .font(.system(size: 118, weight: .thin))
-        .foregroundStyle(.white)
-        .symbolRenderingMode(.monochrome)
     }
   }
 }

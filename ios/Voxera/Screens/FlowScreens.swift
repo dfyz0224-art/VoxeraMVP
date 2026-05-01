@@ -174,7 +174,16 @@ struct RecordingView: View {
         .allowsHitTesting(false)
       VStack(spacing: 0) {
         Spacer(minLength: 24)
-        Spacer(minLength: 0)
+        RecordingScreenTitleOverlay(
+          isRecording: isRecording,
+          timerExpired: timerExpired,
+          timerSec: timerSec,
+          titleColor: titleColor,
+          secondary: secondaryOnBackground,
+          s: s
+        )
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 28)
         ZStack {
           if isRecording {
             GeometryReader { g in
@@ -193,18 +202,9 @@ struct RecordingView: View {
           ) {
             Task { await toggleRecord() }
           }
-          RecordingScreenTitleOverlay(
-            isRecording: isRecording,
-            timerExpired: timerExpired,
-            timerSec: timerSec,
-            titleColor: titleColor,
-            secondary: secondaryOnBackground,
-            s: s
-          )
-          .offset(y: -128)
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 320)
+        .frame(minHeight: 260)
         .padding(.vertical, 8)
         Spacer(minLength: 0)
         Button(s.uploadAudio) { showImporter = true }
@@ -1155,22 +1155,23 @@ struct LiquidGlassRecordButton: View {
               .clipShape(Circle())
           }
         Circle()
+          .strokeBorder(
+            Color.white.opacity(voxeraTheme == .light ? 0.14 : 0.2),
+            lineWidth: isRecording ? 1.45 : 1
+          )
+        Circle()
           .fill(
             RadialGradient(
               colors: [
-                Color.white.opacity(isRecording ? 0.06 : 0.03),
+                Color.white.opacity(isRecording ? 0.025 : 0.012),
                 Color.clear
               ],
-              center: UnitPoint(x: 0.3, y: 0.25),
-              startRadius: 0,
-              endRadius: 96
+              center: UnitPoint(x: 0.32, y: 0.28),
+              startRadius: 8,
+              endRadius: 88
             )
           )
           .blendMode(.plusLighter)
-        if isRecording {
-          Circle()
-            .strokeBorder(Color.white.opacity(0.22), lineWidth: 1.2)
-        }
         FlowScreensRecordingButtonNeonRings(isRecording: isRecording)
         if UIImage(named: "ic_mic_2") != nil {
           Image("ic_mic_2")
@@ -1204,14 +1205,14 @@ struct LiquidGlassRecordButton: View {
           )
       }
       .shadow(
-        color: glow.opacity(isRecording ? 0.32 : 0.18),
-        radius: isRecording ? 32 : 20,
-        y: isRecording ? 10 : 6
+        color: glow.opacity(isRecording ? 0.16 : 0.08),
+        radius: isRecording ? 24 : 14,
+        y: isRecording ? 7 : 4
       )
       .shadow(
-        color: Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.22 : 0.1),
-        radius: isRecording ? 18 : 12,
-        y: 4
+        color: Color(red: 0.45, green: 0.78, blue: 0.95).opacity(isRecording ? 0.12 : 0.06),
+        radius: isRecording ? 14 : 10,
+        y: 3
       )
     }
     .buttonStyle(FlowScreensRecordingPressStyle())
@@ -1238,11 +1239,11 @@ private struct FlowScreensRecordingButtonNeonRings: View {
     Canvas { c, s in
       let center = CGPoint(x: s.width / 2, y: s.height / 2)
       let baseR = min(s.width, s.height) / 2 - 2
-      let glowAlpha: CGFloat = isRecording ? 1 : 0.8
+      let glowAlpha: CGFloat = isRecording ? 0.92 : 0.52
       for g in 1...3 {
         let r = baseR + CGFloat(g) * 2
         let w = 4 + CGFloat(g) * 2
-        let a = glowAlpha * (0.2 / CGFloat(g))
+        let a = glowAlpha * (0.12 / CGFloat(g))
         c.stroke(
           Path(ellipseIn: CGRect(x: center.x - r, y: center.y - r, width: 2 * r, height: 2 * r)),
           with: .color(glow.opacity(a)),
