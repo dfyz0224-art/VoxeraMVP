@@ -1091,7 +1091,7 @@ struct RecordingBreathReader: View {
   var body: some View {
     TimelineView(.animation(minimumInterval: 1 / 60, paused: false)) { context in
       let period = isRecording ? 1.2 : 2.0
-      let amplitude: CGFloat = isRecording ? 0.06 : 0.02
+      let amplitude: CGFloat = isRecording ? 0.038 : 0.012
       let elapsed = context.date.timeIntervalSince(t0)
       let phase = CGFloat(elapsed / period * 2 * .pi)
       let scale: CGFloat = 1.0 + amplitude * sin(phase)
@@ -1123,18 +1123,18 @@ struct LiquidGlassRecordButton: View {
   private var glassBlur: CGFloat {
     switch voxeraTheme {
     case .light:
-      return isRecording ? 0.54 : 0.48
+      return isRecording ? 0.46 : 0.4
     case .glass:
-      return isRecording ? 0.5 : 0.44
+      return isRecording ? 0.42 : 0.36
     }
   }
 
   private var glassTintAlpha: CGFloat {
     switch voxeraTheme {
     case .light:
-      return isRecording ? 0.065 : 0.055
+      return isRecording ? 0.055 : 0.048
     case .glass:
-      return isRecording ? 0.048 : 0.04
+      return isRecording ? 0.042 : 0.035
     }
   }
 
@@ -1175,10 +1175,13 @@ struct LiquidGlassRecordButton: View {
     }
     .liquidGlassBackground(
       cornerRadius: cornerRadius,
-      updateMode: .continuous(interval: isRecording ? 0.05 : 0.07),
+      updateMode: .continuous(interval: isRecording ? 0.085 : 0.1),
       blurScale: glassBlur,
       tintColor: UIColor.white.withAlphaComponent(glassTintAlpha)
     )
+    .compositingGroup()
+    .clipShape(Circle())
+    .contentShape(Circle())
     .buttonStyle(FlowScreensRecordingPressStyle(breathScale: breathScale))
   }
 
