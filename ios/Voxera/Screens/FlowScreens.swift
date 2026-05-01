@@ -1097,7 +1097,7 @@ struct RecordingBreathReader: View {
 }
 
 struct RecordingBreathKey: PreferenceKey {
-  static var defaultValue: CGFloat = 1
+  static let defaultValue: CGFloat = 1
   static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
     value = nextValue()
   }

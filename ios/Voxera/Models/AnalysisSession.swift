@@ -1,6 +1,7 @@
 import Foundation
 
 /// Mirrors Android `AnalysisSession` (single-flight session for navigation).
+@MainActor
 final class AnalysisSession: ObservableObject {
   static let shared = AnalysisSession()
 
