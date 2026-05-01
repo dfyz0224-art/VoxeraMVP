@@ -1,6 +1,6 @@
 # Voxera iOS
 
-SwiftUI-приложение, паритетно Android (`app/`). Минимум: **iOS 17**, **Xcode 15+**.
+SwiftUI-приложение, паритетно Android (`app/`). Минимум: **iOS 17**, **Xcode 16+** (пакет LiquidGlass собирается только на Swift 6).
 
 ## Сборка
 
@@ -27,9 +27,9 @@ open Voxera.xcodeproj
 2. Скопируйте из Firebase Console **`GoogleService-Info.plist`** в `Voxera/` (iOS-приложение в той же Firebase-проекте, что Android).
 3. В Xcode: **Signing & Capabilities** — свой Team, **Automatically manage signing**.
 
-## Зависимости (опционально)
+## Зависимости
 
-Firebase Auth и Google Sign-In можно подключить через SPM, когда понадобятся; в текущем `project.yml` внешних пакетов нет.
+- **[LiquidGlass](https://github.com/BarredEwe/LiquidGlass)** (SPM) — кнопка записи; уже прописан в проекте. После `git pull`: **File → Packages → Resolve Package Versions**.
 
 ## Ассеты
 
