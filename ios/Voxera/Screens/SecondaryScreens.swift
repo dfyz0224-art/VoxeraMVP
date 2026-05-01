@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 private func themedOutlineButton(
   _ title: String, fg: Color = .white, lightStroke: Color? = nil, action: @escaping () -> Void
 ) -> some View {

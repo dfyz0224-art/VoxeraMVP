@@ -257,14 +257,19 @@ struct RecordingView: View {
     }
   }
 
+  @MainActor
   private func toggleRecord() async {
     if isRecording {
       let url = recorder.stopRecording()
       isRecording = false
       recordingStartedAt = nil
       if let url, FileManager.default.fileExists(atPath: url.path) {
-        let attrs = (try? FileManager.default.attributesOfItem(atPath: url.path)) as? [FileAttributeKey: Any]
-        let size = attrs?[.size] as? Int64 ?? 0
+        let size: Int64
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) {
+          size = attrs[.size] as? Int64 ?? 0
+        } else {
+          size = 0
+        }
         if size > 0 {
           session.recordedFileURL = url
           session.lastAudioMimeType = nil
@@ -366,6 +371,7 @@ struct ProcessingView: View {
     }
   }
 
+  @MainActor
   private func run() async {
     guard let url = session.recordedFileURL else {
       session.lastResultJson = "Ошибка: нет файла"
@@ -423,6 +429,7 @@ private func stripHtmlTagsIOS(_ html: String) -> String {
     .trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
+@MainActor
 private func extractDescriptionFromSession(_ session: AnalysisSession) -> String {
   let fromModel = session.lastAnalysisResponse?.result?.description?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
   if !fromModel.isEmpty { return fromModel }
@@ -863,6 +870,7 @@ struct ResultView: View {
   }
 }
 
+@MainActor
 private func sharePreviewLinesIOS(
   session: AnalysisSession,
   s: AppStrings,
