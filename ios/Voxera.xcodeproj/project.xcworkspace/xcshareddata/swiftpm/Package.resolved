@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "liquidglass",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BarredEwe/LiquidGlass.git",
+      "state" : {
+        "revision" : "a7061fae8cac521fa4215b37a18aa9b66aaa8fe0",
+        "version" : "0.8.0"
+      }
+    }
+  ],
+  "version" : 2
+}

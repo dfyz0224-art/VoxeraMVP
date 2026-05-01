@@ -7,7 +7,7 @@ options:
 packages:
   LiquidGlass:
     url: https://github.com/BarredEwe/LiquidGlass
-    from: 1.0.0
+    minorVersion: 0.8.0
 settings:
   base:
     SWIFT_VERSION: "5.9"
