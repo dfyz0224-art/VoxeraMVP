@@ -611,13 +611,9 @@ struct ResultView: View {
   private var lang: AppLanguage { prefs.appLanguage }
   private var themeColors: ThemeColors { prefs.themeType.colors() }
 
-  private var titleColor: Color {
-    prefs.themeType == .light ? .white : themeColors.backgroundTextPrimary
-  }
+  private var titleColor: Color { themeColors.backgroundTextPrimary }
 
-  private var secondaryColor: Color {
-    prefs.themeType == .light ? Color.white.opacity(0.88) : themeColors.backgroundTextSecondary
-  }
+  private var secondaryColor: Color { themeColors.backgroundTextSecondary }
 
   var body: some View {
     ZStack {
@@ -661,6 +657,17 @@ struct ResultView: View {
             } else {
               Text(s.shareNoData).foregroundColor(secondaryColor)
             }
+          } else if let errText = session.lastResultJson, !errText.isEmpty {
+            Text(errText)
+              .font(.body)
+              .foregroundColor(titleColor)
+              .frame(maxWidth: .infinity, alignment: .leading)
+          } else if let raw = session.lastRawApiResponse, !raw.isEmpty {
+            Text(raw)
+              .font(.system(.body, design: .monospaced))
+              .foregroundColor(titleColor)
+          } else {
+            Text(s.shareNoData).foregroundColor(secondaryColor)
           }
 
           HStack(spacing: 12) {
