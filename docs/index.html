@@ -2,12 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=privacy.html">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Voxera — Legal</title>
-  <link rel="canonical" href="privacy.html">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fafafa;
+      --text: #1a1a1a;
+      --muted: #555;
+      --accent: #2563eb;
+      --border: #e5e5e5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f0f;
+        --text: #f0f0f0;
+        --muted: #aaa;
+        --accent: #60a5fa;
+        --border: #333;
+      }
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    main {
+      max-width: 32rem;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 0.5rem; }
+    p { color: var(--muted); margin: 0 0 1.5rem; }
+    a {
+      display: block;
+      color: var(--accent);
+      margin: 0.6rem 0;
+      font-size: 1.05rem;
+    }
+  </style>
 </head>
 <body>
-  <p><a href="privacy.html">Voxera Privacy Policy</a></p>
+  <main>
+    <h1>Voxera — Legal</h1>
+    <p>Public pages for Google Play / App Store.</p>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="account-deletion.html">Account deletion request</a>
+  </main>
 </body>
 </html>
