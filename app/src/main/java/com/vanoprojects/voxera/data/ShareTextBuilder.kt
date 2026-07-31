@@ -67,9 +67,23 @@ private fun fullDescription(response: AnalysisResponse): String {
 private const val BRIEF_DESC_MAX = 450
 
 private fun truncateDescription(rawHtml: String, brief: Boolean): String {
-  val plain = stripHtml(rawHtml)
+  val plain = formatEmostateDescriptionForShare(rawHtml)
   if (!brief || plain.length <= BRIEF_DESC_MAX) return plain
   return plain.take(BRIEF_DESC_MAX).trimEnd() + "…"
+}
+
+/** Paragraph breaks before "2. …", "3. …" for readable share / display plain text. */
+private fun formatEmostateDescriptionForShare(raw: String): String {
+  if (raw.isBlank()) return raw
+  val plain = HtmlCompat.fromHtml(raw, HtmlCompat.FROM_HTML_MODE_LEGACY)
+    .toString()
+    .replace("\r\n", "\n")
+    .replace('\r', '\n')
+    .trim()
+  return plain
+    .replace(Regex("""(?<!^)\s+(?=\d+\.\s+)"""), "\n\n")
+    .replace(Regex("""\n{3,}"""), "\n\n")
+    .trim()
 }
 
 /**
@@ -147,7 +161,7 @@ fun buildSharePlainText(
           }
           if (descRaw.isNotEmpty()) {
             append("\n")
-            append(stripHtml(descRaw))
+            append(formatEmostateDescriptionForShare(descRaw))
           }
         }
       }

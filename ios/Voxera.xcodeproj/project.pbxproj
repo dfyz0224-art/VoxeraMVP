@@ -38,6 +38,9 @@
 		FEF7CBF7C425385D4C408545 /* VoxeraRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */; };
 		FF1AEB9BB29902212DA50BFC /* Secrets.xcconfig.example in Resources */ = {isa = PBXBuildFile; fileRef = 0C40B68329527405A9E8306F /* Secrets.xcconfig.example */; };
 		A8301B252F9C4D6E7F8091A1 /* LiquidGlass in Frameworks */ = {isa = PBXBuildFile; productRef = E703193B2C7C8C9AA0B12EF6 /* LiquidGlass */; };
+		ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A3538AEF74265AE42165C /* AuthCardContent.swift */; };
+		7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */; };
+		E566F43D3DD14CE38A005CB5 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +77,9 @@
 		EAC4FB764A0C16824F50729C /* Secrets.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.generated.swift; sourceTree = "<group>"; };
 		F24C7A32F48037E39DF099C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryMoodPeriod.swift; sourceTree = "<group>"; };
+		380A3538AEF74265AE42165C /* AuthCardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCardContent.swift; sourceTree = "<group>"; };
+		DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionsView.swift; sourceTree = "<group>"; };
+		8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -139,6 +145,8 @@
 			isa = PBXGroup;
 			children = (
 				AF5013032A96D4A7E838E0B6 /* AuthView.swift */,
+				DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */,
+				380A3538AEF74265AE42165C /* AuthCardContent.swift */,
 				C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */,
 				3A9AFCA967A653514358E710 /* ModeSelectView.swift */,
 				058B7141F74A14C38A021234 /* OnboardingView.swift */,
@@ -179,6 +187,7 @@
 		C68A7EA58B79E4E28FF0AA85 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */,
 				0F1015339070C0F45AA03216 /* AudioRecorderService.swift */,
 				9D1A128C58FCA6A50AB90C91 /* HistoryStore.swift */,
 				512D8D0A412C425B40AF7FDC /* PreferencesStore.swift */,
@@ -301,6 +310,9 @@
 				93518FC832D2275276892074 /* AppStrings.swift in Sources */,
 				F008E350D80714CD46539BAF /* AudioRecorderService.swift in Sources */,
 				2FA08539A83EE845C644097E /* AuthView.swift in Sources */,
+				E566F43D3DD14CE38A005CB5 /* CredentialStore.swift in Sources */,
+				7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */,
+				ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */,
 				E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */,
 				5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */,
 				6A8A750D4C20098DD2BC2021 /* LocaleStore.swift in Sources */,

@@ -63,25 +63,6 @@ struct BackgroundImageName: View {
   }
 }
 
-/// Как на Android `RecordingScreen`: для светлой темы — `bg_light_reverse` (фон для liquid/blur).
-struct RecordingScreenBackground: View {
-  @Environment(\.voxeraTheme) private var theme
-  var body: some View {
-    Group {
-      switch theme {
-      case .light:
-        Image("bg_light_reverse")
-          .resizable()
-          .ignoresSafeArea()
-      case .glass:
-        Image("bg_stars")
-          .resizable()
-          .ignoresSafeArea()
-      }
-    }
-  }
-}
-
 struct ThemedCard<Content: View>: View {
   let gradientIndex: Int
   let onTap: (() -> Void)?

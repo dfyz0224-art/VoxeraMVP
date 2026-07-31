@@ -11,6 +11,11 @@ val secrets = Properties().apply {
   if (secretsFile.exists()) load(secretsFile.inputStream())
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+  if (keystorePropertiesFile.exists()) load(keystorePropertiesFile.inputStream())
+}
+
 android {
   namespace = "com.vanoprojects.voxera"
   compileSdk = 36
@@ -19,14 +24,30 @@ android {
     applicationId = "com.vanoprojects.voxera"
     minSdk = 33
     targetSdk = 36
-    versionCode = 1
-    versionName = "0.1.0"
+    versionCode = 4
+    versionName = "0.1.3"
     buildConfigField("String", "VOXERA_API_TOKEN", "\"${secrets.getProperty("VOXERA_API_TOKEN", "")}\"")
     buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${secrets.getProperty("GOOGLE_WEB_CLIENT_ID", "")}\"")
   }
 
+  signingConfigs {
+    create("release") {
+      if (keystorePropertiesFile.exists()) {
+        keyAlias = keystoreProperties.getProperty("keyAlias")
+        keyPassword = keystoreProperties.getProperty("keyPassword")
+        storeFile = rootProject.file(keystoreProperties.getProperty("storeFile")!!)
+        storePassword = keystoreProperties.getProperty("storePassword")
+      }
+    }
+  }
+
   buildTypes {
-    release { isMinifyEnabled = false }
+    release {
+      isMinifyEnabled = false
+      if (keystorePropertiesFile.exists()) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
   }
 
   buildFeatures { compose = true; buildConfig = true }
@@ -55,7 +76,6 @@ dependencies {
   implementation("androidx.navigation:navigation-compose:2.9.0")
   implementation("io.github.fletchmckee.liquid:liquid:1.1.1")
   implementation("androidx.datastore:datastore-preferences:1.1.1")
-  implementation("androidx.core:core-splashscreen:1.2.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -66,4 +86,5 @@ dependencies {
   implementation("com.google.firebase:firebase-auth")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("io.coil-kt:coil-compose:2.5.0")
+  implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

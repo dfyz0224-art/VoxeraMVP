@@ -44,7 +44,8 @@ fun SettingsScreen(
   onPrivacyPolicy: () -> Unit,
   onHelp: () -> Unit,
   onForBusiness: () -> Unit,
-  onProfile: () -> Unit = {}
+  onProfile: () -> Unit = {},
+  onSubscriptions: () -> Unit = {}
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
@@ -80,6 +81,8 @@ fun SettingsScreen(
         prefsManager = prefsManager,
         onClick = onProfile
       )
+      Spacer(modifier = Modifier.height(16.dp))
+      SubscriptionsNavCard(onClick = onSubscriptions)
       Spacer(modifier = Modifier.height(16.dp))
       ThemeSelectorCard(
         currentTheme = currentTheme,
@@ -234,40 +237,25 @@ private fun ProfileCard(
 }
 
 @Composable
-private fun SettingCard(
-  title: String,
-  subtitle: String,
-  checked: Boolean,
-  onChecked: (Boolean) -> Unit,
-  gradientIndex: Int
-) {
+private fun SubscriptionsNavCard(onClick: () -> Unit) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
-  
-  ThemedCard(gradientIndex = gradientIndex) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
+  val strings = LocalStrings.current
+
+  ThemedCard(
+    gradientIndex = 1,
+    height = 72.dp,
+    onClick = onClick
+  ) {
+    Box(
+      modifier = Modifier.fillMaxSize(),
+      contentAlignment = Alignment.CenterStart
     ) {
-      Column(modifier = Modifier.weight(1f)) {
-        TextWithShadow(
-          text = title,
-          style = MaterialTheme.typography.titleMedium,
-          color = colors.textPrimary,
-          fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        TextWithShadow(
-          text = subtitle,
-          style = cardParagraphTextStyle(),
-          color = colors.textSecondary
-        )
-      }
-      Switch(
-        checked = checked,
-        onCheckedChange = onChecked,
-        colors = voxeraSwitchColors()
+      TextWithShadow(
+        text = strings.manageSubscriptions,
+        style = MaterialTheme.typography.titleMedium,
+        color = colors.textPrimary,
+        fontWeight = FontWeight.SemiBold
       )
     }
   }

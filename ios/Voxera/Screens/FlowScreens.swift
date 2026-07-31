@@ -429,6 +429,42 @@ private func stripHtmlTagsIOS(_ html: String) -> String {
     .trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
+/// Android formatEmostateDescriptionPlain: paragraphs before "2. …", "3. …".
+private func formatEmostateDescriptionPlainIOS(_ raw: String) -> String {
+  let plain = stripHtmlTagsIOS(raw)
+    .replacingOccurrences(of: "\r\n", with: "\n")
+    .replacingOccurrences(of: "\r", with: "\n")
+    .trimmingCharacters(in: .whitespacesAndNewlines)
+  guard !plain.isEmpty else { return plain }
+  let spaced = plain.replacingOccurrences(
+    of: #"(?<!^)\s+(?=\d+\.\s+)"#,
+    with: "\n\n",
+    options: .regularExpression
+  )
+  return spaced.replacingOccurrences(
+    of: #"\n{3,}"#,
+    with: "\n\n",
+    options: .regularExpression
+  ).trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+private func formatEmostateDescriptionTextIOS(_ raw: String) -> Text {
+  let plain = formatEmostateDescriptionPlainIOS(raw)
+  var result = Text("")
+  let paragraphs = plain.components(separatedBy: "\n\n")
+  for (index, paragraph) in paragraphs.enumerated() {
+    if index > 0 { result = result + Text("\n\n") }
+    if let match = paragraph.range(of: #"^\d+\.\s+\S+"#, options: .regularExpression) {
+      let head = String(paragraph[match])
+      let rest = String(paragraph[match.upperBound...])
+      result = result + Text(head).fontWeight(.bold) + Text(rest)
+    } else {
+      result = result + Text(paragraph)
+    }
+  }
+  return result
+}
+
 @MainActor
 private func extractDescriptionFromSession(_ session: AnalysisSession) -> String {
   let fromModel = session.lastAnalysisResponse?.result?.description?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -671,16 +707,14 @@ struct ResultView: View {
           }
 
           HStack(spacing: 12) {
-            Button(s.newAnalysis) {
-              path = NavigationPath()
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.white.opacity(0.35))
-            Spacer(minLength: 8)
             Button(s.share) { path.append(AppRoute.share) }
-              .foregroundColor(titleColor)
-            Button(s.history) { path.append(AppRoute.history) }
-              .foregroundColor(titleColor)
+              .buttonStyle(.bordered)
+              .tint(titleColor)
+              .frame(maxWidth: .infinity)
+            Button(s.statesChart) { path.append(AppRoute.history) }
+              .buttonStyle(.borderedProminent)
+              .tint(.white.opacity(0.35))
+              .frame(maxWidth: .infinity)
           }
           .padding(.top, 8)
         }
@@ -801,7 +835,7 @@ struct ResultView: View {
   @ViewBuilder
   private func emostateContent(scales: [EmoScale], descriptionRaw: String) -> some View {
     let sorted = scales.sorted { $0.value > $1.value }
-    let desc = stripHtmlTagsIOS(descriptionRaw)
+    let desc = formatEmostateDescriptionPlainIOS(descriptionRaw)
 
     Text(s.emostateResultTitle)
       .font(.title3.weight(.semibold))
@@ -825,9 +859,10 @@ struct ResultView: View {
         .font(.headline)
         .foregroundColor(titleColor)
         .padding(.top, 12)
-      Text(desc)
+      formatEmostateDescriptionTextIOS(descriptionRaw)
         .font(.body)
         .foregroundColor(secondaryColor)
+        .multilineTextAlignment(.leading)
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(

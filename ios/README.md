@@ -13,7 +13,9 @@ xcodegen generate
 open Voxera.xcodeproj
 ```
 
-После `git pull`, если в проект добавлялись или удалялись `.swift` под `Voxera/`, снова выполните `xcodegen generate` в каталоге `ios`, иначе Xcode может не увидеть новые файлы и ругаться (например, `Cannot find 'HistoryView' in scope`).
+После `git pull`, если в проект добавлялись или удалялись `.swift` под `Voxera/`, снова выполните `xcodegen generate` в каталоге `ios`, иначе Xcode может не увидеть новые файлы и ругаться (например, `Cannot find 'HistoryView' in scope`). Если `.xcodeproj` уже в репозитории — достаточно **File → Packages → Resolve Package Versions** и Clean Build.
+
+Новые экраны (паритет Android): подписки в Settings, форма входа с подтверждением пароля / «Гостевой режим», кнопка «График состояний» на Result.
 
 **API:** без `Voxera/Secrets.xcconfig` (см. `Secrets.xcconfig.example`) запросы вернут `noToken`. В **Debug** можно задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables** без пересборки `Secrets.xcconfig`.
 

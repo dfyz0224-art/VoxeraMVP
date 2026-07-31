@@ -107,9 +107,34 @@ private fun extractDescriptionFromJsonString(jsonStr: String): String = try {
     ""
 }
 
+/**
+ * API often returns "1. Состояние … 2. Риски … 3. Рекомендация …" as one line.
+ * Split into paragraphs and bold the section titles for HtmlCompat display.
+ */
+private fun formatEmostateDescriptionHtml(raw: String): String {
+  if (raw.isBlank()) return raw
+  val plain = HtmlCompat.fromHtml(raw, HtmlCompat.FROM_HTML_MODE_LEGACY)
+    .toString()
+    .replace("\r\n", "\n")
+    .replace('\r', '\n')
+    .trim()
+  val withParagraphs = plain
+    .replace(Regex("""(?<!^)\s+(?=\d+\.\s+)"""), "\n\n")
+    .replace(Regex("""\n{3,}"""), "\n\n")
+  val withBoldTitles = withParagraphs.replace(
+    Regex("""(?m)^(\d+\.\s*)(\S+)""")
+  ) { match ->
+    "${match.groupValues[1]}<b>${match.groupValues[2]}</b>"
+  }
+  return withBoldTitles
+    .split("\n\n")
+    .joinToString("<br/><br/>") { paragraph ->
+      paragraph.trim().replace("\n", "<br/>")
+    }
+}
+
 @Composable
 fun ResultScreen(
-  onNewAnalysis: () -> Unit,
   onShare: () -> Unit,
   onHistory: () -> Unit
 ) {
@@ -209,8 +234,8 @@ fun ResultScreen(
           modifier = Modifier.weight(1f)
         )
         ThemedFilledButton(
-          text = strings.newAnalysis,
-          onClick = onNewAnalysis,
+          text = strings.statesChart,
+          onClick = onHistory,
           modifier = Modifier.weight(1f)
         )
       }
@@ -233,7 +258,8 @@ private fun EmostateResultContent(
   val emoScales = (response.result?.emoScales ?: emptyList())
     .sortedByDescending { it.value }
   val fromModel = response.result?.description.orEmpty()
-  val description = fromModel.ifEmpty { extractDescriptionFromRawJson() }
+  val descriptionRaw = fromModel.ifEmpty { extractDescriptionFromRawJson() }
+  val description = formatEmostateDescriptionHtml(descriptionRaw)
   Log.d("DescriptionExtract", "Emostate: fromModel=${fromModel.length}, final description=${description.length}, showCard=${description.isNotEmpty()}")
 
   Box(modifier = Modifier.fillMaxSize()) {
@@ -784,7 +810,7 @@ private fun ResultScreenEmostatePreview() {
       )
     )
     AnalysisSession.analysisType = "emostate"
-    ResultScreen(onNewAnalysis = {}, onShare = {}, onHistory = {})
+    ResultScreen(onShare = {}, onHistory = {})
   }
 }
 
@@ -811,6 +837,6 @@ private fun ResultScreenPsytypePreview() {
       )
     )
     AnalysisSession.analysisType = "psytype"
-    ResultScreen(onNewAnalysis = {}, onShare = {}, onHistory = {})
+    ResultScreen(onShare = {}, onHistory = {})
   }
 }

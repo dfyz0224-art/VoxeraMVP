@@ -121,29 +121,18 @@ fun ModeSelectScreen(
         // Карточки с фиксированной высотой (одинаковый размер для всех)
         val modeCardHeight = 162.dp
         ModeCard(
-          iconRes = R.drawable.parent_2,
-          title = strings.parentMode,
-          subtitle = strings.parentModeSubtitle,
-          onClick = { onModeChosen("mom") },
+          iconRes = R.drawable.universal_2,
+          label = strings.universalMode,
+          onClick = { onModeChosen("teen") },
           gradientIndex = 0,
           height = modeCardHeight
         )
         Spacer(modifier = Modifier.height(16.dp))
         ModeCard(
-          iconRes = R.drawable.universal_2,
-          title = strings.universalMode,
-          subtitle = strings.universalModeSubtitle,
-          onClick = { onModeChosen("teen") },
-          gradientIndex = 1,
-          height = modeCardHeight
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        ModeCard(
           iconRes = R.drawable.deep_2,
-          title = strings.deepAnalysis,
-          subtitle = strings.deepAnalysisSubtitle,
+          label = strings.deepAnalysis,
           onClick = { onModeChosen("quick") },
-          gradientIndex = 2,
+          gradientIndex = 1,
           height = modeCardHeight
         )
 
@@ -176,8 +165,7 @@ private val ModeCardCorner = 16.dp
 @Composable
 private fun ModeCard(
   iconRes: Int,
-  title: String,
-  subtitle: String,
+  label: String,
   onClick: () -> Unit,
   gradientIndex: Int,
   height: Dp
@@ -249,32 +237,16 @@ private fun ModeCard(
           )
         }
         Spacer(modifier = Modifier.width(16.dp))
-        Column(
-          modifier = Modifier.weight(1f),
-          verticalArrangement = Arrangement.Center
-        ) {
-          Text(
-            text = title,
-            style = cardSectionTitleOnCardStyle().copy(
-              fontSize = 20.sp,
-              lineHeight = 26.sp,
-              fontWeight = FontWeight.Bold
-            ),
-            color = colors.textPrimary,
-            modifier = Modifier.fillMaxWidth()
-          )
-          Spacer(modifier = Modifier.height(8.dp))
-          Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium.copy(
-              fontSize = 16.sp,
-              lineHeight = 24.sp,
-              fontWeight = FontWeight.Normal
-            ),
-            color = colors.textSecondary.copy(alpha = 0.92f),
-            modifier = Modifier.fillMaxWidth()
-          )
-        }
+        Text(
+          text = label,
+          style = MaterialTheme.typography.bodyLarge.copy(
+            fontSize = 17.sp,
+            lineHeight = 24.sp,
+            fontWeight = FontWeight.SemiBold
+          ),
+          color = colors.textPrimary,
+          modifier = Modifier.weight(1f)
+        )
       }
     }
   }

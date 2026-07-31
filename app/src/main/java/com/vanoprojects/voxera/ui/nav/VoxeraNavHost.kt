@@ -1,12 +1,14 @@
 package com.vanoprojects.voxera.ui.nav
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -31,30 +33,17 @@ fun VoxeraNavHost(
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val historyRepository = remember { HistoryRepository(context) }
-  val startDestination = Routes.Splash
-  var splashComplete by remember { mutableStateOf(false) }
-
-  LaunchedEffect(splashComplete, onboardingCompleted, authCompleted) {
-    if (!splashComplete || onboardingCompleted == null) return@LaunchedEffect
-    val currentRoute = navController.currentBackStackEntry?.destination?.route
-    if (currentRoute != Routes.Splash) return@LaunchedEffect
-    when {
-      !onboardingCompleted -> navController.navigate(Routes.Onboarding) {
-        popUpTo(Routes.Splash) { inclusive = true }
-      }
-      !authCompleted -> navController.navigate(Routes.Auth) {
-        popUpTo(Routes.Splash) { inclusive = true }
-      }
-      else -> navController.navigate(Routes.Mode) {
-        popUpTo(Routes.Splash) { inclusive = true }
-      }
+  val startDestination = remember(onboardingCompleted, authCompleted) {
+    when (onboardingCompleted) {
+      null -> null
+      false -> Routes.Onboarding
+      true -> if (!authCompleted) Routes.Auth else Routes.Mode
     }
   }
 
   LaunchedEffect(onboardingCompleted, authCompleted) {
     if (onboardingCompleted == null) return@LaunchedEffect
     val currentRoute = navController.currentBackStackEntry?.destination?.route
-    if (currentRoute == Routes.Splash) return@LaunchedEffect
     when {
       !onboardingCompleted && currentRoute == Routes.Mode ->
         navController.navigate(Routes.Onboarding) {
@@ -75,12 +64,12 @@ fun VoxeraNavHost(
     }
   }
 
+  if (startDestination == null) {
+    Box(Modifier.fillMaxSize().background(Color.Black))
+    return
+  }
+
   NavHost(navController = navController, startDestination = startDestination) {
-    composable(Routes.Splash) {
-      AppSplashScreen(
-        onComplete = { splashComplete = true }
-      )
-    }
     composable(Routes.Onboarding) {
       OnboardingScreen(
         onComplete = {
@@ -147,12 +136,16 @@ fun VoxeraNavHost(
     composable(Routes.Processing) {
       ProcessingScreen(
         historyRepository = historyRepository,
-        onDone = { navController.navigate(Routes.Result) { popUpTo(Routes.Recording) { inclusive = false } } }
+        onDone = {
+          navController.navigate(Routes.Result) {
+            // Drop Recording/Processing/Consent so system back returns to Mode.
+            popUpTo(Routes.Mode) { inclusive = false }
+          }
+        }
       )
     }
     composable(Routes.Result) {
       ResultScreen(
-        onNewAnalysis = { navController.navigate(Routes.Mode) { popUpTo(Routes.Result) { inclusive = true } } },
         onShare = { navController.navigate(Routes.Share) },
         onHistory = { navController.navigate(Routes.History) }
       )
@@ -179,12 +172,15 @@ fun VoxeraNavHost(
         onPrivacyPolicy = { navController.navigate(Routes.PrivacyPolicy) },
         onHelp = { navController.navigate(Routes.Help) },
         onForBusiness = { navController.navigate(Routes.ForBusiness) },
-        onProfile = { navController.navigate(Routes.Profile) }
+        onProfile = { navController.navigate(Routes.Profile) },
+        onSubscriptions = { navController.navigate(Routes.Subscriptions) }
       )
     }
     composable(Routes.Profile) {
-      ProfileScreen(
-        prefsManager = prefsManager,
+      ProfileScreen(prefsManager = prefsManager)
+    }
+    composable(Routes.Subscriptions) {
+      SubscriptionsScreen(
         onForBusiness = { navController.navigate(Routes.ForBusiness) }
       )
     }

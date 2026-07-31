@@ -293,6 +293,7 @@ struct SettingsView: View {
         VStack(spacing: 16) {
           Spacer().frame(height: 8)
           profileCard
+          subscriptionsNavCard
           themeCard
           languageCard
           themedOutlineButton(s.about, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.about) }
@@ -337,8 +338,18 @@ struct SettingsView: View {
     }
   }
 
+  private var subscriptionsNavCard: some View {
+    ThemedCard(gradientIndex: 1, onTap: { path.append(AppRoute.subscriptions) }) {
+      Text(s.manageSubscriptions)
+        .font(.headline)
+        .foregroundColor(.white)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: 36)
+    }
+  }
+
   private var displayName: String {
-    s.profileGuestName
+    AuthBackend.currentEmail ?? s.profileGuestName
   }
 
   private var themeCard: some View {
@@ -844,48 +855,52 @@ struct ProfileView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
+  @State private var authEpoch = 0
   var s: AppStrings { locale.strings }
+
+  private var signedIn: Bool {
+    _ = authEpoch
+    return AuthBackend.isSignedIn
+  }
 
   var body: some View {
     ZStack {
       BackgroundImageName()
       ScrollView {
-        VStack(alignment: .leading, spacing: 16) {
-          ThemedCard(gradientIndex: 0, onTap: {
-            prefs.setAuthCompleted(false)
-            path = NavigationPath()
-          }) {
-            VStack(alignment: .center, spacing: 16) {
-              Text(s.profileGuestTitle)
-                .font(.title3.bold())
-                .multilineTextAlignment(.center)
-                .foregroundColor(.white)
-              Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 56))
-                .foregroundColor(.white)
-              Text(s.profileGuestName)
-                .foregroundColor(.white.opacity(0.9))
+        VStack {
+          Spacer().frame(minHeight: 80)
+          if signedIn {
+            ThemedCard(gradientIndex: 0) {
+              VStack(alignment: .leading, spacing: 10) {
+                Text(s.profile)
+                  .font(.headline)
+                  .foregroundColor(.white)
+                Text(AuthBackend.currentEmail ?? s.userName)
+                  .font(.system(size: 17))
+                  .foregroundColor(.white.opacity(0.85))
+                Button {
+                  AuthBackend.signOut()
+                  prefs.setAuthCompleted(false)
+                  authEpoch += 1
+                } label: {
+                  Text(s.profileSignOut)
+                    .foregroundColor(.red.opacity(0.95))
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.top, 4)
+              }
             }
-            .frame(maxWidth: .infinity)
-          }
-          Button {
-            path.append(AppRoute.forBusiness)
-          } label: {
-            Text(s.forBusiness)
-              .foregroundColor(.white)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 14)
-              .background(Color.white.opacity(0.15))
-              .cornerRadius(12)
-          }
-          .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-              .stroke(
-                prefs.themeType == .light ? Color.white.opacity(0.5) : Color.clear,
-                lineWidth: prefs.themeType == .light ? 1.5 : 0
+          } else {
+            ThemedCard(gradientIndex: 0) {
+              AuthCardContent(
+                showSkipButton: false,
+                onAuthComplete: { authEpoch += 1 }
               )
-          )
+            }
+          }
+          Spacer().frame(minHeight: 80)
         }
+        .frame(maxWidth: .infinity)
         .padding(20)
       }
     }

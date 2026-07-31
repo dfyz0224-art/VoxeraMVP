@@ -5,9 +5,6 @@ struct AuthView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
-  @State private var email = ""
-  @State private var password = ""
-  @State private var isRegister = false
 
   var s: AppStrings { locale.strings }
 
@@ -28,43 +25,23 @@ struct AuthView: View {
           .foregroundColor(.white)
           Text(s.authTitle)
             .font(.title3.bold())
-            .foregroundColor(prefs.themeType == .light ? .white : .white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity, alignment: .leading)
           ThemedCard(gradientIndex: 0) {
-            VStack(alignment: .leading, spacing: 14) {
-              TextField(s.authEmail, text: $email)
-                .textContentType(.emailAddress)
-                .keyboardType(.emailAddress)
-                .autocapitalization(.none)
-                .padding(12)
-                .background(Color.white.opacity(0.12))
-                .cornerRadius(12)
-                .foregroundColor(.white)
-              SecureField(s.authPassword, text: $password)
-                .padding(12)
-                .background(Color.white.opacity(0.12))
-                .cornerRadius(12)
-                .foregroundColor(.white)
-              Button(isRegister ? s.authRegister : s.authLogin) {
+            AuthCardContent(
+              showSkipButton: true,
+              onAuthComplete: {
+                path = NavigationPath()
+              },
+              onSkip: {
                 path = NavigationPath()
                 prefs.setAuthCompleted(true)
               }
-              .buttonStyle(.borderedProminent)
-              .tint(.white.opacity(0.35))
-              Button(s.authSkip) {
-                path = NavigationPath()
-                prefs.setAuthCompleted(true)
-              }
-              .foregroundColor(.white.opacity(0.9))
-              Button(isRegister ? s.authLoginHint : s.authRegisterHint) {
-                isRegister.toggle()
-              }
-              .font(.footnote)
-              .foregroundColor(.white.opacity(0.85))
-            }
+            )
           }
         }
         .padding(.horizontal, 20)
+        .padding(.bottom, 32)
       }
     }
   }

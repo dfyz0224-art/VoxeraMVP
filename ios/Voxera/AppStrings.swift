@@ -48,6 +48,7 @@ struct AppStrings: Equatable {
   let reduced: String
   let share: String
   let newAnalysis: String
+  let statesChart: String
   let emostateResultTitle: String
   let emostateParameters: String
   let emostateReportTitle: String
@@ -185,6 +186,8 @@ struct AppStrings: Equatable {
   let authTitle: String
   let authEmail: String
   let authPassword: String
+  let authPasswordConfirm: String
+  let authRememberPassword: String
   let authLogin: String
   let authRegister: String
   let authGoogle: String
@@ -193,6 +196,7 @@ struct AppStrings: Equatable {
   let authLoginHint: String
   let authErrorInvalidEmail: String
   let authErrorWeakPassword: String
+  let authErrorPasswordMismatch: String
   let authErrorWrongPassword: String
   let authErrorUserNotFound: String
   let authErrorEmailInUse: String

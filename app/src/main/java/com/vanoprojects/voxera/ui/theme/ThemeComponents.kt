@@ -17,6 +17,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.fletchmckee.liquid.liquid
@@ -230,7 +231,9 @@ fun ThemedOutlinedButton(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = colors.buttonText
+            color = colors.buttonText,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -267,7 +270,9 @@ fun ThemedFilledButton(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = textColor
+            color = textColor,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

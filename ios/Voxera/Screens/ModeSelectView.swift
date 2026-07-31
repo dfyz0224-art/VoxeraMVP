@@ -26,30 +26,21 @@ struct ModeSelectView: View {
           .foregroundColor(.white)
           Text(s.selectMode)
             .font(.title3.bold())
-            .foregroundColor(prefs.themeType == .light ? .white : .white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.bottom, 2)
           VStack(spacing: 8) {
             modeCard(
-              title: s.parentMode,
-              subtitle: s.parentModeSubtitle,
-              asset: "parent_2",
-              tag: "mom",
+              title: s.universalMode,
+              asset: "universal_2",
+              tag: "teen",
               gradient: 0
             )
             modeCard(
-              title: s.universalMode,
-              subtitle: s.universalModeSubtitle,
-              asset: "universal_2",
-              tag: "teen",
-              gradient: 1
-            )
-            modeCard(
               title: s.deepAnalysis,
-              subtitle: s.deepAnalysisSubtitle,
               asset: "deep_2",
               tag: "quick",
-              gradient: 2
+              gradient: 1
             )
           }
           HStack(spacing: 12) {
@@ -68,12 +59,8 @@ struct ModeSelectView: View {
     }
   }
 
-  private func modeCard(title: String, subtitle: String, asset: String, tag: String, gradient: Int) -> some View {
+  private func modeCard(title: String, asset: String, tag: String, gradient: Int) -> some View {
     ThemedCard(gradientIndex: gradient, onTap: {
-      if tag == "history" {
-        path.append(AppRoute.history)
-        return
-      }
       session.analysisType = tag == "quick" ? "psytype" : "emostate"
       if prefs.consentGiven {
         path.append(AppRoute.recording)
@@ -81,25 +68,22 @@ struct ModeSelectView: View {
         path.append(AppRoute.consent)
       }
     }) {
-      HStack(alignment: .top, spacing: 12) {
+      HStack(alignment: .center, spacing: 12) {
         Image(asset)
           .renderingMode(.template)
           .resizable()
           .scaledToFit()
-          .frame(width: 64, height: 64)
+          .frame(width: 72, height: 72)
           .foregroundColor(.white)
-        VStack(alignment: .leading, spacing: 4) {
-          Text(title)
-            .font(.headline)
-            .foregroundColor(.white)
-          Text(subtitle)
-            .font(.subheadline)
-            .foregroundColor(.white.opacity(0.88))
-        }
+        Text(title)
+          .font(.system(size: 17, weight: .semibold))
+          .foregroundColor(.white)
+          .multilineTextAlignment(.leading)
+          .frame(maxWidth: .infinity, alignment: .leading)
       }
-      .padding(.vertical, 6)
+      .padding(.vertical, 8)
     }
-    .frame(minHeight: 128)
+    .frame(minHeight: 150)
   }
 
   private func navButton(_ title: String, action: @escaping () -> Void) -> some View {
@@ -109,6 +93,7 @@ struct ModeSelectView: View {
       Text(title)
         .font(.headline)
         .foregroundColor(prefs.themeType == .light ? Color(red: 0.04, green: 0.09, blue: 0.16) : .white)
+        .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .background(Color.white.opacity(prefs.themeType == .light ? 0.55 : 0.12))

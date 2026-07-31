@@ -13,7 +13,7 @@ struct VoxeraApp: App {
         .environmentObject(AnalysisSession.shared)
         .environmentObject(history)
         .environmentObject(locale)
-        .preferredColorScheme(prefs.themeType == .light ? .light : .dark)
+        .preferredColorScheme(.dark)
         .onAppear {
           locale.update(language: prefs.appLanguage)
         }
