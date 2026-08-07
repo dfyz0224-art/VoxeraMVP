@@ -37,7 +37,7 @@ open Voxera.xcodeproj
 
 В `Voxera/Assets.xcassets` уже лежат `bg_stars`, `bg_light`, карточки режимов (`parent_2`, `universal_2`, `deep_2`) — скопированы из Android `res/drawable`. При желании добавьте `ic_voxera_logo_text`, `ic_mic_2`; иначе показываются текст «VOXERA» и системные SF Symbols.
 
-Для релиза в App Store добавьте `1024×1024` в `AppIcon.appiconset`.
+App Store / TestFlight: в `AppIcon.appiconset` лежит `AppIcon-1024.png` (как Play icon). После `git pull` в Xcode откройте **Assets → AppIcon** и убедитесь, что слот заполнен; затем Archive → Upload.
 
 ## Тексты «О приложении»
 
