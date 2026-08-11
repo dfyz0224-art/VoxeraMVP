@@ -2,6 +2,7 @@ package com.vanoprojects.voxera.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -35,41 +36,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import android.content.Intent
 import android.os.Build
 import android.text.Layout
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.text.HtmlCompat
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.AnalysisSession
+import com.vanoprojects.voxera.data.buildSharePlainText
 import com.vanoprojects.voxera.data.model.AnalysisResponse
 import com.vanoprojects.voxera.data.model.EmoScale
 import com.vanoprojects.voxera.data.model.PsyType
+import com.vanoprojects.voxera.ui.strings.EmoScaleNames
 import com.vanoprojects.voxera.ui.strings.LocalStrings
+import com.vanoprojects.voxera.ui.strings.Strings
 import com.vanoprojects.voxera.ui.theme.*
-
-private val EMO_SCALE_NAME_RU = mapOf(
-    "ability_to_attract" to "Притягательность",
-    "expressivity" to "Экспрессивность",
-    "authority" to "Властность",
-    "person_manifestation" to "Демонстративность",
-    "kindness" to "Дружелюбие",
-    "self_control" to "Самоконтроль",
-    "openness_to_new" to "Открытость к опыту",
-    "energy_level" to "Жизнерадостность",
-    "emo_engage" to "Вдохновенность",
-    "ability_to_set_goals" to "Реализованность",
-    "ability_to_assert" to "Независимость",
-    "person_harmonicity" to "Уравновешенность",
-    "emotional_confidence" to "Эмоциональность",
-    "stress_tolerance" to "Стрессоустойчивость",
-)
-
-private fun translateEmoScaleName(name: String): String {
-    if (name.any { it in '\u0400'..'\u04FF' }) return name // уже на русском
-    return EMO_SCALE_NAME_RU[name.lowercase()] ?: name
-}
 
 private fun extractDescriptionFromRawJson(): String {
     val raw = AnalysisSession.lastRawApiResponse
@@ -135,16 +119,36 @@ private fun formatEmostateDescriptionHtml(raw: String): String {
 
 @Composable
 fun ResultScreen(
-  onShare: () -> Unit,
-  onHistory: () -> Unit
+  onHistory: () -> Unit,
+  onGoHome: () -> Unit
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
+  val context = LocalContext.current
 
   val response = AnalysisSession.lastAnalysisResponse
   val analysisType = AnalysisSession.analysisType
   val resultJson = AnalysisSession.lastResultJson ?: "Нет данных"
+
+  fun launchShare() {
+    val text = buildSharePlainText(
+      response = response,
+      analysisType = analysisType,
+      briefOnly = false,
+      strings = strings
+    )
+    if (text.isNullOrBlank()) {
+      Toast.makeText(context, strings.shareNoData, Toast.LENGTH_SHORT).show()
+    } else {
+      val send = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, text)
+        putExtra(Intent.EXTRA_SUBJECT, strings.shareSubject)
+      }
+      context.startActivity(Intent.createChooser(send, strings.share))
+    }
+  }
 
   Box(modifier = Modifier.fillMaxSize()) {
     when (theme.type) {
@@ -227,16 +231,29 @@ fun ResultScreen(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        ThemedOutlinedButton(
-          text = strings.share,
-          onClick = onShare,
-          modifier = Modifier.weight(1f)
-        )
+      Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+          ThemedOutlinedButton(
+            text = strings.share,
+            onClick = { launchShare() },
+            modifier = Modifier.weight(1f)
+          )
+          ThemedFilledButton(
+            text = strings.goHome,
+            onClick = onGoHome,
+            modifier = Modifier.weight(1f)
+          )
+        }
         ThemedFilledButton(
           text = strings.statesChart,
           onClick = onHistory,
-          modifier = Modifier.weight(1f)
+          modifier = Modifier.fillMaxWidth()
         )
       }
       Spacer(modifier = Modifier.height(10.dp))
@@ -253,7 +270,7 @@ private fun EmostateResultContent(
   theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
   strings: com.vanoprojects.voxera.ui.strings.Strings
 ) {
-  var hintSheet by remember { mutableStateOf<Pair<String, String>?>(null) }
+  var hintSheet by remember { mutableStateOf<ResultHintUi?>(null) }
   val scrollState = rememberScrollState()
   val emoScales = (response.result?.emoScales ?: emptyList())
     .sortedByDescending { it.value }
@@ -291,12 +308,13 @@ private fun EmostateResultContent(
 
       emoScales.forEach { scale ->
         EmoScaleCard(
-          name = translateEmoScaleName(scale.name),
+          name = EmoScaleNames.translate(scale.name, strings),
           value = scale.value,
           textColor = cardTextColor,
           theme = theme,
           onInfoClick = {
-            hintSheet = emostateMetricHintTitleBody(scale.name, strings)
+            val (title, body) = emostateMetricHintTitleBody(scale.name, strings)
+            hintSheet = ResultHintUi(title = title, body = body)
           }
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -321,7 +339,10 @@ private fun EmostateResultContent(
           secondaryColor = secondaryColor,
           theme = theme,
           onInfoClick = {
-            hintSheet = strings.emostateReportInfoSheetTitle to emostateDescriptionInterpretationBody(strings)
+            hintSheet = ResultHintUi(
+              title = strings.emostateReportInfoSheetTitle,
+              body = emostateDescriptionInterpretationBody(strings)
+            )
           }
         )
 
@@ -350,6 +371,7 @@ private fun PsytypeResultContent(
   theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
   strings: com.vanoprojects.voxera.ui.strings.Strings
 ) {
+  var hintSheet by remember { mutableStateOf<ResultHintUi?>(null) }
   val scrollState = rememberScrollState()
   val psyTypes = response.result?.psyTypes ?: emptyList()
   val fromModel = response.result?.description.orEmpty()
@@ -359,58 +381,36 @@ private fun PsytypeResultContent(
   val leading = sorted.getOrNull(0)
   val active = sorted.getOrNull(1)
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .verticalScroll(scrollState)
-  ) {
-    Text(
-      text = strings.psytypeResultTitle,
-      style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
-      color = titleColor,
-      fontWeight = FontWeight.SemiBold,
-      modifier = Modifier.fillMaxWidth(),
-      textAlign = TextAlign.Center
-    )
+  Box(modifier = Modifier.fillMaxSize()) {
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .verticalScroll(scrollState)
+    ) {
+      Text(
+        text = strings.psytypeResultTitle,
+        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
+        color = titleColor,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center
+      )
 
-    Spacer(modifier = Modifier.height(20.dp))
+      Spacer(modifier = Modifier.height(20.dp))
 
-    LeadingActiveCard(
-      leadingType = leading?.let { formatPsyTypeName(it.name) to it.value } ?: ("—" to 0.0),
-      activeType = active?.let { formatPsyTypeName(it.name) to it.value } ?: ("—" to 0.0),
-      leadingLabel = strings.leadingType,
-      activeLabel = strings.activeType,
-      textColor = cardTextColor,
-      theme = theme
-    )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    Text(
-      text = "${strings.psytypeAllTypes}:",
-      style = MaterialTheme.typography.titleMedium,
-      color = titleColor,
-      fontWeight = FontWeight.Medium,
-      modifier = Modifier.fillMaxWidth()
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    sorted.forEach { psyType ->
-      PsyTypeCard(
-        name = formatPsyTypeName(psyType.name),
-        value = psyType.value,
+      LeadingActiveCard(
+        leadingType = leading?.let { formatPsyTypeName(it.name) to it.value } ?: ("—" to 0.0),
+        activeType = active?.let { formatPsyTypeName(it.name) to it.value } ?: ("—" to 0.0),
+        leadingLabel = strings.leadingType,
+        activeLabel = strings.activeType,
         textColor = cardTextColor,
         theme = theme
       )
-      Spacer(modifier = Modifier.height(10.dp))
-    }
 
-    Spacer(modifier = Modifier.height(24.dp))
+      Spacer(modifier = Modifier.height(24.dp))
 
-    if (description.isNotEmpty()) {
       Text(
-        text = strings.psytypeReportTitle,
+        text = "${strings.psytypeAllTypes}:",
         style = MaterialTheme.typography.titleMedium,
         color = titleColor,
         fontWeight = FontWeight.Medium,
@@ -419,15 +419,56 @@ private fun PsytypeResultContent(
 
       Spacer(modifier = Modifier.height(12.dp))
 
-      DescriptionCard(
-        description = description,
-        textColor = cardTextColor,
-        secondaryColor = secondaryColor,
-        theme = theme
-      )
+      sorted.forEach { psyType ->
+        PsyTypeCard(
+          name = formatPsyTypeName(psyType.name),
+          value = psyType.value,
+          textColor = cardTextColor,
+          theme = theme,
+          onInfoClick = {
+            val (title, body) = psytypeHintTitleBody(psyType.name, strings)
+            hintSheet = ResultHintUi(
+              title = title,
+              body = body,
+              psytypeStyle = true,
+              personalityTypeLabel = strings.psytypePersonalityTypeLabel,
+              sectionTitle = strings.psytypeReportTitle
+            )
+          }
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+      }
 
       Spacer(modifier = Modifier.height(24.dp))
+
+      if (description.isNotEmpty()) {
+        Text(
+          text = strings.psytypeReportTitle,
+          style = MaterialTheme.typography.titleMedium,
+          color = titleColor,
+          fontWeight = FontWeight.Medium,
+          modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        DescriptionCard(
+          description = description,
+          textColor = cardTextColor,
+          secondaryColor = secondaryColor,
+          theme = theme
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+      }
     }
+
+    ResultHintBottomSheet(
+      data = hintSheet,
+      theme = theme,
+      cardTextColor = cardTextColor,
+      onDismiss = { hintSheet = null }
+    )
   }
 }
 
@@ -479,7 +520,8 @@ private fun PsyTypeCard(
   name: String,
   value: Double,
   textColor: Color,
-  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme
+  theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
+  onInfoClick: () -> Unit
 ) {
   val cardShape = RoundedCornerShape(12.dp)
   val progress = (value / 100.0).toFloat().coerceIn(0f, 1f)
@@ -500,7 +542,12 @@ private fun PsyTypeCard(
       .background(brush = Brush.linearGradient(cardGradient))
       .padding(16.dp)
   ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    val endClearanceForInfo = 52.dp
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(end = endClearanceForInfo)
+    ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -536,6 +583,13 @@ private fun PsyTypeCard(
         )
       }
     }
+    MetricInfoButton(
+      onClick = onInfoClick,
+      contentColor = textColor,
+      modifier = Modifier
+        .align(Alignment.TopEnd)
+        .padding(top = 2.dp, end = 2.dp)
+    )
   }
 }
 
@@ -647,10 +701,18 @@ private fun MetricInfoButton(
   }
 }
 
+private data class ResultHintUi(
+  val title: String,
+  val body: String,
+  val psytypeStyle: Boolean = false,
+  val personalityTypeLabel: String = "",
+  val sectionTitle: String = ""
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ResultHintBottomSheet(
-  data: Pair<String, String>?,
+  data: ResultHintUi?,
   theme: com.vanoprojects.voxera.ui.theme.VoxeraTheme,
   cardTextColor: Color,
   onDismiss: () -> Unit
@@ -669,7 +731,6 @@ private fun ResultHintBottomSheet(
       Color(0xFF243149)
     )
   }
-  val (title, body) = data
   ModalBottomSheet(
     onDismissRequest = onDismiss,
     sheetState = sheetState,
@@ -692,20 +753,63 @@ private fun ResultHintBottomSheet(
         .padding(horizontal = 16.dp)
         .padding(bottom = 32.dp)
     ) {
+      if (data.psytypeStyle && data.sectionTitle.isNotBlank()) {
+        Text(
+          text = data.sectionTitle,
+          style = MaterialTheme.typography.titleMedium,
+          color = cardTextColor,
+          fontWeight = FontWeight.SemiBold,
+          modifier = Modifier.padding(bottom = 10.dp)
+        )
+      }
       Box(
         modifier = Modifier
           .fillMaxWidth()
           .clip(cardShape)
           .background(brush = Brush.linearGradient(cardGradient))
+          .border(1.dp, cardTextColor.copy(alpha = 0.22f), cardShape)
       ) {
         Column(
           modifier = Modifier
             .padding(20.dp)
             .verticalScroll(scroll)
         ) {
-          if (title.isNotBlank()) {
+          if (data.psytypeStyle) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Text(
+                text = "★",
+                color = Color(0xFFFFD54F),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                text = data.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = cardTextColor,
+                fontWeight = FontWeight.Bold
+              )
+              if (data.personalityTypeLabel.isNotBlank()) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                  text = "${data.personalityTypeLabel} ",
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = cardTextColor.copy(alpha = 0.9f)
+                )
+                Text(
+                  text = data.title,
+                  style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
+                  color = cardTextColor.copy(alpha = 0.9f)
+                )
+              }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+          } else if (data.title.isNotBlank()) {
             Text(
-              text = title,
+              text = data.title,
               style = MaterialTheme.typography.titleMedium,
               color = cardTextColor,
               fontWeight = FontWeight.SemiBold
@@ -713,7 +817,7 @@ private fun ResultHintBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
           }
           Text(
-            text = body,
+            text = data.body,
             style = MaterialTheme.typography.bodyMedium,
             color = cardTextColor.copy(alpha = 0.94f),
             lineHeight = 22.sp
@@ -810,7 +914,7 @@ private fun ResultScreenEmostatePreview() {
       )
     )
     AnalysisSession.analysisType = "emostate"
-    ResultScreen(onShare = {}, onHistory = {})
+    ResultScreen(onHistory = {}, onGoHome = {})
   }
 }
 
@@ -837,6 +941,6 @@ private fun ResultScreenPsytypePreview() {
       )
     )
     AnalysisSession.analysisType = "psytype"
-    ResultScreen(onShare = {}, onHistory = {})
+    ResultScreen(onHistory = {}, onGoHome = {})
   }
 }

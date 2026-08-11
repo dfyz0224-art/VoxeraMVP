@@ -40,10 +40,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
   prefsManager: PreferencesManager,
-  onAbout: () -> Unit,
   onPrivacyPolicy: () -> Unit,
-  onHelp: () -> Unit,
-  onForBusiness: () -> Unit,
   onProfile: () -> Unit = {},
   onSubscriptions: () -> Unit = {}
 ) {
@@ -102,28 +99,8 @@ fun SettingsScreen(
 
       Spacer(modifier = Modifier.height(18.dp))
       ThemedOutlinedButton(
-        text = strings.about,
-        onClick = onAbout,
-        modifier = Modifier.fillMaxWidth()
-      )
-
-      Spacer(modifier = Modifier.height(8.dp))
-      ThemedOutlinedButton(
         text = strings.privacyPolicyShortLink,
         onClick = onPrivacyPolicy,
-        modifier = Modifier.fillMaxWidth()
-      )
-
-      Spacer(modifier = Modifier.height(8.dp))
-      ThemedOutlinedButton(
-        text = strings.help,
-        onClick = onHelp,
-        modifier = Modifier.fillMaxWidth()
-      )
-      Spacer(modifier = Modifier.height(8.dp))
-      ThemedOutlinedButton(
-        text = strings.forBusiness,
-        onClick = onForBusiness,
         modifier = Modifier.fillMaxWidth()
       )
       Spacer(modifier = Modifier.height(24.dp))
@@ -149,7 +126,9 @@ fun SettingsScreen(
             AppLanguage.RU to strings.languageRu,
             AppLanguage.EN to strings.languageEn,
             AppLanguage.ZH to strings.languageZh,
-            AppLanguage.KZ to strings.languageKz
+            AppLanguage.KZ to strings.languageKz,
+            AppLanguage.UK to strings.languageUk,
+            AppLanguage.KA to strings.languageKa
           ).forEach { (lang, label) ->
             TextButton(
               onClick = {
@@ -313,6 +292,8 @@ private fun LanguageSelectorCard(
     AppLanguage.EN -> strings.languageEn
     AppLanguage.ZH -> strings.languageZh
     AppLanguage.KZ -> strings.languageKz
+    AppLanguage.UK -> strings.languageUk
+    AppLanguage.KA -> strings.languageKa
   }
 
   ThemedCard(gradientIndex = 3) {

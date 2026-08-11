@@ -2,14 +2,7 @@ package com.vanoprojects.voxera.ui.screens
 
 import com.vanoprojects.voxera.ui.strings.AppLanguage
 import com.vanoprojects.voxera.ui.strings.Strings
-
-internal fun Strings.resolveAppLanguage(): AppLanguage = when (emostateResultTitle) {
-  Strings.Ru.emostateResultTitle -> AppLanguage.RU
-  Strings.En.emostateResultTitle -> AppLanguage.EN
-  Strings.Zh.emostateResultTitle -> AppLanguage.ZH
-  Strings.Kz.emostateResultTitle -> AppLanguage.KZ
-  else -> AppLanguage.RU
-}
+import com.vanoprojects.voxera.ui.strings.resolveAppLanguage
 
 /**
  * Текст для шторки подсказки по шкале (ключ API в нижнем регистре). Заголовок не используется — только тело.
@@ -202,18 +195,18 @@ private fun metricHintBody(key: String, lang: AppLanguage, strings: Strings): St
     """.trimIndent()
   )
   return when (lang) {
-    AppLanguage.RU -> ru[key] ?: strings.emostateParamHintFallback
-    AppLanguage.EN -> en[key] ?: strings.emostateParamHintFallback
-    AppLanguage.ZH, AppLanguage.KZ -> en[key] ?: strings.emostateParamHintFallback
+    AppLanguage.RU, AppLanguage.UK -> ru[key] ?: strings.emostateParamHintFallback
+    AppLanguage.EN, AppLanguage.ZH, AppLanguage.KZ, AppLanguage.KA ->
+      en[key] ?: strings.emostateParamHintFallback
   }
 }
 
 /** Полный текст шторки «интерпретация описания» (негативные состояния и правила). */
 internal fun emostateDescriptionInterpretationBody(strings: Strings): String =
   when (strings.resolveAppLanguage()) {
-    AppLanguage.RU -> DESCRIPTION_INTERPRETATION_RU
-    AppLanguage.EN -> DESCRIPTION_INTERPRETATION_EN
-    AppLanguage.ZH, AppLanguage.KZ -> DESCRIPTION_INTERPRETATION_EN
+    AppLanguage.RU, AppLanguage.UK -> DESCRIPTION_INTERPRETATION_RU
+    AppLanguage.EN, AppLanguage.ZH, AppLanguage.KZ, AppLanguage.KA ->
+      DESCRIPTION_INTERPRETATION_EN
   }
 
 private val DESCRIPTION_INTERPRETATION_RU = buildString {

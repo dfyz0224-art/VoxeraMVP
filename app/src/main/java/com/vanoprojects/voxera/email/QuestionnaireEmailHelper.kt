@@ -3,6 +3,7 @@ package com.vanoprojects.voxera.email
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import com.vanoprojects.voxera.ui.screens.QuestionnairePurpose
 import com.vanoprojects.voxera.ui.strings.Strings
@@ -13,8 +14,9 @@ import java.time.format.FormatStyle
 private const val RECIPIENT_EMAIL = "voxera2026@gmail.com"
 
 /**
- * Собирает текст письма и открывает почтовый клиент с заполненным получателем и телом.
- * @return true, если chooser открыт; false — нет приложения для почты.
+ * Opens the device email app with To / subject / body prefilled (mailto),
+ * without the general Share sheet.
+ * @return true if an email app was opened; false if none found.
  */
 fun Context.launchQuestionnaireEmail(
     strings: Strings,
@@ -50,19 +52,31 @@ fun Context.launchQuestionnaireEmail(
     )
     val subject = "${strings.questionnaireEmailSubject} — ${orgName.trim()}"
 
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "message/rfc822"
-        putExtra(Intent.EXTRA_EMAIL, arrayOf(RECIPIENT_EMAIL))
-        putExtra(Intent.EXTRA_SUBJECT, subject)
-        putExtra(Intent.EXTRA_TEXT, body)
-    }
-    val chooser = Intent.createChooser(intent, strings.questionnaireEmailChooserTitle)
+    // ACTION_SENDTO + mailto: only email clients; not the system Share sheet.
+    val mailto = Uri.parse("mailto:$RECIPIENT_EMAIL").buildUpon()
+        .appendQueryParameter("subject", subject)
+        .appendQueryParameter("body", body)
+        .build()
+    val intent = Intent(Intent.ACTION_SENDTO, mailto)
+
     return try {
-        startActivity(chooser)
+        startActivity(intent)
         true
     } catch (_: ActivityNotFoundException) {
-        Toast.makeText(this, strings.questionnaireNoEmailApp, Toast.LENGTH_LONG).show()
-        false
+        // Fallback: rfc822 still targets email apps when possible
+        val fallback = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(RECIPIENT_EMAIL))
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
+        }
+        try {
+            startActivity(Intent.createChooser(fallback, strings.questionnaireEmailChooserTitle))
+            true
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, strings.questionnaireNoEmailApp, Toast.LENGTH_LONG).show()
+            false
+        }
     }
 }
 

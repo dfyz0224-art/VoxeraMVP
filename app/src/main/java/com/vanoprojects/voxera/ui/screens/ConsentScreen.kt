@@ -36,7 +36,6 @@ fun ConsentScreen(
   var agree1 by rememberSaveable { mutableStateOf(false) }
   var agree2 by rememberSaveable { mutableStateOf(false) }
   val canContinue = agree1 && agree2
-  val scroll = rememberScrollState()
 
   Box(modifier = Modifier.fillMaxSize()) {
     if (theme.type == ThemeType.LIGHT) {
@@ -52,7 +51,6 @@ fun ConsentScreen(
     Column(
       modifier = Modifier
         .fillMaxSize()
-        .verticalScroll(scroll)
         .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
       Spacer(modifier = Modifier.height(18.dp))
@@ -64,64 +62,111 @@ fun ConsentScreen(
       )
       Spacer(modifier = Modifier.height(CardTextSpacing.AfterSectionTitle))
 
-      ThemedCard(
+      ConsentAcceptanceBody(
+        agree1 = agree1,
+        agree2 = agree2,
+        onAgree1 = { agree1 = it },
+        onAgree2 = { agree2 = it },
+        onOpenFullPrivacyPolicy = onOpenFullPrivacyPolicy,
+        onAccept = onAccept,
+        canContinue = canContinue,
+        modifier = Modifier.weight(1f)
+      )
+    }
+  }
+}
+
+/**
+ * Scrollable welcome card + sticky checkboxes / privacy / Start at the bottom.
+ */
+@Composable
+fun ConsentAcceptanceBody(
+  agree1: Boolean,
+  agree2: Boolean,
+  onAgree1: (Boolean) -> Unit,
+  onAgree2: (Boolean) -> Unit,
+  onOpenFullPrivacyPolicy: () -> Unit,
+  onAccept: () -> Unit,
+  canContinue: Boolean,
+  modifier: Modifier = Modifier,
+  useTextWithShadow: Boolean = false
+) {
+  val colors = LocalVoxeraTheme.current.colors
+  val strings = LocalStrings.current
+  val scroll = rememberScrollState()
+
+  Column(modifier = modifier.fillMaxWidth()) {
+    ThemedCard(
+      modifier = Modifier
+        .weight(1f, fill = true)
+        .fillMaxWidth(),
+      gradientIndex = 0,
+      contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+    ) {
+      Column(
         modifier = Modifier
-          .fillMaxWidth()
-          .wrapContentHeight(),
-        gradientIndex = 0,
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp)
+          .fillMaxSize()
+          .verticalScroll(scroll)
       ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        if (useTextWithShadow) {
+          TextWithShadow(
+            text = strings.consentCardSummary,
+            style = cardParagraphTextStyle(),
+            color = colors.textPrimary
+          )
+        } else {
           Text(
             text = strings.consentCardSummary,
             style = cardParagraphTextStyle(),
             color = colors.textPrimary
           )
-          Spacer(modifier = Modifier.height(18.dp))
-          ConsentRow(
-            checked = agree1,
-            onChecked = { agree1 = it },
-            text = strings.consentVoice,
-            textColor = colors.textPrimary
-          )
-          Spacer(modifier = Modifier.height(CardTextSpacing.BetweenParagraphs))
-          ConsentRow(
-            checked = agree2,
-            onChecked = { agree2 = it },
-            text = strings.consentPrivacy,
-            textColor = colors.textPrimary
-          )
-          Spacer(modifier = Modifier.height(12.dp))
-          TextButton(
-            onClick = onOpenFullPrivacyPolicy,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.textButtonColors(contentColor = colors.textPrimary),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-          ) {
-            Text(
-              text = strings.consentOpenPrivacyPolicyButton,
-              style = MaterialTheme.typography.labelLarge.copy(
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-                fontWeight = FontWeight.Medium
-              ),
-              textAlign = TextAlign.Center,
-              modifier = Modifier.fillMaxWidth()
-            )
-          }
         }
       }
-
-      Spacer(modifier = Modifier.height(24.dp))
-
-      ThemedFilledButton(
-        text = strings.start,
-        onClick = onAccept,
-        modifier = Modifier.fillMaxWidth(),
-        enabled = canContinue
-      )
-      Spacer(modifier = Modifier.height(10.dp))
     }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    ConsentRow(
+      checked = agree1,
+      onChecked = onAgree1,
+      text = strings.consentVoice,
+      textColor = colors.backgroundTextPrimary,
+      useTextWithShadow = useTextWithShadow
+    )
+    Spacer(modifier = Modifier.height(CardTextSpacing.BetweenParagraphs))
+    ConsentRow(
+      checked = agree2,
+      onChecked = onAgree2,
+      text = strings.consentPrivacy,
+      textColor = colors.backgroundTextPrimary,
+      useTextWithShadow = useTextWithShadow
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    TextButton(
+      onClick = onOpenFullPrivacyPolicy,
+      modifier = Modifier.fillMaxWidth(),
+      colors = ButtonDefaults.textButtonColors(contentColor = colors.backgroundTextPrimary),
+      contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+    ) {
+      Text(
+        text = strings.consentOpenPrivacyPolicyButton,
+        style = MaterialTheme.typography.labelLarge.copy(
+          fontSize = 13.sp,
+          lineHeight = 18.sp,
+          fontWeight = FontWeight.Medium
+        ),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+      )
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    ThemedFilledButton(
+      text = strings.start,
+      onClick = onAccept,
+      modifier = Modifier.fillMaxWidth(),
+      enabled = canContinue
+    )
+    Spacer(modifier = Modifier.height(10.dp))
   }
 }
 
@@ -130,7 +175,8 @@ private fun ConsentRow(
   checked: Boolean,
   onChecked: (Boolean) -> Unit,
   text: String,
-  textColor: Color = LocalVoxeraTheme.current.colors.backgroundTextPrimary
+  textColor: Color = LocalVoxeraTheme.current.colors.backgroundTextPrimary,
+  useTextWithShadow: Boolean = false
 ) {
   Row(
     modifier = Modifier.fillMaxWidth(),
@@ -142,12 +188,21 @@ private fun ConsentRow(
       colors = voxeraCheckboxColors()
     )
     Spacer(modifier = Modifier.width(12.dp))
-    Text(
-      text = text,
-      color = textColor,
-      style = cardParagraphTextStyle(),
-      modifier = Modifier.weight(1f)
-    )
+    if (useTextWithShadow) {
+      TextWithShadow(
+        text = text,
+        color = textColor,
+        style = cardParagraphTextStyle(),
+        modifier = Modifier.weight(1f)
+      )
+    } else {
+      Text(
+        text = text,
+        color = textColor,
+        style = cardParagraphTextStyle(),
+        modifier = Modifier.weight(1f)
+      )
+    }
   }
 }
 

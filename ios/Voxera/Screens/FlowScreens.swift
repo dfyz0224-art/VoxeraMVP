@@ -7,36 +7,46 @@ struct ConsentView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
+  @State private var agree1 = false
+  @State private var agree2 = false
   var s: AppStrings { locale.strings }
 
   var body: some View {
     ZStack {
       BackgroundImageName()
-      ScrollView {
-        ThemedCard(gradientIndex: 0) {
-          VStack(alignment: .leading, spacing: 12) {
-            Text(s.consentDescription)
-              .foregroundColor(.white)
+      VStack(alignment: .leading, spacing: 14) {
+        Text(s.privacyAndConsent)
+          .font(.title3.bold())
+          .foregroundColor(.white)
+          .padding(.top, 8)
+        ScrollView {
+          ThemedCard(gradientIndex: 0) {
             Text(s.consentCardSummary)
-              .foregroundColor(.white.opacity(0.92))
+              .foregroundColor(.white.opacity(0.95))
               .font(.callout)
-            Button(s.consentOpenPrivacyPolicyButton) { path.append(AppRoute.privacyPolicy) }
-              .foregroundColor(.white)
-            Button(s.back) { path.removeLast() }
-              .foregroundColor(.white.opacity(0.85))
-            Button(s.start) {
-              prefs.setConsentGiven(true)
-              if !path.isEmpty {
-                path.removeLast()
-              }
-              path.append(AppRoute.recording)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.white.opacity(0.35))
+              .fixedSize(horizontal: false, vertical: true)
           }
         }
-        .padding(20)
+        Toggle(s.consentVoice, isOn: $agree1).foregroundColor(.white)
+        Toggle(s.consentPrivacy, isOn: $agree2).foregroundColor(.white)
+        Button(s.consentOpenPrivacyPolicyButton) { path.append(AppRoute.privacyPolicy) }
+          .foregroundColor(.white)
+        Button(s.back) { path.removeLast() }
+          .foregroundColor(.white.opacity(0.85))
+        Button(s.start) {
+          guard agree1 && agree2 else { return }
+          prefs.setConsentGiven(true)
+          if !path.isEmpty {
+            path.removeLast()
+          }
+          path.append(AppRoute.recording)
+        }
+        .disabled(!agree1 || !agree2)
+        .buttonStyle(.borderedProminent)
+        .tint(.white.opacity(0.35))
       }
+      .padding(.horizontal, 20)
+      .padding(.bottom, 20)
     }
   }
 }
@@ -511,23 +521,40 @@ enum MoodStatisticsData {
   }
 
   static func emoScaleDisplayName(apiName: String, language: AppLanguage) -> String {
-    if apiName.unicodeScalars.contains(where: { (0x0400...0x04FF).contains($0.value) }) {
-      return apiName
-    }
     let key = canonicalEmoKey(apiName)
     let sixPack = label(forKey: key, language: language)
     if sixPack != key { return sixPack }
     if let e = extendedLabel(key: key, language: language) { return e }
+    // API may already return a Russian label — try reverse lookup via RU maps.
+    if let canonical = reverseRuKey(apiName) {
+      let again = label(forKey: canonical, language: language)
+      if again != canonical { return again }
+      if let e = extendedLabel(key: canonical, language: language) { return e }
+    }
     return apiName.replacingOccurrences(of: "_", with: " ")
+  }
+
+  private static func reverseRuKey(_ name: String) -> String? {
+    let allRu = [
+      "emo_engage": "Вдохновенность",
+      "self_control": "Самоконтроль",
+      "stress_tolerance": "Стрессоустойчивость",
+      "authority": "Властность",
+      "person_harmonicity": "Уравновешенность",
+      "energy_level": "Жизнерадостность"
+    ].merging(extraRu) { _, b in b }
+    return allRu.first(where: { $0.value.caseInsensitiveCompare(name) == .orderedSame })?.key
   }
 
   private static func extendedLabel(key: String, language: AppLanguage) -> String? {
     let k = key.lowercased()
     switch language {
     case .ru: return extraRu[k]
+    case .uk: return extraUk[k] ?? extraRu[k]
     case .en: return extraEn[k]
     case .zh: return extraZh[k] ?? extraEn[k]
     case .kz: return extraKz[k] ?? extraEn[k]
+    case .ka: return extraKa[k] ?? extraEn[k]
     }
   }
 
@@ -542,34 +569,54 @@ enum MoodStatisticsData {
     "emotional_confidence": "Эмоциональность"
   ]
   private static let extraEn: [String: String] = [
-    "ability_to_attract": "Ability to attract",
-    "expressivity": "Expressivity",
-    "person_manifestation": "Demonstration",
+    "ability_to_attract": "Attractiveness",
+    "expressivity": "Expressiveness",
+    "person_manifestation": "Showmanship",
     "kindness": "Friendliness",
     "openness_to_new": "Openness to experience",
-    "ability_to_set_goals": "Goal achievement",
-    "ability_to_assert": "Assertiveness",
+    "ability_to_set_goals": "Goal fulfillment",
+    "ability_to_assert": "Independence",
     "emotional_confidence": "Emotionality"
   ]
   private static let extraZh: [String: String] = [
     "ability_to_attract": "吸引力",
     "expressivity": "表现力",
-    "person_manifestation": "外显性",
-    "kindness": "亲和力",
-    "openness_to_new": "对新体验的开放度",
-    "ability_to_set_goals": "目标实现",
-    "ability_to_assert": "自信坚持",
-    "emotional_confidence": "情绪表达"
+    "person_manifestation": "表现欲",
+    "kindness": "友善",
+    "openness_to_new": "开放性",
+    "ability_to_set_goals": "目标实现感",
+    "ability_to_assert": "独立性",
+    "emotional_confidence": "情绪性"
   ]
   private static let extraKz: [String: String] = [
-    "ability_to_attract": "Тартылымдылық",
+    "ability_to_attract": "Тартымдылық",
     "expressivity": "Экспрессивтілік",
     "person_manifestation": "Демонстративтілік",
-    "kindness": "Жақындық",
-    "openness_to_new": "Жаңа тәжірибеге ашықтық",
+    "kindness": "Достық",
+    "openness_to_new": "Жаңалыққа ашықтық",
     "ability_to_set_goals": "Мақсатқа жету",
-    "ability_to_assert": "Бәсекелестік",
+    "ability_to_assert": "Тәуелсіздік",
     "emotional_confidence": "Эмоционалдылық"
+  ]
+  private static let extraUk: [String: String] = [
+    "ability_to_attract": "Привабливість",
+    "expressivity": "Експресивність",
+    "person_manifestation": "Демонстративність",
+    "kindness": "Дружелюбність",
+    "openness_to_new": "Відкритість до досвіду",
+    "ability_to_set_goals": "Реалізованість",
+    "ability_to_assert": "Незалежність",
+    "emotional_confidence": "Емоційність"
+  ]
+  private static let extraKa: [String: String] = [
+    "ability_to_attract": "მიმზიდველობა",
+    "expressivity": "ექსპრესიულობა",
+    "person_manifestation": "დემონსტრატიულობა",
+    "kindness": "კეთილგანწყობა",
+    "openness_to_new": "გახსნილობა გამოცდილებისადმი",
+    "ability_to_set_goals": "მიზნების მიღწევა",
+    "ability_to_assert": "დამოუკიდებლობა",
+    "emotional_confidence": "ემოციურობა"
   ]
 
   static func label(forKey key: String, language: AppLanguage) -> String {
@@ -606,11 +653,29 @@ enum MoodStatisticsData {
       "person_harmonicity": "Тұрақтылық",
       "energy_level": "Өмір қуанышы"
     ]
+    let uk: [String: String] = [
+      "emo_engage": "Натхненність",
+      "self_control": "Самоконтроль",
+      "stress_tolerance": "Стресостійкість",
+      "authority": "Владність",
+      "person_harmonicity": "Врівноваженість",
+      "energy_level": "Життєрадісність"
+    ]
+    let ka: [String: String] = [
+      "emo_engage": "შთაგონება",
+      "self_control": "თვითკონტროლი",
+      "stress_tolerance": "სტრესგამძლეობა",
+      "authority": "დომინანტობა",
+      "person_harmonicity": "წონასწორობა",
+      "energy_level": "სიცოცხლისუნარიანობა"
+    ]
     switch language {
     case .ru: return ru[k] ?? key
     case .en: return en[k] ?? key
     case .zh: return zh[k] ?? en[k] ?? key
     case .kz: return kz[k] ?? en[k] ?? key
+    case .uk: return uk[k] ?? ru[k] ?? key
+    case .ka: return ka[k] ?? en[k] ?? key
     }
   }
 

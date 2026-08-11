@@ -2,7 +2,7 @@ package com.vanoprojects.voxera.ui.strings
 
 import androidx.compose.runtime.compositionLocalOf
 
-enum class AppLanguage { RU, EN, ZH, KZ }
+enum class AppLanguage { RU, EN, ZH, KZ, UK, KA }
 
 val LocalStrings = compositionLocalOf { Strings.Ru }
 
@@ -26,7 +26,7 @@ data class Strings(
     val consentDescription: String,
     val consentVoice: String,
     val consentPrivacy: String,
-    /** Краткий текст на карточке согласия; полная политика открывается отдельно. */
+    /** Приветственный текст на карточке согласия; полная политика открывается отдельно. */
     val consentCardSummary: String,
     val readFullPrivacyPolicy: String,
     /** Короткая подпись ссылки и кнопки в настройках: «Политика конфиденциальности». */
@@ -53,6 +53,7 @@ data class Strings(
     // Processing
     val analyzing: String,
     val analyzingSubtitle: String,
+    val analyzeRetry: String,
     // Result
     val result: String,
     val emotionalBackground: String,
@@ -66,6 +67,7 @@ data class Strings(
     val share: String,
     val newAnalysis: String,
     val statesChart: String,
+    val goHome: String,
     val emostateResultTitle: String,
     val emostateParameters: String,
     val emostateReportTitle: String,
@@ -79,6 +81,7 @@ data class Strings(
     val activeType: String,
     val psytypeAllTypes: String,
     val psytypeReportTitle: String,
+    val psytypePersonalityTypeLabel: String,
     // Share
     val shareResult: String,
     val shareNoData: String,
@@ -124,6 +127,8 @@ data class Strings(
     val languageEn: String,
     val languageZh: String,
     val languageKz: String,
+    val languageUk: String,
+    val languageKa: String,
     // About
     val aboutTitle: String,
     val aboutDescription: String,
@@ -219,6 +224,11 @@ data class Strings(
     val authSkip: String,
     val authRegisterHint: String,
     val authLoginHint: String,
+    val authForgotPassword: String,
+    val authResetEmailSent: String,
+    val authVerifyEmailSent: String,
+    val authEmailNotVerified: String,
+    val authResendVerification: String,
     val authErrorInvalidEmail: String,
     val authErrorWeakPassword: String,
     val authErrorPasswordMismatch: String,
@@ -242,7 +252,7 @@ data class Strings(
             universalModeSubtitle = "",
             deepAnalysis = "Глубокий анализ и оценка вашего психологического портрета",
             deepAnalysisSubtitle = "",
-            history = "История",
+            history = "График настроений",
             settings = "Настройки",
             onboardingText1 = "Voxera — это AI-экосистема голосовой аналитики. Алгоритмы искусственного интеллекта обрабатывают параметры речи и формируют цифровой профиль психоэмоционального состояния, помогая лучше понимать себя и управлять своим состоянием",
             onboardingText2 = "Голос — это не просто слова: он отражает работу дыхания, мышц, нервной системы и эмоций. Именно эти признаки Voxera анализирует, чтобы понять ваш уровень стресса, эмоциональный фон, когнитивную нагрузку, энергетическое состояние и стабильность поведения.",
@@ -253,8 +263,11 @@ data class Strings(
             consentVoice = "Я согласен(а) на обработку голосовых данных для анализа",
             consentPrivacy = "Я принимаю Политику конфиденциальности и обработки данных",
             consentCardSummary =
-                "Кратко: VOICElab обрабатывает аудио и технические данные в приложении Voxera для предоставления анализа. " +
-                "Это не медицинский диагноз. Полный текст политики — по ссылке ниже; при желании откройте и прочитайте, затем отметьте пункты.",
+                "Вас приветствует команда разработчиков Voxera!\n" +
+                "Перед вами приложение, позволяющее контролировать один из важнейших параметров человека, напрямую влияющий на здоровье и качество жизни — психоэмоциональное состояние.\n" +
+                "Приложение не ставит медицинских диагнозов, являясь вашим помощником и консультантом, измеряющим параметры психоэмоционального состояния путем обработки аудиоинформации.\n\n" +
+                "О применяемых технологиях и научной базе вы сможете детально узнать далее в разделе «О приложении».\n\n" +
+                "Пользуйтесь на здоровье!",
             readFullPrivacyPolicy = "Открыть полную политику конфиденциальности",
             privacyPolicyShortLink = "Политика конфиденциальности",
             consentOpenPrivacyPolicyButton = "Ознакомиться с политикой конфиденциальности",
@@ -275,6 +288,7 @@ data class Strings(
             recordingEmptyFile = "Запись пуста или слишком короткая — попробуйте ещё раз",
             analyzing = "Анализируем",
             analyzingSubtitle = "Это займёт несколько секунд",
+            analyzeRetry = "Повторить",
             result = "Результат",
             emotionalBackground = "Эмоциональный фон",
             stressLevel = "Уровень стресса",
@@ -287,6 +301,7 @@ data class Strings(
             share = "Поделиться",
             newAnalysis = "Новый анализ",
             statesChart = "График состояний",
+            goHome = "На главную",
             emostateResultTitle = "Результаты анализа психоэмоционального состояния",
             emostateParameters = "Параметры",
             emostateReportTitle = "Отчет по психоэмоциональному состоянию",
@@ -304,6 +319,7 @@ data class Strings(
             activeType = "Активный тип",
             psytypeAllTypes = "Все типы",
             psytypeReportTitle = "Описание",
+            psytypePersonalityTypeLabel = "Тип личности",
             shareResult = "Поделиться результатом",
             shareNoData = "Нет данных для публикации",
             shareSubject = "Voxera — результат анализа",
@@ -311,7 +327,7 @@ data class Strings(
             more = "Ещё…",
             state = "Состояние",
             stableLightTension = "Стабильнее, лёгкое напряжение",
-            historyTitle = "История",
+            historyTitle = "График настроений",
             today = "Сегодня",
             yesterday = "Вчера",
             daysAgo = "дней назад",
@@ -346,6 +362,8 @@ data class Strings(
             languageEn = "English",
             languageZh = "中文",
             languageKz = "Қазақша",
+            languageUk = "Українська",
+            languageKa = "ქართული",
             aboutTitle = "О приложении",
             aboutDescription = "Экспериментальный анализ состояния по голосу. Не является медицинским диагнозом.",
             aboutBriefSectionTitle = "Краткое описание",
@@ -436,12 +454,17 @@ data class Strings(
             authSkip = "Гостевой режим",
             authRegisterHint = "Нет аккаунта? Зарегистрироваться",
             authLoginHint = "Уже есть аккаунт? Войти",
+            authForgotPassword = "Забыли пароль?",
+            authResetEmailSent = "Письмо для сброса пароля отправлено. Проверьте почту.",
+            authVerifyEmailSent = "Аккаунт создан. Мы отправили письмо со ссылкой для подтверждения. Подтвердите email, затем войдите.",
+            authEmailNotVerified = "Email не подтверждён. Откройте ссылку из письма, затем войдите снова.",
+            authResendVerification = "Отправить письмо подтверждения снова",
             authErrorInvalidEmail = "Неверный формат email",
             authErrorWeakPassword = "Пароль должен быть не менее 6 символов",
             authErrorPasswordMismatch = "Пароли не совпадают",
             authErrorWrongPassword = "Неверный пароль",
             authErrorUserNotFound = "Пользователь не найден",
-            authErrorEmailInUse = "Email уже используется",
+            authErrorEmailInUse = "Этот аккаунт уже зарегистрирован",
             authErrorGeneric = "Ошибка входа. Попробуйте снова.",
             profileEditTitle = "Редактирование профиля",
             profileChangePhoto = "Изменить фото",
@@ -458,7 +481,7 @@ data class Strings(
             universalModeSubtitle = "",
             deepAnalysis = "Deep analysis and assessment of your psychological profile",
             deepAnalysisSubtitle = "",
-            history = "History",
+            history = "Mood chart",
             settings = "Settings",
             onboardingText1 = "Voxera is an AI ecosystem for voice analytics. AI algorithms process speech parameters and create a digital profile of psycho-emotional state, helping you better understand and manage your condition.",
             onboardingText2 = "Voice is not just words: it reflects the work of breathing, muscles, nervous system and emotions. Voxera analyzes these signs to understand your stress level, emotional background, cognitive load, energy state and behavioral stability.",
@@ -469,8 +492,11 @@ data class Strings(
             consentVoice = "I agree to the processing of my voice data for analysis",
             consentPrivacy = "I accept the Privacy Policy and personal data processing terms",
             consentCardSummary =
-                "In short: VOICElab processes audio and technical data you provide in the Voxera app to deliver the service. " +
-                "This is not a medical diagnosis. The full policy is available via the link below — open it if you wish, then check the boxes to continue.",
+                "Welcome from the Voxera development team!\n" +
+                "This app helps you track one of the most important human parameters that directly affects health and quality of life — your psycho-emotional state.\n" +
+                "The app does not make medical diagnoses. It is your assistant and consultant that measures psycho-emotional parameters by processing audio.\n\n" +
+                "You can learn more about the technologies and scientific background later in the About section.\n\n" +
+                "Enjoy!",
             readFullPrivacyPolicy = "Read full Privacy Policy",
             privacyPolicyShortLink = "Privacy Policy",
             consentOpenPrivacyPolicyButton = "View privacy policy",
@@ -491,6 +517,7 @@ data class Strings(
             recordingEmptyFile = "Recording is empty or too short — try again",
             analyzing = "Analyzing",
             analyzingSubtitle = "This will take a few seconds",
+            analyzeRetry = "Retry",
             result = "Result",
             emotionalBackground = "Emotional background",
             stressLevel = "Stress level",
@@ -503,6 +530,7 @@ data class Strings(
             share = "Share",
             newAnalysis = "New analysis",
             statesChart = "States chart",
+            goHome = "Home",
             emostateResultTitle = "Psycho-emotional state analysis results",
             emostateParameters = "Parameters",
             emostateReportTitle = "Psycho-emotional state report",
@@ -520,6 +548,7 @@ data class Strings(
             activeType = "Active type",
             psytypeAllTypes = "All types",
             psytypeReportTitle = "Description",
+            psytypePersonalityTypeLabel = "Personality type",
             shareResult = "Share result",
             shareNoData = "Nothing to share",
             shareSubject = "Voxera — analysis result",
@@ -527,7 +556,7 @@ data class Strings(
             more = "More…",
             state = "State",
             stableLightTension = "Stable, light tension",
-            historyTitle = "History",
+            historyTitle = "Mood chart",
             today = "Today",
             yesterday = "Yesterday",
             daysAgo = "days ago",
@@ -562,6 +591,8 @@ data class Strings(
             languageEn = "English",
             languageZh = "中文",
             languageKz = "Қазақша",
+            languageUk = "Українська",
+            languageKa = "ქართული",
             aboutTitle = "About",
             aboutDescription = "Experimental voice-based state analysis. Not a medical diagnosis.",
             aboutBriefSectionTitle = "Brief overview",
@@ -652,12 +683,17 @@ data class Strings(
             authSkip = "Guest mode",
             authRegisterHint = "No account? Register",
             authLoginHint = "Already have an account? Sign in",
+            authForgotPassword = "Forgot password?",
+            authResetEmailSent = "Password reset email sent. Check your inbox.",
+            authVerifyEmailSent = "Account created. We sent a verification link. Confirm your email, then sign in.",
+            authEmailNotVerified = "Email not verified. Open the link from the email, then sign in again.",
+            authResendVerification = "Resend verification email",
             authErrorInvalidEmail = "Invalid email format",
             authErrorWeakPassword = "Password must be at least 6 characters",
             authErrorPasswordMismatch = "Passwords do not match",
             authErrorWrongPassword = "Wrong password",
             authErrorUserNotFound = "User not found",
-            authErrorEmailInUse = "Email already in use",
+            authErrorEmailInUse = "This account is already registered",
             authErrorGeneric = "Sign in failed. Please try again.",
             profileEditTitle = "Edit profile",
             profileChangePhoto = "Change photo",
@@ -674,7 +710,7 @@ data class Strings(
             universalModeSubtitle = "",
             deepAnalysis = "深度分析并评估您的心理画像",
             deepAnalysisSubtitle = "",
-            history = "历史",
+            history = "情绪图表",
             settings = "设置",
             onboardingText1 = "Voxera是语音分析的AI生态系统。AI算法处理语音参数并创建心理情绪状态的数字档案，帮助您更好地了解和管理自己的状态。",
             onboardingText2 = "声音不仅仅是文字：它反映呼吸、肌肉、神经系统和情绪的工作。Voxera分析这些特征以了解您的压力水平、情绪背景、认知负荷、能量状态和行为稳定性。",
@@ -685,8 +721,11 @@ data class Strings(
             consentVoice = "我同意为分析目的处理语音数据",
             consentPrivacy = "我接受隐私政策与个人数据处理条款",
             consentCardSummary =
-                "简要说明：VOICElab 会在 Voxera 应用中处理您提供的音频与技术数据以提供服务。" +
-                "这不是医学诊断。完整政策见下方链接；您可随时打开阅读，然后勾选以继续。",
+                "欢迎来到 Voxera 开发团队！\n" +
+                "本应用帮助您关注直接影响健康与生活质量的重要指标——心理情绪状态。\n" +
+                "本应用不做出医学诊断，而是作为助手与顾问，通过分析音频测量心理情绪参数。\n\n" +
+                "关于所用技术与科学基础，您可稍后在「关于应用」中详细了解。\n\n" +
+                "祝使用愉快！",
             readFullPrivacyPolicy = "查看完整隐私政策",
             privacyPolicyShortLink = "隐私政策",
             consentOpenPrivacyPolicyButton = "查看隐私政策",
@@ -707,6 +746,7 @@ data class Strings(
             recordingEmptyFile = "录音为空或太短，请重试",
             analyzing = "分析中",
             analyzingSubtitle = "只需几秒钟",
+            analyzeRetry = "重试",
             result = "结果",
             emotionalBackground = "情绪背景",
             stressLevel = "压力水平",
@@ -719,6 +759,7 @@ data class Strings(
             share = "分享",
             newAnalysis = "新分析",
             statesChart = "状态图表",
+            goHome = "主页",
             emostateResultTitle = "心理情绪状态分析结果",
             emostateParameters = "参数",
             emostateReportTitle = "心理情绪状态报告",
@@ -734,6 +775,7 @@ data class Strings(
             activeType = "活跃类型",
             psytypeAllTypes = "所有类型",
             psytypeReportTitle = "描述",
+            psytypePersonalityTypeLabel = "人格类型",
             shareResult = "分享结果",
             shareNoData = "暂无可分享内容",
             shareSubject = "Voxera — 分析结果",
@@ -741,7 +783,7 @@ data class Strings(
             more = "更多…",
             state = "状态",
             stableLightTension = "稳定，轻度紧张",
-            historyTitle = "历史",
+            historyTitle = "情绪图表",
             today = "今天",
             yesterday = "昨天",
             daysAgo = "天前",
@@ -776,6 +818,8 @@ data class Strings(
             languageEn = "English",
             languageZh = "中文",
             languageKz = "Қазақша",
+            languageUk = "Українська",
+            languageKa = "ქართული",
             aboutTitle = "关于",
             aboutDescription = "实验性语音状态分析。非医学诊断。",
             aboutBriefSectionTitle = "简要说明",
@@ -866,12 +910,17 @@ data class Strings(
             authSkip = "访客模式",
             authRegisterHint = "没有账户？注册",
             authLoginHint = "已有账户？登录",
+            authForgotPassword = "忘记密码？",
+            authResetEmailSent = "重置密码邮件已发送，请查收邮箱。",
+            authVerifyEmailSent = "账号已创建。我们已发送验证链接，请确认邮箱后再登录。",
+            authEmailNotVerified = "邮箱未验证。请打开邮件中的链接，然后重新登录。",
+            authResendVerification = "重新发送验证邮件",
             authErrorInvalidEmail = "电子邮件格式无效",
             authErrorWeakPassword = "密码至少6个字符",
             authErrorPasswordMismatch = "两次输入的密码不一致",
             authErrorWrongPassword = "密码错误",
             authErrorUserNotFound = "未找到用户",
-            authErrorEmailInUse = "电子邮件已被使用",
+            authErrorEmailInUse = "该账号已注册",
             authErrorGeneric = "登录失败，请重试。",
             profileEditTitle = "编辑个人资料",
             profileChangePhoto = "更换照片",
@@ -888,7 +937,7 @@ data class Strings(
             universalModeSubtitle = "",
             deepAnalysis = "Терең талдау және психологиялық портретіңізді бағалау",
             deepAnalysisSubtitle = "",
-            history = "Тарих",
+            history = "Көңіл-күй графигі",
             settings = "Баптаулар",
             onboardingText1 = "Voxera — дауыс аналитикасының AI экожүйесі. AI алгоритмдері сөйлеу параметрлерін өңдейді және психоэмоционалдық жағдайдың сандық профилін құрады, өзіңізді жақсырақ түсінуге және жағдайыңызды басқаруға көмектеседі.",
             onboardingText2 = "Дауыс — тек сөздер емес: ол тыныс алу, бұлшықеттер, жүйке жүйесі және эмоциялардың жұмысын көрсетеді. Voxera стресс деңгейіңізді, эмоционалды фонды, когнитивтік жүктемені, энергетикалық жағдайды және мінез-құлық тұрақтылығын түсіну үшін осы белгілерді талдайды.",
@@ -899,8 +948,11 @@ data class Strings(
             consentVoice = "Талдау үшін дауыс деректерін өңдеуге келісемін",
             consentPrivacy = "Құпиялылық саясатын және жеке деректерді өңдеу шарттарын қабылдаймын",
             consentCardSummary =
-                "Қысқаша: VOICElab Voxera қолданбасында сіз берген аудио және техникалық деректерді қызмет көрсету үшін өңдейді. " +
-                "Бұл медициналық диагноз емес. Толық саясат төмендегі сілтемеде; қалағанда оқыңыз, содан кейін белгілерді қойыңыз.",
+                "Voxera әзірлеушілер тобы сізді құттықтайды!\n" +
+                "Бұл қолданба адамның денсаулығы мен өмір сапасына тікелей әсер ететін маңызды параметрлердің бірі — психоэмоционалдық жағдайды бақылауға көмектеседі.\n" +
+                "Қолданба медициналық диагноз қоймайды; ол аудиоақпаратты өңдеу арқылы психоэмоционалдық параметрлерді өлшейтін көмекші және кеңесші.\n\n" +
+                "Қолданылатын технологиялар мен ғылыми негіз туралы толығырақ кейін «Қолданба туралы» бөлімінен біле аласыз.\n\n" +
+                "Пайдаланыңыз!",
             readFullPrivacyPolicy = "Толық құпиялылық саясатын ашу",
             privacyPolicyShortLink = "Құпиялылық саясаты",
             consentOpenPrivacyPolicyButton = "Құпиялылық саясатын оқу",
@@ -921,6 +973,7 @@ data class Strings(
             recordingEmptyFile = "Жазу бос немесе тым қысқа — қайталаңыз",
             analyzing = "Талдауда",
             analyzingSubtitle = "Бірнеше секунд қажет",
+            analyzeRetry = "Қайталау",
             result = "Нәтиже",
             emotionalBackground = "Эмоционалды фон",
             stressLevel = "Стресс деңгейі",
@@ -933,6 +986,7 @@ data class Strings(
             share = "Бөлісу",
             newAnalysis = "Жаңа талдау",
             statesChart = "Күйлер графигі",
+            goHome = "Басты бетке",
             emostateResultTitle = "Психоэмоционалды күй талдау нәтижелері",
             emostateParameters = "Параметрлер",
             emostateReportTitle = "Психоэмоционалды күй туралы есеп",
@@ -950,6 +1004,7 @@ data class Strings(
             activeType = "Белсенді тип",
             psytypeAllTypes = "Барлық типтер",
             psytypeReportTitle = "Сипаттама",
+            psytypePersonalityTypeLabel = "Тұлға типі",
             shareResult = "Нәтижені бөлісу",
             shareNoData = "Бөлісу үшін дерек жоқ",
             shareSubject = "Voxera — талдау нәтижесі",
@@ -957,7 +1012,7 @@ data class Strings(
             more = "Тағы…",
             state = "Жағдай",
             stableLightTension = "Тұрақты, жеңіл кернеу",
-            historyTitle = "Тарих",
+            historyTitle = "Көңіл-күй графигі",
             today = "Бүгін",
             yesterday = "Кеше",
             daysAgo = "күн бұрын",
@@ -992,6 +1047,8 @@ data class Strings(
             languageEn = "English",
             languageZh = "中文",
             languageKz = "Қазақша",
+            languageUk = "Українська",
+            languageKa = "ქართული",
             aboutTitle = "Қолданба туралы",
             aboutDescription = "Дауыс бойынша жағдайды тәжірибелік талдау. Медициналық диагноз емес.",
             aboutBriefSectionTitle = "Қысқаша сипаттама",
@@ -1082,12 +1139,17 @@ data class Strings(
             authSkip = "Қонақ режимі",
             authRegisterHint = "Аккаунт жоқ па? Тіркеліңіз",
             authLoginHint = "Аккаунтыңыз бар ма? Кіріңіз",
+            authForgotPassword = "Құпия сөзді ұмыттыңыз ба?",
+            authResetEmailSent = "Құпия сөзді қалпына келтіру хаты жіберілді. Поштаңызды тексеріңіз.",
+            authVerifyEmailSent = "Аккаунт жасалды. Растау сілтемесі бар хат жіберілді. Email-ды растап, содан кейін кіріңіз.",
+            authEmailNotVerified = "Email расталмаған. Хаттағы сілтемені ашып, қайта кіріңіз.",
+            authResendVerification = "Растау хатын қайта жіберу",
             authErrorInvalidEmail = "Email форматы қате",
             authErrorWeakPassword = "Құпия сөз кем дегенде 6 таңбадан тұруы керек",
             authErrorPasswordMismatch = "Құпия сөздер сәйкес келмейді",
             authErrorWrongPassword = "Құпия сөз қате",
             authErrorUserNotFound = "Пайдаланушы табылмады",
-            authErrorEmailInUse = "Email қолданыста",
+            authErrorEmailInUse = "Бұл аккаунт қазірдің өзінде тіркелген",
             authErrorGeneric = "Кіру сәтсіз аяқталды. Қайталап көріңіз.",
             profileEditTitle = "Профильді өңдеу",
             profileChangePhoto = "Фотоны өзгерту",
@@ -1096,5 +1158,8 @@ data class Strings(
             profileGuestName = "Қонақ",
             profileDone = "Дайын"
         )
+
+        val Uk: Strings by lazy { buildUkStrings() }
+        val Ka: Strings by lazy { buildKaStrings() }
     }
 }

@@ -7,29 +7,8 @@ import com.google.gson.JsonPrimitive
 import com.vanoprojects.voxera.data.model.AnalysisResponse
 import com.vanoprojects.voxera.data.model.EmoScale
 import com.vanoprojects.voxera.data.model.PsyType
+import com.vanoprojects.voxera.ui.strings.EmoScaleNames
 import com.vanoprojects.voxera.ui.strings.Strings
-
-private val EMO_SCALE_NAME_RU = mapOf(
-  "ability_to_attract" to "Притягательность",
-  "expressivity" to "Экспрессивность",
-  "authority" to "Властность",
-  "person_manifestation" to "Демонстративность",
-  "kindness" to "Дружелюбие",
-  "self_control" to "Самоконтроль",
-  "openness_to_new" to "Открытость к опыту",
-  "energy_level" to "Жизнерадостность",
-  "emo_engage" to "Вдохновенность",
-  "ability_to_set_goals" to "Реализованность",
-  "ability_to_assert" to "Независимость",
-  "person_harmonicity" to "Уравновешенность",
-  "emotional_confidence" to "Эмоциональность",
-  "stress_tolerance" to "Стрессоустойчивость"
-)
-
-private fun translateEmoScaleName(name: String): String {
-  if (name.any { it in '\u0400'..'\u04FF' }) return name
-  return EMO_SCALE_NAME_RU[name.lowercase()] ?: name
-}
 
 private fun formatPsyTypeName(name: String): String =
   name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
@@ -149,7 +128,7 @@ fun buildSharePlainText(
         val sorted = scales.sortedByDescending { it.value }
         if (briefOnly) {
           sorted.take(3).forEach { s ->
-            append("${translateEmoScaleName(s.name)}: ${s.value}\n")
+            append("${EmoScaleNames.translate(s.name, strings)}: ${s.value}\n")
           }
           if (desc.isNotEmpty()) {
             append("\n")
@@ -157,7 +136,7 @@ fun buildSharePlainText(
           }
         } else {
           sorted.forEach { s ->
-            append("${translateEmoScaleName(s.name)}: ${s.value}\n")
+            append("${EmoScaleNames.translate(s.name, strings)}: ${s.value}\n")
           }
           if (descRaw.isNotEmpty()) {
             append("\n")
@@ -192,7 +171,7 @@ fun sharePreviewLines(
       if (scales.isEmpty()) return strings.shareNoData to ""
       val top3 = scales.sortedByDescending { it.value }.take(3)
       val subtitle = top3.joinToString("\n") { s ->
-        "${translateEmoScaleName(s.name)}: ${s.value}"
+        "${EmoScaleNames.translate(s.name, strings)}: ${s.value}"
       }
       strings.emostateResultTitle to subtitle
     }

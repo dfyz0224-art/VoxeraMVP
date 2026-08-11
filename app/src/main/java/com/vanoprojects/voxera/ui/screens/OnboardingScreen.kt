@@ -68,7 +68,6 @@ fun OnboardingScreen(
       modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 20.dp, vertical = 24.dp)
-        .verticalScroll(rememberScrollState())
     ) {
       Spacer(modifier = Modifier.height(48.dp))
 
@@ -91,141 +90,61 @@ fun OnboardingScreen(
 
       when (step) {
         0 -> {
-          // Шаг 1: Выбор языка
-          ThemedCard(
-            modifier = Modifier.wrapContentHeight(),
-            gradientIndex = 0
+          Column(
+            modifier = Modifier
+              .weight(1f)
+              .fillMaxWidth()
+              .verticalScroll(rememberScrollState())
           ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-              TextWithShadow(
-                text = strings.selectLanguage,
-                style = MaterialTheme.typography.titleMedium,
-                color = colors.textPrimary,
-                fontWeight = FontWeight.SemiBold
-              )
-              Spacer(modifier = Modifier.height(16.dp))
-              val currentLangLabel = when (currentLanguage) {
-                AppLanguage.RU -> strings.languageRu
-                AppLanguage.EN -> strings.languageEn
-                AppLanguage.ZH -> strings.languageZh
-                AppLanguage.KZ -> strings.languageKz
-              }
-              OutlinedButton(
-                onClick = { showLanguageSheet = true },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                  contentColor = colors.textPrimary,
-                  containerColor = colors.buttonBackground.copy(alpha = 0.5f)
+            ThemedCard(
+              modifier = Modifier.wrapContentHeight(),
+              gradientIndex = 0
+            ) {
+              Column(modifier = Modifier.fillMaxWidth()) {
+                TextWithShadow(
+                  text = strings.selectLanguage,
+                  style = MaterialTheme.typography.titleMedium,
+                  color = colors.textPrimary,
+                  fontWeight = FontWeight.SemiBold
                 )
-              ) {
-                Text(currentLangLabel)
+                Spacer(modifier = Modifier.height(16.dp))
+                val currentLangLabel = when (currentLanguage) {
+                  AppLanguage.RU -> strings.languageRu
+                  AppLanguage.EN -> strings.languageEn
+                  AppLanguage.ZH -> strings.languageZh
+                  AppLanguage.KZ -> strings.languageKz
+                  AppLanguage.UK -> strings.languageUk
+                  AppLanguage.KA -> strings.languageKa
+                }
+                OutlinedButton(
+                  onClick = { showLanguageSheet = true },
+                  modifier = Modifier.fillMaxWidth(),
+                  shape = RoundedCornerShape(12.dp),
+                  colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = colors.textPrimary,
+                    containerColor = colors.buttonBackground.copy(alpha = 0.5f)
+                  )
+                ) {
+                  Text(currentLangLabel)
+                }
               }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            ThemedFilledButton(
+              text = strings.next,
+              onClick = { step = 1 },
+              modifier = Modifier.fillMaxWidth()
+            )
           }
-          Spacer(modifier = Modifier.height(16.dp))
-          ThemedFilledButton(
-            text = strings.next,
-            onClick = { step = 1 },
-            modifier = Modifier.fillMaxWidth()
-          )
         }
         1 -> {
-          // Шаг 2: Текст о Voxera
-          ThemedCard(
-            modifier = Modifier.wrapContentHeight(),
-            gradientIndex = 1
-          ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-              TextWithShadow(
-                text = strings.onboardingText1,
-                style = cardParagraphTextStyle(),
-                color = colors.textPrimary
-              )
-            }
-          }
-          Spacer(modifier = Modifier.height(16.dp))
-          ThemedFilledButton(
-            text = strings.next,
-            onClick = { step = 2 },
-            modifier = Modifier.fillMaxWidth()
-          )
-        }
-        2 -> {
-          // Шаг 3: согласие (как на ConsentScreen: краткий текст, галочки, кнопка политики)
-          ThemedCard(
-            modifier = Modifier
-              .fillMaxWidth()
-              .wrapContentHeight(),
-            gradientIndex = 2,
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp)
-          ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-              TextWithShadow(
-                text = strings.consentCardSummary,
-                style = cardParagraphTextStyle(),
-                color = colors.textPrimary
-              )
-              Spacer(modifier = Modifier.height(18.dp))
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Checkbox(
-                  checked = agree1,
-                  onCheckedChange = { agree1 = it },
-                  colors = voxeraCheckboxColors()
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                TextWithShadow(
-                  text = strings.consentVoice,
-                  style = cardParagraphTextStyle(),
-                  color = colors.textPrimary,
-                  modifier = Modifier.weight(1f)
-                )
-              }
-              Spacer(modifier = Modifier.height(CardTextSpacing.BetweenParagraphs))
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Checkbox(
-                  checked = agree2,
-                  onCheckedChange = { agree2 = it },
-                  colors = voxeraCheckboxColors()
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                TextWithShadow(
-                  text = strings.consentPrivacy,
-                  style = cardParagraphTextStyle(),
-                  color = colors.textPrimary,
-                  modifier = Modifier.weight(1f)
-                )
-              }
-              Spacer(modifier = Modifier.height(12.dp))
-              TextButton(
-                onClick = onOpenPrivacyPolicy,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColors(contentColor = colors.textPrimary),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-              ) {
-                Text(
-                  text = strings.consentOpenPrivacyPolicyButton,
-                  style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontWeight = FontWeight.Medium
-                  ),
-                  textAlign = TextAlign.Center,
-                  modifier = Modifier.fillMaxWidth()
-                )
-              }
-            }
-          }
-          Spacer(modifier = Modifier.height(16.dp))
-          ThemedFilledButton(
-            text = strings.start,
-            onClick = {
+          ConsentAcceptanceBody(
+            agree1 = agree1,
+            agree2 = agree2,
+            onAgree1 = { agree1 = it },
+            onAgree2 = { agree2 = it },
+            onOpenFullPrivacyPolicy = onOpenPrivacyPolicy,
+            onAccept = {
               if (agree1 && agree2) {
                 scope.launch {
                   prefsManager.setConsentGiven(true)
@@ -234,13 +153,12 @@ fun OnboardingScreen(
                 }
               }
             },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = agree1 && agree2
+            canContinue = agree1 && agree2,
+            modifier = Modifier.weight(1f),
+            useTextWithShadow = true
           )
         }
       }
-
-      Spacer(modifier = Modifier.weight(1f))
     }
   }
 
@@ -265,7 +183,9 @@ fun OnboardingScreen(
           AppLanguage.RU to strings.languageRu,
           AppLanguage.EN to strings.languageEn,
           AppLanguage.ZH to strings.languageZh,
-          AppLanguage.KZ to strings.languageKz
+          AppLanguage.KZ to strings.languageKz,
+          AppLanguage.UK to strings.languageUk,
+          AppLanguage.KA to strings.languageKa
         ).forEach { (lang, label) ->
           TextButton(
             onClick = {

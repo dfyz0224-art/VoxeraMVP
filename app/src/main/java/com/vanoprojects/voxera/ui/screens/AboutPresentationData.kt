@@ -23,6 +23,8 @@ fun stringsToAppLanguage(strings: Strings): AppLanguage = when (strings) {
   Strings.En -> AppLanguage.EN
   Strings.Zh -> AppLanguage.ZH
   Strings.Kz -> AppLanguage.KZ
+  Strings.Uk -> AppLanguage.UK
+  Strings.Ka -> AppLanguage.KA
   else -> AppLanguage.EN
 }
 
@@ -31,6 +33,9 @@ fun aboutShortSections(language: AppLanguage): List<AboutShortSection> = when (l
   AppLanguage.EN -> aboutShortEn()
   AppLanguage.ZH -> aboutShortZh()
   AppLanguage.KZ -> aboutShortKz()
+  // Full UK/KA copy comes later; UI chrome is localized via Strings.
+  AppLanguage.UK -> aboutShortEn()
+  AppLanguage.KA -> aboutShortEn()
 }
 
 fun aboutPresentationSlides(language: AppLanguage): List<AboutSlide> = when (language) {
@@ -38,6 +43,8 @@ fun aboutPresentationSlides(language: AppLanguage): List<AboutSlide> = when (lan
   AppLanguage.EN -> slidesEn()
   AppLanguage.ZH -> slidesZh()
   AppLanguage.KZ -> slidesKz()
+  AppLanguage.UK -> slidesEn()
+  AppLanguage.KA -> slidesEn()
 }
 
 // --- Краткое описание ---
@@ -243,7 +250,7 @@ private fun aboutShortKz() = listOf(
 private fun slidesRu() = listOf(
   AboutSlide(
     title = "VOXERA: революция в анализе голосовой индивидуальности",
-    body = "VOXERA представляет собой передовую комплексную голосовую AI-экосистему, разработанную в Казахстане. Она интегрирует современные технологии анализа голоса, эмоционального состояния и поведенческих паттернов пользователей для создания инновационных решений."
+    body = "VOXERA представляет собой передовую комплексную голосовую AI-экосистему. Она интегрирует современные технологии анализа голоса, эмоционального состояния и поведенческих паттернов пользователей для создания инновационных решений."
   ),
   AboutSlide(
     title = "Ограничения классических методик",
@@ -306,7 +313,7 @@ private fun slidesRu() = listOf(
 private fun slidesEn() = listOf(
   AboutSlide(
     title = "VOXERA: a revolution in voice personality analysis",
-    body = "VOXERA is an advanced, comprehensive voice AI ecosystem developed in Kazakhstan. It integrates state-of-the-art analysis of voice, emotional state, and user behavioral patterns to deliver innovative solutions."
+    body = "VOXERA is an advanced, comprehensive voice AI ecosystem. It integrates state-of-the-art analysis of voice, emotional state, and user behavioral patterns to deliver innovative solutions."
   ),
   AboutSlide(
     title = "Limits of traditional methods",
@@ -369,7 +376,7 @@ private fun slidesEn() = listOf(
 private fun slidesZh() = listOf(
   AboutSlide(
     title = "VOXERA：语音个体性分析的革新",
-    body = "VOXERA 是由哈萨克斯坦研发的先进综合语音 AI 生态，整合前沿的语音分析、情绪状态与用户行为模式技术，以打造创新解决方案。"
+    body = "VOXERA 是先进的综合语音 AI 生态，整合前沿的语音分析、情绪状态与用户行为模式技术，以打造创新解决方案。"
   ),
   AboutSlide(
     title = "传统方法的局限",
@@ -432,7 +439,7 @@ private fun slidesZh() = listOf(
 private fun slidesKz() = listOf(
   AboutSlide(
     title = "VOXERA: дауыстық жеке ерекшелік талдауындағы төңкеріс",
-    body = "VOXERA — Қазақстанда әзірленген дауыстық AI экожүйесі: дауыс, эмоционалдық күй және мінез-құлық үлгілерін заманауи талдайды және инновациялық шешімдер береді."
+    body = "VOXERA — дауыстық AI экожүйесі: дауыс, эмоционалдық күй және мінез-құлық үлгілерін заманауи талдайды және инновациялық шешімдер береді."
   ),
   AboutSlide(
     title = "Дәстүрлі әдістердің шектеулері",

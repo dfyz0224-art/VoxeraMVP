@@ -31,10 +31,6 @@ val aboutResearchLinksList = listOf(
     url = "https://doi.org/10.1016/j.specom.2023.102974"
   ),
   ResearchLink(
-    title = "Analysis and Compensation of Speech Under Stress",
-    url = "https://doi.org/10.1016/S0167-6393(96)00013-7"
-  ),
-  ResearchLink(
     title = "A Generalizable Speech Emotion Recognition Model Reveals Depression and Remission",
     url = "https://doi.org/10.1111/acps.13388"
   ),

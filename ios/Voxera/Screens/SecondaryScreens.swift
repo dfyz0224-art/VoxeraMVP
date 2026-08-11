@@ -311,6 +311,8 @@ struct SettingsView: View {
           Button { setLang(.en); showLanguageSheet = false } label: { Text(s.languageEn) }
           Button { setLang(.zh); showLanguageSheet = false } label: { Text(s.languageZh) }
           Button { setLang(.kz); showLanguageSheet = false } label: { Text(s.languageKz) }
+          Button { setLang(.uk); showLanguageSheet = false } label: { Text(s.languageUk) }
+          Button { setLang(.ka); showLanguageSheet = false } label: { Text(s.languageKa) }
         }
         .navigationTitle(s.selectLanguage)
         .toolbar {
@@ -398,6 +400,8 @@ struct SettingsView: View {
     case .en: return s.languageEn
     case .zh: return s.languageZh
     case .kz: return s.languageKz
+    case .uk: return s.languageUk
+    case .ka: return s.languageKa
     }
   }
 
@@ -817,10 +821,10 @@ struct QuestionnaireView: View {
       }
     }()
     let body = buildEmailBody(purposeLabel: purposeLabel)
-    let subject = "Voxera B2B — \(orgName)"
+    let subject = "\(s.questionnaireEmailSubject) — \(orgName)"
     let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
     let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-    if let url = URL(string: "mailto:support@voxera.kz?subject=\(encodedSubject)&body=\(encodedBody)") {
+    if let url = URL(string: "mailto:voxera2026@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") {
       openURL(url)
     }
     if path.count >= 2 {

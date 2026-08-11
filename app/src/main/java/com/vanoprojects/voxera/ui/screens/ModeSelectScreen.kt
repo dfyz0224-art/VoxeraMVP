@@ -6,8 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -39,69 +37,70 @@ import com.vanoprojects.voxera.ui.theme.*
 fun ModeSelectScreen(
   onBack: () -> Unit,
   onModeChosen: (String) -> Unit,
-  onOpenSettings: () -> Unit = {}
+  onOpenSettings: () -> Unit = {},
+  onAbout: () -> Unit = {},
+  onHelp: () -> Unit = {},
+  onForBusiness: () -> Unit = {}
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
 
   Box(modifier = Modifier.fillMaxSize()) {
-      when (theme.type) {
-        ThemeType.LIGHT -> {
-          Image(
-            painter = painterResource(R.drawable.bg_light),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-          )
-        }
-        ThemeType.GLASS -> {
-          Image(
-            painter = painterResource(R.drawable.bg_stars),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-          )
-        }
+    when (theme.type) {
+      ThemeType.LIGHT -> {
+        Image(
+          painter = painterResource(R.drawable.bg_light),
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier = Modifier.fillMaxSize()
+        )
       }
+      ThemeType.GLASS -> {
+        Image(
+          painter = painterResource(R.drawable.bg_stars),
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier = Modifier.fillMaxSize()
+        )
+      }
+    }
 
-      Column(
+    BoxWithConstraints(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 20.dp, vertical = 24.dp)
+        .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-      // Весовой Spacer между карточками и кнопками на узких экранах схлопывается в 0.
-      // Верх — в scroll; низ — фиксированный отступ + кнопки, чтобы зазор не исчезал.
-      val scroll = rememberScrollState()
-      Column(
-        modifier = Modifier
-          .weight(1f)
-          .fillMaxWidth()
-          .verticalScroll(scroll)
-      ) {
-        Spacer(modifier = Modifier.height(48.dp))
+      // Keep cards + 5 buttons on one screen without scroll on short devices.
+      val buttonBlockApprox = 188.dp
+      val topChromeApprox = 108.dp // logo + title + spacers
+      val gapCardsToButtons = 14.dp
+      val cardGap = 10.dp
+      val freeForCards = (maxHeight - buttonBlockApprox - topChromeApprox - gapCardsToButtons)
+        .coerceAtLeast(220.dp)
+      val modeCardHeight = ((freeForCards - cardGap) / 2f).coerceIn(112.dp, 150.dp)
+      val logoHeight = if (maxHeight < 680.dp) 52.dp else 64.dp
+      val topSpacer = if (maxHeight < 680.dp) 12.dp else 28.dp
 
-        // Логотип ic_voxera_logo_text - увеличенный размер, по центру
+      Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.height(topSpacer))
+
         Box(
           modifier = Modifier
-            .height(70.dp)
-            .wrapContentHeight(),
+            .height(logoHeight)
+            .fillMaxWidth(),
           contentAlignment = Alignment.Center
         ) {
           Image(
             painter = painterResource(R.drawable.ic_voxera_logo_text),
             contentDescription = null,
-            modifier = Modifier
-              .fillMaxWidth(),
-            contentScale = ContentScale.Fit,
-
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = ContentScale.Fit
           )
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Заголовок "Выберите режим" под логотипом, перед карточками - по центру, ближе к карточкам
-        // В светлой теме - белый, в остальных - backgroundTextPrimary
         val titleColor = if (theme.type == ThemeType.LIGHT) {
           Color.White
         } else {
@@ -116,10 +115,8 @@ fun ModeSelectScreen(
           textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // Карточки с фиксированной высотой (одинаковый размер для всех)
-        val modeCardHeight = 162.dp
         ModeCard(
           iconRes = R.drawable.universal_2,
           label = strings.universalMode,
@@ -127,7 +124,7 @@ fun ModeSelectScreen(
           gradientIndex = 0,
           height = modeCardHeight
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(cardGap))
         ModeCard(
           iconRes = R.drawable.deep_2,
           label = strings.deepAnalysis,
@@ -136,26 +133,51 @@ fun ModeSelectScreen(
           height = modeCardHeight
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-      }
+        Spacer(modifier = Modifier.weight(1f, fill = true))
+        Spacer(modifier = Modifier.height(gapCardsToButtons))
 
-      Spacer(modifier = Modifier.height(20.dp))
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-      ) {
-        ThemedOutlinedButton(
-          text = strings.history,
-        onClick = { onModeChosen("history") },
-          modifier = Modifier.weight(1f)
-        )
-        ThemedFilledButton(
-          text = strings.settings,
-          onClick = onOpenSettings,
-          modifier = Modifier.weight(1f)
-        )
+        Column(
+          modifier = Modifier.fillMaxWidth(),
+          verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            ThemedOutlinedButton(
+              text = strings.about,
+              onClick = onAbout,
+              modifier = Modifier.weight(1f)
+            )
+            ThemedFilledButton(
+              text = strings.settings,
+              onClick = onOpenSettings,
+              modifier = Modifier.weight(1f)
+            )
+          }
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            ThemedOutlinedButton(
+              text = strings.help,
+              onClick = onHelp,
+              modifier = Modifier.weight(1f)
+            )
+            ThemedOutlinedButton(
+              text = strings.forBusiness,
+              onClick = onForBusiness,
+              modifier = Modifier.weight(1f)
+            )
+          }
+          ThemedOutlinedButton(
+            text = strings.history,
+            onClick = { onModeChosen("history") },
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
       }
-      Spacer(modifier = Modifier.height(35.dp))
     }
   }
 }
@@ -192,6 +214,10 @@ private fun ModeCard(
     label = "modeCardNudge"
   )
 
+  val iconSize = if (height < 130.dp) 72.dp else 88.dp
+  val fontSize = if (height < 130.dp) 15.sp else 17.sp
+  val lineHeight = if (height < 130.dp) 20.sp else 24.sp
+
   Box(
     modifier = Modifier
       .fillMaxWidth()
@@ -215,7 +241,7 @@ private fun ModeCard(
       onClick = null,
       gradientIndex = gradientIndex,
       height = height,
-      contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+      contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
     ) {
       Row(
         modifier = Modifier
@@ -225,7 +251,7 @@ private fun ModeCard(
         verticalAlignment = Alignment.CenterVertically
       ) {
         Box(
-          modifier = Modifier.size(88.dp),
+          modifier = Modifier.size(iconSize),
           contentAlignment = Alignment.Center
         ) {
           Image(
@@ -236,12 +262,12 @@ private fun ModeCard(
             colorFilter = ColorFilter.tint(Color.White)
           )
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
         Text(
           text = label,
           style = MaterialTheme.typography.bodyLarge.copy(
-            fontSize = 17.sp,
-            lineHeight = 24.sp,
+            fontSize = fontSize,
+            lineHeight = lineHeight,
             fontWeight = FontWeight.SemiBold
           ),
           color = colors.textPrimary,

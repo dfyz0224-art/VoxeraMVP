@@ -22,10 +22,10 @@ android {
 
   defaultConfig {
     applicationId = "com.vanoprojects.voxera"
-    minSdk = 33
+    minSdk = 30
     targetSdk = 36
-    versionCode = 4
-    versionName = "0.1.3"
+    versionCode = 10
+    versionName = "0.1.9"
     buildConfigField("String", "VOXERA_API_TOKEN", "\"${secrets.getProperty("VOXERA_API_TOKEN", "")}\"")
     buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${secrets.getProperty("GOOGLE_WEB_CLIENT_ID", "")}\"")
   }
@@ -73,6 +73,7 @@ dependencies {
   debugImplementation("androidx.compose.ui:ui-tooling")
 
   implementation("androidx.compose.material3:material3")
+  implementation("androidx.compose.material:material-icons-extended")
   implementation("androidx.navigation:navigation-compose:2.9.0")
   implementation("io.github.fletchmckee.liquid:liquid:1.1.1")
   implementation("androidx.datastore:datastore-preferences:1.1.1")

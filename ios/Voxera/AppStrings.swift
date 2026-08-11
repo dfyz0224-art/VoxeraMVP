@@ -104,6 +104,8 @@ struct AppStrings: Equatable {
   let languageEn: String
   let languageZh: String
   let languageKz: String
+  let languageUk: String
+  let languageKa: String
   let aboutTitle: String
   let aboutDescription: String
   let aboutBriefSectionTitle: String
