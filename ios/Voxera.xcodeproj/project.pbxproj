@@ -72,6 +72,7 @@
 		AF5013032A96D4A7E838E0B6 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		BFC564971443F9590B2C3EBB /* StringPackEN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackEN.swift; sourceTree = "<group>"; };
 		C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowScreens.swift; sourceTree = "<group>"; };
+		A11RHINT01REF14B5 /* ResultHints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultHints.swift; sourceTree = "<group>"; };
 		CA57270AF50EC7B77BD8B807 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		CB739D7742354D19B0125241 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraRootView.swift; sourceTree = "<group>"; };
