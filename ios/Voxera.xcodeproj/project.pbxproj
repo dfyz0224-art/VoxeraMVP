@@ -323,6 +323,7 @@
 				7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */,
 				ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */,
 				E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */,
+				A11RHINT01SRC14B5 /* ResultHints.swift in Sources */,
 				5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */,
 				6A8A750D4C20098DD2BC2021 /* LocaleStore.swift in Sources */,
 				D20AE8F955310A980492380C /* ModeSelectView.swift in Sources */,
