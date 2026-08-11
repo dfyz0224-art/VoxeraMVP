@@ -137,9 +137,9 @@ fun ProfileScreen(
                       GoogleSignIn.getClient(context as Activity, gso).signOut()
                     }
                     CredentialStore(context).clear()
-                    prefsManager.setAuthCompleted(false)
                     prefsManager.setProfilePhotoPath(null)
                     prefsManager.setProfilePhone(null)
+                    prefsManager.resetOnboardingAndConsent()
                     authEpoch++
                   }
                 },

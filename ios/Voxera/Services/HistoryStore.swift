@@ -10,23 +10,58 @@ struct HistoryEntry: Codable, Identifiable, Equatable {
 
 @MainActor
 final class HistoryStore: ObservableObject {
+  static let guestAccountKey = "guest"
+
   @Published private(set) var entries: [HistoryEntry] = []
 
-  private let fileURL: URL
+  private var accountKey: String = guestAccountKey
   private let lock = NSLock()
+  private var documentsDir: URL {
+    FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+  }
+
+  private var fileURL: URL {
+    documentsDir.appendingPathComponent("history_\(accountKey).json")
+  }
+
+  private var legacyFileURL: URL {
+    documentsDir.appendingPathComponent("history_voxera.json")
+  }
 
   init() {
-    let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-    fileURL = dir.appendingPathComponent("history_voxera.json")
+    load()
+  }
+
+  func setAccountKey(_ key: String) {
+    let normalized = key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      ? Self.guestAccountKey
+      : key.lowercased()
+    guard normalized != accountKey else { return }
+    accountKey = normalized
     load()
   }
 
   private func load() {
-    guard let data = try? Data(contentsOf: fileURL) else { return }
+    migrateLegacyIfNeeded()
+    guard let data = try? Data(contentsOf: fileURL) else {
+      entries = []
+      return
+    }
     let dec = JSONDecoder()
     if let list = try? dec.decode([HistoryEntry].self, from: data) {
       entries = list.sorted { $0.timestamp > $1.timestamp }
+    } else {
+      entries = []
     }
+  }
+
+  private func migrateLegacyIfNeeded() {
+    let fm = FileManager.default
+    guard fm.fileExists(atPath: legacyFileURL.path),
+      !fm.fileExists(atPath: fileURL.path)
+    else { return }
+    try? fm.copyItem(at: legacyFileURL, to: fileURL)
+    try? fm.removeItem(at: legacyFileURL)
   }
 
   private func save() {

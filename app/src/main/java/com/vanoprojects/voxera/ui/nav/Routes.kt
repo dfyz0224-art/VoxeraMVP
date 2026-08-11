@@ -10,7 +10,6 @@ object Routes {
   const val Recording = "recording"
   const val Processing = "processing"
   const val Result = "result"
-  const val Share = "share"
   const val History = "history"
   const val Settings = "settings"
   const val About = "about"

@@ -4,9 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -14,7 +18,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.vanoprojects.voxera.data.AnalysisSession
+import com.vanoprojects.voxera.data.AnalysisUploadCoordinator
 import com.vanoprojects.voxera.data.HistoryRepository
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.screens.*
@@ -33,6 +39,18 @@ fun VoxeraNavHost(
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val historyRepository = remember { HistoryRepository(context) }
+  var firebaseUid by remember {
+    mutableStateOf(FirebaseAuth.getInstance().currentUser?.uid)
+  }
+  DisposableEffect(Unit) {
+    val auth = FirebaseAuth.getInstance()
+    val listener = FirebaseAuth.AuthStateListener { firebaseUid = it.currentUser?.uid }
+    auth.addAuthStateListener(listener)
+    onDispose { auth.removeAuthStateListener(listener) }
+  }
+  LaunchedEffect(firebaseUid) {
+    historyRepository.setAccountKey(firebaseUid ?: HistoryRepository.GUEST_ACCOUNT_KEY)
+  }
   val startDestination = remember(onboardingCompleted, authCompleted) {
     when (onboardingCompleted) {
       null -> null
@@ -45,9 +63,9 @@ fun VoxeraNavHost(
     if (onboardingCompleted == null) return@LaunchedEffect
     val currentRoute = navController.currentBackStackEntry?.destination?.route
     when {
-      !onboardingCompleted && currentRoute == Routes.Mode ->
+      !onboardingCompleted && currentRoute != null && currentRoute != Routes.Onboarding ->
         navController.navigate(Routes.Onboarding) {
-          popUpTo(Routes.Mode) { inclusive = true }
+          popUpTo(navController.graph.id) { inclusive = true }
         }
       onboardingCompleted && !authCompleted && currentRoute == Routes.Mode ->
         navController.navigate(Routes.Auth) {
@@ -60,6 +78,14 @@ fun VoxeraNavHost(
       onboardingCompleted && authCompleted && currentRoute == Routes.Auth ->
         navController.navigate(Routes.Mode) {
           popUpTo(Routes.Auth) { inclusive = true }
+        }
+      onboardingCompleted && !authCompleted &&
+        currentRoute != null &&
+        currentRoute != Routes.Auth &&
+        currentRoute != Routes.Onboarding &&
+        currentRoute != Routes.PrivacyPolicy ->
+        navController.navigate(Routes.Auth) {
+          popUpTo(navController.graph.id) { inclusive = true }
         }
     }
   }
@@ -109,7 +135,10 @@ fun VoxeraNavHost(
             }
           }
         },
-        onOpenSettings = { navController.navigate(Routes.Settings) }
+        onOpenSettings = { navController.navigate(Routes.Settings) },
+        onAbout = { navController.navigate(Routes.About) },
+        onHelp = { navController.navigate(Routes.Help) },
+        onForBusiness = { navController.navigate(Routes.ForBusiness) }
       )
     }
     composable(Routes.Consent) {
@@ -130,7 +159,10 @@ fun VoxeraNavHost(
     }
     composable(Routes.Recording) {
       RecordingScreen(
-        onGoProcessing = { navController.navigate(Routes.Processing) }
+        onGoProcessing = {
+          AnalysisUploadCoordinator.reset()
+          navController.navigate(Routes.Processing)
+        }
       )
     }
     composable(Routes.Processing) {
@@ -146,12 +178,11 @@ fun VoxeraNavHost(
     }
     composable(Routes.Result) {
       ResultScreen(
-        onShare = { navController.navigate(Routes.Share) },
-        onHistory = { navController.navigate(Routes.History) }
+        onHistory = { navController.navigate(Routes.History) },
+        onGoHome = {
+          navController.popBackStack(Routes.Mode, inclusive = false)
+        }
       )
-    }
-    composable(Routes.Share) {
-      ShareScreen()
     }
     composable(Routes.History) {
       HistoryScreen(
@@ -168,10 +199,7 @@ fun VoxeraNavHost(
     composable(Routes.Settings) {
       SettingsScreen(
         prefsManager = prefsManager,
-        onAbout = { navController.navigate(Routes.About) },
         onPrivacyPolicy = { navController.navigate(Routes.PrivacyPolicy) },
-        onHelp = { navController.navigate(Routes.Help) },
-        onForBusiness = { navController.navigate(Routes.ForBusiness) },
         onProfile = { navController.navigate(Routes.Profile) },
         onSubscriptions = { navController.navigate(Routes.Subscriptions) }
       )

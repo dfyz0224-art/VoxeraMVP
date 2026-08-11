@@ -37,6 +37,7 @@ struct AppStrings: Equatable {
   let recordingEmptyFile: String
   let analyzing: String
   let analyzingSubtitle: String
+  let analyzeRetry: String
   let result: String
   let emotionalBackground: String
   let stressLevel: String
@@ -49,6 +50,7 @@ struct AppStrings: Equatable {
   let share: String
   let newAnalysis: String
   let statesChart: String
+  let goHome: String
   let emostateResultTitle: String
   let emostateParameters: String
   let emostateReportTitle: String
@@ -196,6 +198,11 @@ struct AppStrings: Equatable {
   let authSkip: String
   let authRegisterHint: String
   let authLoginHint: String
+  let authForgotPassword: String
+  let authResetEmailSent: String
+  let authVerifyEmailSent: String
+  let authEmailNotVerified: String
+  let authResendVerification: String
   let authErrorInvalidEmail: String
   let authErrorWeakPassword: String
   let authErrorPasswordMismatch: String

@@ -6,6 +6,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,13 +16,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -39,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -51,7 +58,10 @@ import com.vanoprojects.voxera.BuildConfig
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.CredentialStore
 import com.vanoprojects.voxera.data.PreferencesManager
+import com.vanoprojects.voxera.data.isAllowedIntoApp
+import com.vanoprojects.voxera.data.requiresEmailVerification
 import com.vanoprojects.voxera.ui.strings.LocalStrings
+import com.vanoprojects.voxera.ui.strings.Strings
 import com.vanoprojects.voxera.ui.theme.ThemeType
 import com.vanoprojects.voxera.ui.theme.ThemedFilledButton
 import com.vanoprojects.voxera.ui.theme.ThemedOutlinedButton
@@ -79,10 +89,14 @@ fun AuthCardContent(
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
   var passwordConfirm by remember { mutableStateOf("") }
+  var passwordVisible by remember { mutableStateOf(false) }
+  var passwordConfirmVisible by remember { mutableStateOf(false) }
   var rememberPassword by remember { mutableStateOf(false) }
   var isRegisterMode by remember { mutableStateOf(false) }
   var isLoading by remember { mutableStateOf(false) }
   var errorMessage by remember { mutableStateOf<String?>(null) }
+  var infoMessage by remember { mutableStateOf<String?>(null) }
+  var showResendVerification by remember { mutableStateOf(false) }
   var autoLoginAttempted by remember { mutableStateOf(false) }
 
   val auth = FirebaseAuth.getInstance()
@@ -115,9 +129,26 @@ fun AuthCardContent(
     }
   }
 
+  suspend fun finishIfAllowed() {
+    val user = auth.currentUser ?: throw IllegalStateException("No user")
+    user.reload().await()
+    if (user.requiresEmailVerification()) {
+      showResendVerification = true
+      auth.signOut()
+      errorMessage = strings.authEmailNotVerified
+      return
+    }
+    showResendVerification = false
+    persistCredentialsAfterSuccess()
+    prefsManager.setAuthCompleted(true)
+    onAuthComplete()
+  }
+
   suspend fun signInWithEmailPassword(emailValue: String, passwordValue: String, register: Boolean) {
     if (register) {
       auth.createUserWithEmailAndPassword(emailValue, passwordValue).await()
+      auth.currentUser?.sendEmailVerification()?.await()
+      auth.signOut()
     } else {
       auth.signInWithEmailAndPassword(emailValue, passwordValue).await()
     }
@@ -132,10 +163,10 @@ fun AuthCardContent(
     autoLoginAttempted = true
     isLoading = true
     errorMessage = null
+    infoMessage = null
     try {
       signInWithEmailPassword(saved.first, saved.second, register = false)
-      prefsManager.setAuthCompleted(true)
-      onAuthComplete()
+      finishIfAllowed()
     } catch (_: Exception) {
       credentialStore.clear()
       rememberPassword = false
@@ -149,6 +180,7 @@ fun AuthCardContent(
     scope.launch {
       isLoading = true
       errorMessage = null
+      infoMessage = null
       try {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential).await()
@@ -245,6 +277,8 @@ fun AuthCardContent(
 
   fun validateAndSubmit() {
     errorMessage = null
+    infoMessage = null
+    showResendVerification = false
     when {
       email.isBlank() -> errorMessage = strings.authErrorInvalidEmail
       !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
@@ -256,19 +290,80 @@ fun AuthCardContent(
         scope.launch {
           isLoading = true
           try {
-            signInWithEmailPassword(email, password, isRegisterMode)
-            persistCredentialsAfterSuccess()
-            prefsManager.setAuthCompleted(true)
-            onAuthComplete()
-          } catch (e: Exception) {
-            errorMessage = when ((e as? FirebaseAuthException)?.errorCode) {
-              "invalid-email" -> strings.authErrorInvalidEmail
-              "wrong-password" -> strings.authErrorWrongPassword
-              "user-not-found" -> strings.authErrorUserNotFound
-              "email-already-in-use" -> strings.authErrorEmailInUse
-              "weak-password" -> strings.authErrorWeakPassword
-              else -> strings.authErrorGeneric
+            if (isRegisterMode) {
+              signInWithEmailPassword(email, password, register = true)
+              infoMessage = strings.authVerifyEmailSent
+              showResendVerification = true
+              isRegisterMode = false
+              passwordConfirm = ""
+            } else {
+              signInWithEmailPassword(email, password, register = false)
+              finishIfAllowed()
             }
+          } catch (e: Exception) {
+            errorMessage = mapAuthError(e, strings)
+          } finally {
+            isLoading = false
+          }
+        }
+      }
+    }
+  }
+
+  fun sendPasswordReset() {
+    errorMessage = null
+    infoMessage = null
+    when {
+      email.isBlank() -> errorMessage = strings.authErrorInvalidEmail
+      !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
+        errorMessage = strings.authErrorInvalidEmail
+      else -> {
+        scope.launch {
+          isLoading = true
+          try {
+            auth.sendPasswordResetEmail(email.trim()).await()
+            infoMessage = strings.authResetEmailSent
+            credentialStore.clear()
+            rememberPassword = false
+          } catch (e: Exception) {
+            errorMessage = mapAuthError(e, strings)
+          } finally {
+            isLoading = false
+          }
+        }
+      }
+    }
+  }
+
+  fun resendVerificationEmail() {
+    errorMessage = null
+    infoMessage = null
+    when {
+      email.isBlank() -> errorMessage = strings.authErrorInvalidEmail
+      !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
+        errorMessage = strings.authErrorInvalidEmail
+      password.length < 6 -> errorMessage = strings.authErrorWeakPassword
+      else -> {
+        scope.launch {
+          isLoading = true
+          try {
+            auth.signInWithEmailAndPassword(email.trim(), password).await()
+            val user = auth.currentUser
+            if (user == null) {
+              errorMessage = strings.authErrorGeneric
+            } else {
+              user.reload().await()
+              if (user.isAllowedIntoApp()) {
+                finishIfAllowed()
+              } else {
+                user.sendEmailVerification().await()
+                auth.signOut()
+                infoMessage = strings.authVerifyEmailSent
+                showResendVerification = true
+              }
+            }
+          } catch (e: Exception) {
+            errorMessage = mapAuthError(e, strings)
           } finally {
             isLoading = false
           }
@@ -281,7 +376,7 @@ fun AuthCardContent(
     Column(modifier = Modifier.fillMaxWidth()) {
       OutlinedTextField(
         value = email,
-        onValueChange = { email = it; errorMessage = null },
+        onValueChange = { email = it; errorMessage = null; infoMessage = null },
         label = { Text(strings.authEmail) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -292,11 +387,21 @@ fun AuthCardContent(
       Spacer(modifier = Modifier.height(16.dp))
       OutlinedTextField(
         value = password,
-        onValueChange = { password = it; errorMessage = null },
+        onValueChange = { password = it; errorMessage = null; infoMessage = null },
         label = { Text(strings.authPassword) },
         singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
+        visualTransformation = if (passwordVisible) {
+          VisualTransformation.None
+        } else {
+          PasswordVisualTransformation()
+        },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        trailingIcon = {
+          PasswordVisibilityToggle(
+            visible = passwordVisible,
+            onToggle = { passwordVisible = !passwordVisible }
+          )
+        },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = fieldColors
@@ -305,15 +410,37 @@ fun AuthCardContent(
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
           value = passwordConfirm,
-          onValueChange = { passwordConfirm = it; errorMessage = null },
+          onValueChange = { passwordConfirm = it; errorMessage = null; infoMessage = null },
           label = { Text(strings.authPasswordConfirm) },
           singleLine = true,
-          visualTransformation = PasswordVisualTransformation(),
+          visualTransformation = if (passwordConfirmVisible) {
+            VisualTransformation.None
+          } else {
+            PasswordVisualTransformation()
+          },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+          trailingIcon = {
+            PasswordVisibilityToggle(
+              visible = passwordConfirmVisible,
+              onToggle = { passwordConfirmVisible = !passwordConfirmVisible }
+            )
+          },
           modifier = Modifier.fillMaxWidth(),
           shape = RoundedCornerShape(12.dp),
           colors = fieldColors
         )
+      } else {
+        TextButton(
+          onClick = { sendPasswordReset() },
+          modifier = Modifier.align(Alignment.End),
+          contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+        ) {
+          Text(
+            text = strings.authForgotPassword,
+            color = colors.primaryGlow,
+            style = MaterialTheme.typography.bodyMedium
+          )
+        }
       }
       Spacer(modifier = Modifier.height(4.dp))
       Row(
@@ -351,6 +478,27 @@ fun AuthCardContent(
           color = MaterialTheme.colorScheme.error
         )
       }
+      infoMessage?.let { msg ->
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+          text = msg,
+          style = MaterialTheme.typography.bodySmall,
+          color = colors.primaryGlow
+        )
+      }
+      if (showResendVerification && !isRegisterMode) {
+        Spacer(modifier = Modifier.height(4.dp))
+        TextButton(
+          onClick = { resendVerificationEmail() },
+          contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+        ) {
+          Text(
+            text = strings.authResendVerification,
+            color = colors.primaryGlow,
+            style = MaterialTheme.typography.bodyMedium
+          )
+        }
+      }
       Spacer(modifier = Modifier.height(16.dp))
       ThemedFilledButton(
         text = if (isRegisterMode) strings.authRegister else strings.authLogin,
@@ -363,6 +511,8 @@ fun AuthCardContent(
           isRegisterMode = !isRegisterMode
           passwordConfirm = ""
           errorMessage = null
+          infoMessage = null
+          showResendVerification = false
         }
       ) {
         Text(
@@ -398,6 +548,36 @@ fun AuthCardContent(
         )
       }
     }
+  }
+}
+
+@Composable
+private fun PasswordVisibilityToggle(
+  visible: Boolean,
+  onToggle: () -> Unit
+) {
+  val colors = LocalVoxeraTheme.current.colors
+  IconButton(onClick = onToggle) {
+    Icon(
+      imageVector = if (visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+      contentDescription = null,
+      tint = colors.textSecondary
+    )
+  }
+}
+
+private fun mapAuthError(e: Exception, strings: Strings): String {
+  val code = (e as? FirebaseAuthException)?.errorCode.orEmpty()
+  val message = e.message.orEmpty().lowercase()
+  return when {
+    code in setOf("ERROR_EMAIL_ALREADY_IN_USE", "email-already-in-use") ||
+      message.contains("email address is already in use") ||
+      message.contains("already in use") -> strings.authErrorEmailInUse
+    code in setOf("ERROR_INVALID_EMAIL", "invalid-email") -> strings.authErrorInvalidEmail
+    code in setOf("ERROR_WRONG_PASSWORD", "wrong-password") -> strings.authErrorWrongPassword
+    code in setOf("ERROR_USER_NOT_FOUND", "user-not-found") -> strings.authErrorUserNotFound
+    code in setOf("ERROR_WEAK_PASSWORD", "weak-password") -> strings.authErrorWeakPassword
+    else -> strings.authErrorGeneric
   }
 }
 

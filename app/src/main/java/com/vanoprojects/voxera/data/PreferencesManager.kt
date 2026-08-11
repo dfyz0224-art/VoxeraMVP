@@ -86,6 +86,15 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    /** After sign-out: language / welcome / policy must run again for the next session. */
+    suspend fun resetOnboardingAndConsent() {
+        context.dataStore.edit { preferences ->
+            preferences[ONBOARDING_COMPLETED_KEY] = false
+            preferences[CONSENT_GIVEN_KEY] = false
+            preferences[AUTH_COMPLETED_KEY] = false
+        }
+    }
+
     val profilePhotoPath: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[PROFILE_PHOTO_PATH_KEY]
     }

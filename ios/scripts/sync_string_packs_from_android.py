@@ -134,22 +134,37 @@ def main():
         if m:
             kt_fields.append(m.group(1))
 
-    # Keep iOS-compatible subset: existing AppStrings fields + languageUk/Ka
+    # Keep iOS-compatible subset: existing AppStrings fields + parity fields from Android
     existing = re.findall(r"^\s+let\s+(\w+)\s*:\s*String", app_strings_path.read_text(encoding="utf-8"), re.M)
-    wanted = set(existing) | {"languageUk", "languageKa"}
+    wanted = set(existing) | {
+        "languageUk",
+        "languageKa",
+        "goHome",
+        "analyzeRetry",
+        "authForgotPassword",
+        "authResetEmailSent",
+        "authVerifyEmailSent",
+        "authEmailNotVerified",
+        "authResendVerification",
+    }
     # Preserve Kotlin order for common fields, append any missing wanted at end
     field_order = [f for f in kt_fields if f in wanted]
     for f in existing:
         if f not in field_order:
             field_order.append(f)
-    for f in ("languageUk", "languageKa"):
+    for f in (
+        "languageUk",
+        "languageKa",
+        "goHome",
+        "analyzeRetry",
+        "authForgotPassword",
+        "authResetEmailSent",
+        "authVerifyEmailSent",
+        "authEmailNotVerified",
+        "authResendVerification",
+    ):
         if f not in field_order:
-            # insert after languageKz
-            if "languageKz" in field_order:
-                i = field_order.index("languageKz") + 1
-                field_order.insert(i, f)
-            else:
-                field_order.append(f)
+            field_order.append(f)
 
     packs = {}
     for lang, suffix in [("Ru", "ru"), ("En", "en"), ("Zh", "zh"), ("Kz", "kz")]:

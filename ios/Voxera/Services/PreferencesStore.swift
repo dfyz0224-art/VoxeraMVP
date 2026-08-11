@@ -71,6 +71,13 @@ final class PreferencesStore: ObservableObject {
     d.set(v, forKey: K.auth)
   }
 
+  /** After sign-out: language / welcome / policy must run again (Android resetOnboardingAndConsent). */
+  func resetOnboardingAndConsent() {
+    setOnboardingCompleted(false)
+    setConsentGiven(false)
+    setAuthCompleted(false)
+  }
+
   func setProfilePhotoPath(_ path: String?) {
     profilePhotoPath = path
     if let path {

@@ -63,6 +63,12 @@ struct VoxeraRootView: View {
       .onChange(of: prefs.appLanguage) { _, new in
         locale.update(language: new)
       }
+      .onAppear {
+        history.setAccountKey(AuthBackend.isSignedIn ? AuthBackend.accountKey() : HistoryStore.guestAccountKey)
+      }
+      .onChange(of: prefs.authCompleted) { _, _ in
+        history.setAccountKey(AuthBackend.isSignedIn ? AuthBackend.accountKey() : HistoryStore.guestAccountKey)
+      }
 
       if !splashDone {
         SplashView(onComplete: {

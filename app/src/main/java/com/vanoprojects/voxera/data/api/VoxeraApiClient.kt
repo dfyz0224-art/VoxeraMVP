@@ -27,6 +27,8 @@ object VoxeraApiClient {
         .connectTimeout(90, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
         .writeTimeout(180, TimeUnit.SECONDS)
+        .callTimeout(0, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
         .build()
 
     private val gson = GsonBuilder()

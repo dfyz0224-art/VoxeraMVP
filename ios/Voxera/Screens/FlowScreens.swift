@@ -772,20 +772,38 @@ struct ResultView: View {
           }
 
           HStack(spacing: 12) {
-            Button(s.share) { path.append(AppRoute.share) }
+            Button(s.share) { presentSystemShare() }
               .buttonStyle(.bordered)
               .tint(titleColor)
               .frame(maxWidth: .infinity)
-            Button(s.statesChart) { path.append(AppRoute.history) }
+            Button(s.goHome) {
+              path = NavigationPath()
+            }
               .buttonStyle(.borderedProminent)
               .tint(.white.opacity(0.35))
               .frame(maxWidth: .infinity)
           }
-          .padding(.top, 8)
+          Button(s.statesChart) { path.append(AppRoute.history) }
+            .buttonStyle(.borderedProminent)
+            .tint(.white.opacity(0.28))
+            .frame(maxWidth: .infinity)
+            .padding(.top, 4)
         }
         .padding(20)
       }
     }
+  }
+
+  private func presentSystemShare() {
+    let text = buildSharePlainTextIOS(session: session, s: s, lang: lang)
+    guard let text, !text.isEmpty else { return }
+    let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+    let root = scene.windows.first(where: \.isKeyWindow)?.rootViewController
+      ?? scene.windows.first?.rootViewController
+    guard var presenter = root else { return }
+    while let presented = presenter.presentedViewController { presenter = presented }
+    presenter.present(av, animated: true)
   }
 
   @ViewBuilder
@@ -975,6 +993,44 @@ struct ResultView: View {
         .stroke(themeColors.borderGlass, lineWidth: 1)
     )
   }
+}
+
+@MainActor
+private func buildSharePlainTextIOS(
+  session: AnalysisSession,
+  s: AppStrings,
+  lang: AppLanguage
+) -> String? {
+  guard let r = session.lastAnalysisResponse, r.success, let result = r.result else { return nil }
+  let analysisType = session.analysisType
+  var lines: [String] = [s.shareSubject, ""]
+  if analysisType == "psytype" {
+    let types = (result.psyTypes ?? []).sorted { $0.value > $1.value }
+    guard !types.isEmpty else { return nil }
+    lines.append(s.psytypeResultTitle)
+    lines.append("")
+    if let lead = types.first {
+      lines.append("\(s.leadingType): \(formatPsyTypeNameIOS(lead.name)) (\(String(format: "%.2f", lead.value))%)")
+    }
+    if types.count > 1 {
+      let act = types[1]
+      lines.append("\(s.activeType): \(formatPsyTypeNameIOS(act.name)) (\(String(format: "%.2f", act.value))%)")
+    }
+  } else {
+    let scales = (result.emoScales ?? []).sorted { $0.value > $1.value }
+    guard !scales.isEmpty else { return nil }
+    lines.append(s.emostateResultTitle)
+    lines.append("")
+    for sc in scales {
+      lines.append("\(MoodStatisticsData.emoScaleDisplayName(apiName: sc.name, language: lang)): \(sc.value)")
+    }
+  }
+  let desc = stripHtmlTagsIOS(extractDescriptionFromSession(session))
+  if !desc.isEmpty {
+    lines.append("")
+    lines.append(desc)
+  }
+  return lines.joined(separator: "\n")
 }
 
 @MainActor

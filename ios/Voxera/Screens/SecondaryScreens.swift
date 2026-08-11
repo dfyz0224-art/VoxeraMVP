@@ -296,10 +296,7 @@ struct SettingsView: View {
           subscriptionsNavCard
           themeCard
           languageCard
-          themedOutlineButton(s.about, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.about) }
           themedOutlineButton(s.privacyPolicyShortLink, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.privacyPolicy) }
-          themedOutlineButton(s.help, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.help) }
-          themedOutlineButton(s.forBusiness, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.forBusiness) }
         }
         .padding(20)
       }
@@ -665,6 +662,17 @@ struct ForBusinessView: View {
               Text(s.forBusinessOutro).foregroundColor(.white).padding(.top, 6)
             }
           }
+          Button {
+            path.append(AppRoute.questionnaire)
+          } label: {
+            Text(s.fillQuestionnaire)
+              .font(.headline)
+              .foregroundColor(.white)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 14)
+              .background(Color.white.opacity(0.28))
+              .cornerRadius(14)
+          }
         }
         .padding(20)
       }
@@ -859,6 +867,7 @@ struct ProfileView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
+  @EnvironmentObject private var history: HistoryStore
   @State private var authEpoch = 0
   var s: AppStrings { locale.strings }
 
@@ -884,7 +893,11 @@ struct ProfileView: View {
                   .foregroundColor(.white.opacity(0.85))
                 Button {
                   AuthBackend.signOut()
-                  prefs.setAuthCompleted(false)
+                  prefs.setProfilePhotoPath(nil)
+                  prefs.setProfilePhone(nil)
+                  history.setAccountKey(HistoryStore.guestAccountKey)
+                  prefs.resetOnboardingAndConsent()
+                  path = NavigationPath()
                   authEpoch += 1
                 } label: {
                   Text(s.profileSignOut)

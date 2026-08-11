@@ -101,6 +101,12 @@ fun ForBusinessScreen(
           )
         }
       }
+      Spacer(modifier = Modifier.height(16.dp))
+      ThemedFilledButton(
+        text = strings.fillQuestionnaire,
+        onClick = onFillQuestionnaire,
+        modifier = Modifier.fillMaxWidth()
+      )
       Spacer(modifier = Modifier.height(24.dp))
     }
   }
