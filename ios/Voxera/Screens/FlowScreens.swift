@@ -92,6 +92,7 @@ struct RecordingView: View {
   @State private var isRecording = false
   @State private var showImporter = false
   @State private var breathScale: CGFloat = 1.0
+  @State private var recordingAlert: String?
   #if DEBUG
   @State private var testAudioError: String?
   #endif
@@ -265,6 +266,14 @@ struct RecordingView: View {
       recordingStartedAt = nil
       if recorder.isRecording { _ = recorder.stopRecording() }
     }
+    .alert(s.voiceRecording, isPresented: Binding(
+      get: { recordingAlert != nil },
+      set: { if !$0 { recordingAlert = nil } }
+    )) {
+      Button("OK", role: .cancel) { recordingAlert = nil }
+    } message: {
+      Text(recordingAlert ?? "")
+    }
   }
 
   @MainActor
@@ -284,19 +293,28 @@ struct RecordingView: View {
           session.recordedFileURL = url
           session.lastAudioMimeType = nil
           path.append(AppRoute.processing)
+        } else {
+          recordingAlert = s.recordingEmptyFile
         }
+      } else {
+        recordingAlert = s.recordingEmptyFile
       }
       return
     }
     let ok = await recorder.requestPermission()
-    guard ok else { return }
+    guard ok else {
+      recordingAlert = s.micPermissionRequired
+      return
+    }
     let url = FileManager.default.temporaryDirectory.appendingPathComponent("recording_\(UUID().uuidString).m4a")
     try? FileManager.default.removeItem(at: url)
     do {
       try recorder.startRecording(to: url)
       isRecording = true
       recordingStartedAt = Date()
-    } catch {}
+    } catch {
+      recordingAlert = s.recordingStartFailed
+    }
   }
 
   #if DEBUG
@@ -359,6 +377,8 @@ struct ProcessingView: View {
   @EnvironmentObject private var history: HistoryStore
   @EnvironmentObject private var locale: LocaleStore
   @State private var errorText: String?
+  @State private var isRunning = false
+  @State private var canRetry = false
 
   var s: AppStrings { locale.strings }
 
@@ -366,13 +386,25 @@ struct ProcessingView: View {
     ZStack {
       BackgroundImageName()
       VStack(spacing: 20) {
-        ProgressView()
-          .tint(.white)
-          .scaleEffect(1.4)
+        if isRunning {
+          ProgressView()
+            .tint(.white)
+            .scaleEffect(1.4)
+        }
         Text(s.analyzing).font(.title2.bold()).foregroundColor(.white)
         Text(s.analyzingSubtitle).foregroundColor(.white.opacity(0.85))
         if let errorText {
-          Text(errorText).foregroundColor(.red.opacity(0.9)).padding()
+          Text(errorText)
+            .foregroundColor(.red.opacity(0.95))
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 20)
+        }
+        if canRetry {
+          Button(s.analyzeRetry) {
+            Task { await run() }
+          }
+          .buttonStyle(.borderedProminent)
+          .tint(.white.opacity(0.35))
         }
       }
     }
@@ -383,10 +415,15 @@ struct ProcessingView: View {
 
   @MainActor
   private func run() async {
+    guard !isRunning else { return }
+    isRunning = true
+    errorText = nil
+    canRetry = false
+    defer { isRunning = false }
+
     guard let url = session.recordedFileURL else {
-      session.lastResultJson = "Ошибка: нет файла"
-      popRecordingPipelineFromPath(&path)
-      path.append(AppRoute.result)
+      errorText = s.recordingEmptyFile
+      canRetry = false
       return
     }
     do {
@@ -411,16 +448,16 @@ struct ProcessingView: View {
       session.lastAnalysisResponse = nil
       session.lastRawApiResponse = nil
       if let err = error as? VoxeraAPIError, case .noToken = err {
-        session.lastResultJson = """
+        errorText = """
           Ошибка: нет API-токена (noToken).
-          1) Скопируйте ios/Voxera/Secrets.xcconfig.example → Secrets.xcconfig и укажите VOXERA_API_TOKEN (как в Android secrets.properties), пересоберите.
-          2) Либо в Debug: Product → Scheme → Edit Scheme… → Run → Environment Variables: VOXERA_API_TOKEN = <ваш_токен>
+          1) Скопируйте ios/Voxera/Secrets.xcconfig.example → Secrets.xcconfig и укажите VOXERA_API_TOKEN, пересоберите.
+          2) Либо в Debug: Scheme → Run → Environment Variables: VOXERA_API_TOKEN
           """
+        canRetry = false
       } else {
-        session.lastResultJson = "Ошибка: \(error)"
+        errorText = "\(s.analyzeRetry): \(error.localizedDescription)"
+        canRetry = true
       }
-      popRecordingPipelineFromPath(&path)
-      path.append(AppRoute.result)
     }
   }
 }
@@ -716,6 +753,10 @@ struct ResultView: View {
 
   private var secondaryColor: Color { themeColors.backgroundTextSecondary }
 
+  @State private var hintTitle = ""
+  @State private var hintBody: String?
+  @State private var showHint = false
+
   var body: some View {
     ZStack {
       BackgroundImageName()
@@ -792,6 +833,31 @@ struct ResultView: View {
         .padding(20)
       }
     }
+    .sheet(isPresented: $showHint) {
+      NavigationStack {
+        ScrollView {
+          Text(hintBody ?? "")
+            .font(.body)
+            .foregroundColor(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+        }
+        .navigationTitle(hintTitle.isEmpty ? s.resultHintTitle : hintTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button(s.back) { showHint = false }
+          }
+        }
+      }
+      .presentationDetents([.medium, .large])
+    }
+  }
+
+  private func openHint(title: String, body: String) {
+    hintTitle = title
+    hintBody = body
+    showHint = true
   }
 
   private func presentSystemShare() {
@@ -830,7 +896,7 @@ struct ResultView: View {
       .padding(.top, 8)
 
     ForEach(Array(sorted.enumerated()), id: \.offset) { _, pt in
-      psyTypeRow(name: formatPsyTypeNameIOS(pt.name), value: pt.value)
+      psyTypeRow(name: formatPsyTypeNameIOS(pt.name), value: pt.value, apiName: pt.name)
     }
 
     if !desc.isEmpty {
@@ -880,7 +946,7 @@ struct ResultView: View {
     )
   }
 
-  private func psyTypeRow(name: String, value: Double) -> some View {
+  private func psyTypeRow(name: String, value: Double, apiName: String) -> some View {
     let progress = CGFloat(min(1, max(0, value / 100)))
     return VStack(alignment: .leading, spacing: 8) {
       HStack {
@@ -891,6 +957,13 @@ struct ResultView: View {
         Text("\(String(format: "%.2f", value))%")
           .font(.body.weight(.semibold))
           .foregroundColor(themeColors.textPrimary)
+        Button {
+          openHint(title: name, body: ResultHints.psytypeBody(typeKey: apiName, language: lang))
+        } label: {
+          Image(systemName: "info.circle")
+            .foregroundColor(themeColors.textPrimary.opacity(0.9))
+        }
+        .buttonStyle(.plain)
       }
       GeometryReader { g in
         ZStack(alignment: .leading) {
@@ -933,15 +1006,29 @@ struct ResultView: View {
     ForEach(Array(sorted.enumerated()), id: \.offset) { _, sc in
       emoScaleRow(
         label: MoodStatisticsData.emoScaleDisplayName(apiName: sc.name, language: lang),
-        value: sc.value
+        value: sc.value,
+        apiName: sc.name
       )
     }
 
     if !desc.isEmpty {
-      Text(s.emostateReportTitle)
-        .font(.headline)
-        .foregroundColor(titleColor)
-        .padding(.top, 12)
+      HStack {
+        Text(s.emostateReportTitle)
+          .font(.headline)
+          .foregroundColor(titleColor)
+        Spacer()
+        Button {
+          openHint(
+            title: s.emostateReportInfoSheetTitle,
+            body: ResultHints.descriptionInterpretation(language: lang)
+          )
+        } label: {
+          Image(systemName: "info.circle")
+            .foregroundColor(titleColor.opacity(0.9))
+        }
+        .buttonStyle(.plain)
+      }
+      .padding(.top, 12)
       formatEmostateDescriptionTextIOS(descriptionRaw)
         .font(.body)
         .foregroundColor(secondaryColor)
@@ -959,7 +1046,7 @@ struct ResultView: View {
     }
   }
 
-  private func emoScaleRow(label: String, value: Int) -> some View {
+  private func emoScaleRow(label: String, value: Int, apiName: String) -> some View {
     let progress = CGFloat(min(1, max(0, Double(value) / 100)))
     return VStack(alignment: .leading, spacing: 8) {
       HStack {
@@ -970,6 +1057,20 @@ struct ResultView: View {
         Text("\(value)")
           .font(.body.weight(.semibold))
           .foregroundColor(themeColors.textPrimary)
+        Button {
+          openHint(
+            title: label,
+            body: ResultHints.emoMetricBody(
+              scaleKey: apiName,
+              language: lang,
+              fallback: s.emostateParamHintFallback
+            )
+          )
+        } label: {
+          Image(systemName: "info.circle")
+            .foregroundColor(themeColors.textPrimary.opacity(0.9))
+        }
+        .buttonStyle(.plain)
       }
       GeometryReader { g in
         ZStack(alignment: .leading) {
