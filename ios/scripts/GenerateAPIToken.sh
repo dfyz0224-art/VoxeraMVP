@@ -1,96 +1,139 @@
 #!/bin/bash
-# Injects VOXERA_API_TOKEN into Generated/APIToken.generated.swift (Debug + Release/TestFlight).
-# Reads Voxera/Secrets.xcconfig (and a few fallback paths). Does not rely on Scheme env vars.
-set -eu
+# Bake VOXERA_API_TOKEN into Generated/APIToken.generated.swift for Debug + Archive/TestFlight.
+set -u
 
 ROOT="${SRCROOT:-}"
-if [[ -z "$ROOT" ]]; then
+if [[ -z "${ROOT}" ]]; then
   ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 fi
 
-OUT="$ROOT/Voxera/Generated/APIToken.generated.swift"
-mkdir -p "$(dirname "$OUT")"
+OUT="${ROOT}/Voxera/Generated/APIToken.generated.swift"
+SECRETS="${ROOT}/Voxera/Secrets.xcconfig"
+mkdir -p "$(dirname "${OUT}")"
 
-extract_token() {
-  local file="$1"
-  [[ -f "$file" ]] || return 1
-  # Strip UTF-8 BOM / CR; take last VOXERA_API_TOKEN assignment.
-  local line
-  line=$(
-    tr -d '\r' <"$file" \
-      | sed $'1s/^\xEF\xBB\xBF//' \
-      | grep -E '^[[:space:]]*VOXERA_API_TOKEN[[:space:]]*=' \
-      | tail -1 \
-    || true
-  )
-  [[ -n "$line" ]] || return 1
-  printf '%s' "$line" | sed 's/^[^=]*=[[:space:]]*//' | sed 's/[[:space:]]*$//'
+echo "note: GenerateAPIToken ROOT=${ROOT}"
+echo "note: CONFIGURATION=${CONFIGURATION:-?} env VOXERA_API_TOKEN length=${#VOXERA_API_TOKEN}"
+
+# Print file as UTF-8 (handles UTF-16 / UTF-16LE / BOM / CRLF).
+file_as_utf8() {
+  local f="$1"
+  [[ -f "$f" ]] || return 1
+  if command -v iconv >/dev/null 2>&1; then
+    if iconv -f UTF-8 -t UTF-8 "$f" >/dev/null 2>&1; then
+      iconv -f UTF-8 -t UTF-8 "$f" 2>/dev/null | tr -d '\r'
+      return 0
+    fi
+    for enc in UTF-16 UTF-16LE UTF-16BE; do
+      if iconv -f "$enc" -t UTF-8 "$f" >/dev/null 2>&1; then
+        echo "note: converting $(basename "$f") from ${enc} → UTF-8" >&2
+        iconv -f "$enc" -t UTF-8 "$f" 2>/dev/null | tr -d '\r'
+        return 0
+      fi
+    done
+  fi
+  tr -d '\r' <"$f" | sed $'1s/^\xEF\xBB\xBF//'
 }
 
-TOKEN=""
-# Build setting (only if Xcode exports it — often empty in script phases).
-if [[ -n "${VOXERA_API_TOKEN:-}" ]]; then
-  TOKEN="$VOXERA_API_TOKEN"
+# Extract last non-placeholder VOXERA_API_TOKEN from a secrets file path.
+extract_token_from_file() {
+  local f="$1"
+  [[ -f "$f" ]] || return 1
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c '
+import re, sys
+path = sys.argv[1]
+raw = open(path, "rb").read()
+if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+    text = raw.decode("utf-16")
+elif raw.startswith(b"\xef\xbb\xbf"):
+    text = raw[3:].decode("utf-8", errors="replace")
+else:
+    # Heuristic: NUL bytes ⇒ UTF-16 without BOM
+    if b"\x00" in raw[:200]:
+        try:
+            text = raw.decode("utf-16-le")
+        except Exception:
+            text = raw.decode("utf-8", errors="replace")
+    else:
+        text = raw.decode("utf-8", errors="replace")
+text = text.replace("\r\n", "\n").replace("\r", "\n")
+token = ""
+for raw_line in text.splitlines():
+    line = raw_line.strip()
+    if not line or line.startswith("//") or line.startswith("#"):
+        continue
+    m = re.match(r"^VOXERA_API_TOKEN\s*=\s*(.*)$", line, re.I)
+    if not m:
+        continue
+    val = m.group(1).strip().strip("\"\x27")
+    # Strip trailing xcconfig comment if present
+    if "//" in val:
+        val = val.split("//", 1)[0].rstrip()
+    if val and val not in ("paste_token_here", "your_token_here"):
+        token = val
+print(token, end="")
+' "$f"
+    return 0
+  fi
+
+  local text line val
+  text="$(file_as_utf8 "$f" || true)"
+  line=$(printf '%s\n' "$text" | grep -iE '^[[:space:]]*VOXERA_API_TOKEN[[:space:]]*=' | tail -1 || true)
+  [[ -n "$line" ]] || return 1
+  val=$(printf '%s' "$line" | sed 's/^[^=]*=[[:space:]]*//' | sed 's/[[:space:]]*$//' | sed 's/^"//;s/"$//;s/^'"'"'//;s/'"'"'$//')
+  printf '%s' "$val"
+}
+
+TOKEN="${VOXERA_API_TOKEN:-}"
+if [[ "$TOKEN" == "paste_token_here" || "$TOKEN" == "your_token_here" ]]; then
+  TOKEN=""
 fi
 
-CANDIDATES=(
-  "$ROOT/Voxera/Secrets.xcconfig"
-  "$ROOT/Secrets.xcconfig"
-  "${PROJECT_DIR:-}/Voxera/Secrets.xcconfig"
-  "${PROJECT_DIR:-}/Secrets.xcconfig"
-)
-
-# Last resort: people sometimes paste the token into the .example file in Xcode.
-FALLBACK_EXAMPLE="$ROOT/Voxera/Secrets.xcconfig.example"
-
-echo "note: GenerateAPIToken SRCROOT=${ROOT}"
-for f in "${CANDIDATES[@]}"; do
-  [[ -n "$f" ]] || continue
-  if [[ -f "$f" ]]; then
-    echo "note: found secrets file: $f"
-    if GOT=$(extract_token "$f"); then
-      if [[ -n "$GOT" && "$GOT" != "paste_token_here" && "$GOT" != "your_token_here" ]]; then
-        TOKEN="$GOT"
-        echo "note: parsed token from $f (length=${#TOKEN})"
-        break
-      fi
-    fi
-  else
-    echo "note: missing: $f"
-  fi
-done
-
-if [[ -z "$TOKEN" && -f "$FALLBACK_EXAMPLE" ]]; then
-  if GOT=$(extract_token "$FALLBACK_EXAMPLE"); then
-    if [[ -n "$GOT" && "$GOT" != "paste_token_here" && "$GOT" != "your_token_here" ]]; then
-      TOKEN="$GOT"
-      echo "warning: token was read from Secrets.xcconfig.example — copy it to Secrets.xcconfig (gitignored)."
-    fi
+if [[ -z "$TOKEN" && -f "$SECRETS" ]]; then
+  echo "note: reading $SECRETS ($(wc -c <"$SECRETS" | tr -d ' ') bytes)"
+  TOKEN="$(extract_token_from_file "$SECRETS" || true)"
+  echo "note: parsed from Secrets.xcconfig length=${#TOKEN}"
+else
+  if [[ ! -f "$SECRETS" ]]; then
+    echo "note: Secrets.xcconfig not found at $SECRETS"
+    ls -la "${ROOT}/Voxera" 2>/dev/null || true
   fi
 fi
 
-# Strip accidental quotes
-case "$TOKEN" in
-  \"*\") TOKEN="${TOKEN:1:${#TOKEN}-2}" ;;
-  \'*\') TOKEN="${TOKEN:1:${#TOKEN}-2}" ;;
-esac
+EXAMPLE="${ROOT}/Voxera/Secrets.xcconfig.example"
+if [[ -z "$TOKEN" && -f "$EXAMPLE" ]]; then
+  TOKEN="$(extract_token_from_file "$EXAMPLE" || true)"
+  if [[ -n "$TOKEN" ]]; then
+    echo "warning: using token from Secrets.xcconfig.example — copy it to Secrets.xcconfig"
+  fi
+fi
 
 TOKEN_ESC=$(printf '%s' "$TOKEN" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
 
-cat >"$OUT" <<EOF
+cat >"${OUT}" <<EOF
 // Generated by scripts/GenerateAPIToken.sh — do not edit by hand.
 enum APIToken {
   static let value: String = "${TOKEN_ESC}"
 }
 EOF
 
-echo "note: wrote $OUT (token length=${#TOKEN})"
+echo "note: wrote ${OUT} (token length=${#TOKEN})"
 
 if [[ "${CONFIGURATION:-Debug}" == "Release" && -z "$TOKEN" ]]; then
   echo "error: VOXERA_API_TOKEN is empty for Release/TestFlight."
-  echo "error: Expected file at: $ROOT/Voxera/Secrets.xcconfig"
-  echo "error: Contents must include a line: VOXERA_API_TOKEN = your_token"
-  echo "error: (Scheme Environment Variables are NOT used for Archive/TestFlight.)"
-  ls -la "$ROOT/Voxera" 2>/dev/null || true
+  echo "error: In ${SECRETS} put exactly:"
+  echo "error: VOXERA_API_TOKEN = vxi_your_real_token"
+  echo "error: Save as UTF-8 (Xcode: Editor may show encoding). Cmd+S, Clean, Archive."
+  if [[ -f "$SECRETS" ]]; then
+    echo "error: xxd head:"
+    xxd -l 160 "$SECRETS" 2>/dev/null || od -An -tx1 -N 160 "$SECRETS" 2>/dev/null || true
+    echo "error: decoded preview:"
+    extract_token_from_file "$SECRETS" >/dev/null || true
+    if command -v python3 >/dev/null 2>&1; then
+      python3 -c 'import sys; p=sys.argv[1]; b=open(p,"rb").read();
+print(b[:200])' "$SECRETS" 2>/dev/null || true
+    fi
+  fi
   exit 1
 fi
