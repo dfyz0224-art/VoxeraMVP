@@ -450,8 +450,10 @@ struct ProcessingView: View {
       if let err = error as? VoxeraAPIError, case .noToken = err {
         errorText = """
           Ошибка: нет API-токена (noToken).
-          1) Скопируйте ios/Voxera/Secrets.xcconfig.example → Secrets.xcconfig и укажите VOXERA_API_TOKEN, пересоберите.
-          2) Либо в Debug: Scheme → Run → Environment Variables: VOXERA_API_TOKEN
+          Нужен файл ios/Voxera/Secrets.xcconfig (не Android secrets.properties):
+          VOXERA_API_TOKEN = ваш_токен
+          Затем Product → Clean Build Folder и Run.
+          Или Debug: Scheme → Run → Environment Variables → VOXERA_API_TOKEN
           """
         canRetry = false
       } else {

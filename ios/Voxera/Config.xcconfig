@@ -1,3 +1,4 @@
-// Base build settings. Copy Secrets.xcconfig.example to Secrets.xcconfig and set VOXERA_API_TOKEN.
-#include? "Secrets.xcconfig"
+// Base build settings. Copy Secrets.xcconfig.example → Secrets.xcconfig and set VOXERA_API_TOKEN.
+// Default empty first; Secrets.xcconfig (if present) overrides — last assignment wins in xcconfig.
 VOXERA_API_TOKEN =
+#include? "Secrets.xcconfig"

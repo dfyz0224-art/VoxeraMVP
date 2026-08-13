@@ -17,7 +17,13 @@ open Voxera.xcodeproj
 
 Новые экраны (паритет Android): подписки в Settings, форма входа с подтверждением пароля / «Гостевой режим», кнопка «График состояний» на Result.
 
-**API:** без `Voxera/Secrets.xcconfig` (см. `Secrets.xcconfig.example`) запросы вернут `noToken`. В **Debug** можно задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables** без пересборки `Secrets.xcconfig`.
+**API:** нужен файл **`ios/Voxera/Secrets.xcconfig`** (не Android `secrets.properties`!). Скопируйте `Secrets.xcconfig.example` → `Secrets.xcconfig`, одна строка:
+
+```text
+VOXERA_API_TOKEN = ваш_токен_как_в_Android
+```
+
+Пересоберите (**Clean Build Folder**, затем Run). Без этого — `noToken`. В **Debug** можно вместо файла задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables**.
 
 **Debug:** кнопка **«Тест»** на экране записи копирует `Resources/audio_test.ogg` (как Android `assets/audio_test.ogg`) и сразу идёт в анализ.
 
