@@ -4,3 +4,7 @@
 *.jpeg binary
 *.ogg binary
 *.wav binary
+
+# Shell scripts must be LF for Xcode PhaseScriptExecution on Mac.
+*.sh text eol=lf
+ios/scripts/* text eol=lf

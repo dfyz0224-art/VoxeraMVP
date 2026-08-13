@@ -1,44 +1,25 @@
 #!/bin/bash
-# Bake VOXERA_API_TOKEN into Generated/APIToken.generated.swift for Debug + Archive/TestFlight.
-set -u
+# Bake VOXERA_API_TOKEN into Generated/APIToken.generated.swift
+# Must tolerate unset env vars (Xcode Archive often has no VOXERA_API_TOKEN in the environment).
 
 ROOT="${SRCROOT:-}"
-if [[ -z "${ROOT}" ]]; then
+if [ -z "$ROOT" ]; then
   ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 fi
 
-OUT="${ROOT}/Voxera/Generated/APIToken.generated.swift"
-SECRETS="${ROOT}/Voxera/Secrets.xcconfig"
-mkdir -p "$(dirname "${OUT}")"
+OUT="$ROOT/Voxera/Generated/APIToken.generated.swift"
+SECRETS="$ROOT/Voxera/Secrets.xcconfig"
+EXAMPLE="$ROOT/Voxera/Secrets.xcconfig.example"
+mkdir -p "$(dirname "$OUT")"
 
-echo "note: GenerateAPIToken ROOT=${ROOT}"
-echo "note: CONFIGURATION=${CONFIGURATION:-?} env VOXERA_API_TOKEN length=${#VOXERA_API_TOKEN}"
+TOKEN="${VOXERA_API_TOKEN-}"
 
-# Print file as UTF-8 (handles UTF-16 / UTF-16LE / BOM / CRLF).
-file_as_utf8() {
+extract_token() {
+  # $1 = file path. Prints token or empty. Always exit 0.
   local f="$1"
-  [[ -f "$f" ]] || return 1
-  if command -v iconv >/dev/null 2>&1; then
-    if iconv -f UTF-8 -t UTF-8 "$f" >/dev/null 2>&1; then
-      iconv -f UTF-8 -t UTF-8 "$f" 2>/dev/null | tr -d '\r'
-      return 0
-    fi
-    for enc in UTF-16 UTF-16LE UTF-16BE; do
-      if iconv -f "$enc" -t UTF-8 "$f" >/dev/null 2>&1; then
-        echo "note: converting $(basename "$f") from ${enc} → UTF-8" >&2
-        iconv -f "$enc" -t UTF-8 "$f" 2>/dev/null | tr -d '\r'
-        return 0
-      fi
-    done
+  if [ ! -f "$f" ]; then
+    return 0
   fi
-  tr -d '\r' <"$f" | sed $'1s/^\xEF\xBB\xBF//'
-}
-
-# Extract last non-placeholder VOXERA_API_TOKEN from a secrets file path.
-extract_token_from_file() {
-  local f="$1"
-  [[ -f "$f" ]] || return 1
-
   if command -v python3 >/dev/null 2>&1; then
     python3 -c '
 import re, sys
@@ -48,15 +29,13 @@ if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
     text = raw.decode("utf-16")
 elif raw.startswith(b"\xef\xbb\xbf"):
     text = raw[3:].decode("utf-8", errors="replace")
-else:
-    # Heuristic: NUL bytes ⇒ UTF-16 without BOM
-    if b"\x00" in raw[:200]:
-        try:
-            text = raw.decode("utf-16-le")
-        except Exception:
-            text = raw.decode("utf-8", errors="replace")
-    else:
+elif b"\x00" in raw[:200]:
+    try:
+        text = raw.decode("utf-16-le")
+    except Exception:
         text = raw.decode("utf-8", errors="replace")
+else:
+    text = raw.decode("utf-8", errors="replace")
 text = text.replace("\r\n", "\n").replace("\r", "\n")
 token = ""
 for raw_line in text.splitlines():
@@ -66,74 +45,50 @@ for raw_line in text.splitlines():
     m = re.match(r"^VOXERA_API_TOKEN\s*=\s*(.*)$", line, re.I)
     if not m:
         continue
-    val = m.group(1).strip().strip("\"\x27")
-    # Strip trailing xcconfig comment if present
+    val = m.group(1).strip().strip("\"'\''")
     if "//" in val:
         val = val.split("//", 1)[0].rstrip()
     if val and val not in ("paste_token_here", "your_token_here"):
         token = val
-print(token, end="")
-' "$f"
+sys.stdout.write(token)
+' "$f" || true
     return 0
   fi
-
-  local text line val
-  text="$(file_as_utf8 "$f" || true)"
-  line=$(printf '%s\n' "$text" | grep -iE '^[[:space:]]*VOXERA_API_TOKEN[[:space:]]*=' | tail -1 || true)
-  [[ -n "$line" ]] || return 1
-  val=$(printf '%s' "$line" | sed 's/^[^=]*=[[:space:]]*//' | sed 's/[[:space:]]*$//' | sed 's/^"//;s/"$//;s/^'"'"'//;s/'"'"'$//')
-  printf '%s' "$val"
+  # grep fallback
+  local line val
+  line=$(tr -d '\r' <"$f" | grep -iE '^[[:space:]]*VOXERA_API_TOKEN[[:space:]]*=' | tail -1 || true)
+  if [ -n "$line" ]; then
+    val=$(printf '%s' "$line" | sed 's/^[^=]*=[[:space:]]*//' | sed 's/[[:space:]]*$//' | sed 's/^"//;s/"$//')
+    printf '%s' "$val"
+  fi
 }
 
-TOKEN="${VOXERA_API_TOKEN:-}"
-if [[ "$TOKEN" == "paste_token_here" || "$TOKEN" == "your_token_here" ]]; then
-  TOKEN=""
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "paste_token_here" ] || [ "$TOKEN" = "your_token_here" ]; then
+  TOKEN="$(extract_token "$SECRETS")"
 fi
-
-if [[ -z "$TOKEN" && -f "$SECRETS" ]]; then
-  echo "note: reading $SECRETS ($(wc -c <"$SECRETS" | tr -d ' ') bytes)"
-  TOKEN="$(extract_token_from_file "$SECRETS" || true)"
-  echo "note: parsed from Secrets.xcconfig length=${#TOKEN}"
-else
-  if [[ ! -f "$SECRETS" ]]; then
-    echo "note: Secrets.xcconfig not found at $SECRETS"
-    ls -la "${ROOT}/Voxera" 2>/dev/null || true
+if [ -z "$TOKEN" ]; then
+  TOKEN="$(extract_token "$EXAMPLE")"
+  if [ -n "$TOKEN" ]; then
+    echo "warning: token read from Secrets.xcconfig.example; prefer Secrets.xcconfig"
   fi
 fi
 
-EXAMPLE="${ROOT}/Voxera/Secrets.xcconfig.example"
-if [[ -z "$TOKEN" && -f "$EXAMPLE" ]]; then
-  TOKEN="$(extract_token_from_file "$EXAMPLE" || true)"
-  if [[ -n "$TOKEN" ]]; then
-    echo "warning: using token from Secrets.xcconfig.example — copy it to Secrets.xcconfig"
-  fi
-fi
+echo "note: GenerateAPIToken secrets=$SECRETS token_len=${#TOKEN}"
 
 TOKEN_ESC=$(printf '%s' "$TOKEN" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
 
-cat >"${OUT}" <<EOF
+cat >"$OUT" <<EOF
 // Generated by scripts/GenerateAPIToken.sh — do not edit by hand.
 enum APIToken {
   static let value: String = "${TOKEN_ESC}"
 }
 EOF
 
-echo "note: wrote ${OUT} (token length=${#TOKEN})"
-
-if [[ "${CONFIGURATION:-Debug}" == "Release" && -z "$TOKEN" ]]; then
-  echo "error: VOXERA_API_TOKEN is empty for Release/TestFlight."
-  echo "error: In ${SECRETS} put exactly:"
-  echo "error: VOXERA_API_TOKEN = vxi_your_real_token"
-  echo "error: Save as UTF-8 (Xcode: Editor may show encoding). Cmd+S, Clean, Archive."
-  if [[ -f "$SECRETS" ]]; then
-    echo "error: xxd head:"
-    xxd -l 160 "$SECRETS" 2>/dev/null || od -An -tx1 -N 160 "$SECRETS" 2>/dev/null || true
-    echo "error: decoded preview:"
-    extract_token_from_file "$SECRETS" >/dev/null || true
-    if command -v python3 >/dev/null 2>&1; then
-      python3 -c 'import sys; p=sys.argv[1]; b=open(p,"rb").read();
-print(b[:200])' "$SECRETS" 2>/dev/null || true
-    fi
-  fi
+CONFIG="${CONFIGURATION-Debug}"
+if [ "$CONFIG" = "Release" ] && [ -z "$TOKEN" ]; then
+  echo "error: VOXERA_API_TOKEN empty for Release. Put in $SECRETS :"
+  echo "error: VOXERA_API_TOKEN = your_token"
   exit 1
 fi
+
+exit 0
