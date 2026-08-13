@@ -1,8 +1,42 @@
 import AVFoundation
 import Foundation
 
-/// Records with AAC (stable on device/simulator), then converts to WAV for the API.
-/// Native OGG/Opus recording is not available on iOS without third-party codecs.
+enum AudioRecorderError: LocalizedError {
+  case inputUnavailable
+  case prepareFailed
+  case recordFailed
+  case emptyCapture
+
+  var errorDescription: String? {
+    switch self {
+    case .inputUnavailable:
+      #if targetEnvironment(simulator)
+      return """
+      Симулятор не видит микрофон (0 каналов входа).
+      • I/O → Audio Input в меню Simulator, или
+      • кнопка «Тест» справа сверху (готовый audio_test.ogg), или
+      • проверка записи на реальном iPhone.
+      """
+      #else
+      return "Микрофон недоступен. Проверьте разрешение в Настройки → Voxera."
+      #endif
+    case .prepareFailed, .recordFailed:
+      #if targetEnvironment(simulator)
+      return """
+      Не удалось начать запись на симуляторе.
+      Используйте «Тест» (Debug) или проверьте Simulator → I/O → Audio Input.
+      """
+      #else
+      return "Не удалось начать запись. Проверьте микрофон и повторите."
+      #endif
+    case .emptyCapture:
+      return "Запись пуста. Говорите ближе к микрофону или используйте «Тест»."
+    }
+  }
+}
+
+/// AAC capture (native), then convert to WAV for API duration parsing.
+/// OGG is not available on iOS without third-party codecs.
 final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDelegate {
   @Published var isRecording = false
   @Published var permissionDenied = false
@@ -12,84 +46,85 @@ final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDel
   private var wavURL: URL?
 
   func requestPermission() async -> Bool {
-    await AVAudioApplication.requestRecordPermission()
+    let ok = await AVAudioApplication.requestRecordPermission()
+    permissionDenied = !ok
+    return ok
   }
 
   func startRecording(to wavDestination: URL) throws {
-    // Finish any previous session without tearing down audio I/O mid-flight.
     if recorder?.isRecording == true {
       recorder?.stop()
     }
     recorder = nil
+    m4aURL = nil
+    wavURL = nil
 
     let session = AVAudioSession.sharedInstance()
-    try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
-    try session.setActive(true)
+    // `.record` avoids some playAndRecord converter glitches on Simulator.
+    do {
+      try session.setCategory(.record, mode: .measurement, options: [])
+    } catch {
+      try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+    }
+    try session.setActive(true, options: [])
+
+    guard session.isInputAvailable else {
+      throw AudioRecorderError.inputUnavailable
+    }
+
+    // Match hardware rate when possible (Simulator often reports 0 input channels).
+    let hwRate = session.sampleRate > 0 ? session.sampleRate : 44_100
+    try? session.setPreferredSampleRate(hwRate)
+    try? session.setPreferredInputNumberOfChannels(1)
+
+    if session.inputNumberOfChannels < 1 {
+      throw AudioRecorderError.inputUnavailable
+    }
 
     let m4a = FileManager.default.temporaryDirectory
       .appendingPathComponent("recording_\(UUID().uuidString).m4a")
     try? FileManager.default.removeItem(at: m4a)
     try? FileManager.default.removeItem(at: wavDestination)
 
-    // AAC/M4A is the reliable AVAudioRecorder path; Linear PCM often crashes on AQClient.
     let settings: [String: Any] = [
       AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-      AVSampleRateKey: 44_100.0,
+      AVSampleRateKey: hwRate,
       AVNumberOfChannelsKey: 1,
-      AVEncoderBitRateKey: 128_000,
       AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
     ]
 
     let rec = try AVAudioRecorder(url: m4a, settings: settings)
     rec.delegate = self
-    guard rec.prepareToRecord() else {
-      throw NSError(
-        domain: "AudioRecorderService",
-        code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "prepareToRecord failed"]
-      )
-    }
-
-    // Strong retain BEFORE record() — otherwise AQClient can EXC_BAD_ACCESS.
+    // Retain before prepare/record — AudioQueue callbacks need a live object.
     m4aURL = m4a
     wavURL = wavDestination
     recorder = rec
 
+    guard rec.prepareToRecord() else {
+      cleanupRecorderFiles()
+      throw AudioRecorderError.prepareFailed
+    }
     guard rec.record() else {
-      recorder = nil
-      m4aURL = nil
-      wavURL = nil
-      throw NSError(
-        domain: "AudioRecorderService",
-        code: 2,
-        userInfo: [NSLocalizedDescriptionKey: "AVAudioRecorder.record() failed"]
-      )
+      cleanupRecorderFiles()
+      throw AudioRecorderError.recordFailed
     }
     isRecording = true
   }
 
-  /// Stops without waiting for WAV conversion (e.g. leaving the screen).
   func cancelRecording() {
     recorder?.stop()
     isRecording = false
-    recorder = nil
-    if let m4aURL {
-      try? FileManager.default.removeItem(at: m4aURL)
-    }
-    m4aURL = nil
-    wavURL = nil
+    cleanupRecorderFiles()
   }
 
-  /// Stops recording and returns a WAV file URL suitable for `integrations/analyze`.
   func stopRecording() async -> URL? {
-    guard let rec = recorder else { return wavURL ?? m4aURL }
+    guard let rec = recorder else { return nil }
     rec.stop()
     isRecording = false
 
     let m4a = m4aURL
     let wav = wavURL
-    // Keep recorder alive briefly so AudioQueue teardown can finish.
-    try? await Task.sleep(nanoseconds: 150_000_000)
+    try? await Task.sleep(nanoseconds: 200_000_000)
     recorder = nil
     m4aURL = nil
     wavURL = nil
@@ -100,22 +135,34 @@ final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDel
       ?? FileManager.default.temporaryDirectory.appendingPathComponent(
         "recording_\(UUID().uuidString).wav")
 
+    let size = (try? FileManager.default.attributesOfItem(atPath: m4a.path)[.size] as? NSNumber)?
+      .intValue ?? 0
+    if size < 1024 {
+      try? FileManager.default.removeItem(at: m4a)
+      return nil
+    }
+
     do {
       try Self.convertToWav(source: m4a, destination: destination)
       try? FileManager.default.removeItem(at: m4a)
       return destination
     } catch {
-      // Last resort: send M4A with correct MIME (audio/mp4).
       let fallback = destination.deletingPathExtension().appendingPathExtension("m4a")
       try? FileManager.default.removeItem(at: fallback)
-      try? FileManager.default.copyItem(at: m4a, to: fallback)
-      try? FileManager.default.removeItem(at: m4a)
+      try? FileManager.default.moveItem(at: m4a, to: fallback)
       return fallback
     }
   }
 
   func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
     isRecording = false
+  }
+
+  private func cleanupRecorderFiles() {
+    recorder = nil
+    if let m4aURL { try? FileManager.default.removeItem(at: m4aURL) }
+    m4aURL = nil
+    wavURL = nil
   }
 
   private static func convertToWav(source: URL, destination: URL) throws {
@@ -125,11 +172,7 @@ final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDel
     guard frameCount > 0,
       let inputBuffer = AVAudioPCMBuffer(pcmFormat: inFormat, frameCapacity: frameCount)
     else {
-      throw NSError(
-        domain: "AudioRecorderService",
-        code: 3,
-        userInfo: [NSLocalizedDescriptionKey: "Empty AAC buffer"]
-      )
+      throw AudioRecorderError.emptyCapture
     }
     try inputFile.read(into: inputBuffer)
 
@@ -152,47 +195,47 @@ final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDel
     )
 
     let outFormat = outputFile.processingFormat
-    if inFormat == outFormat {
+    if inFormat.channelCount == outFormat.channelCount,
+      inFormat.sampleRate == outFormat.sampleRate,
+      inFormat.commonFormat == outFormat.commonFormat
+    {
       try outputFile.write(from: inputBuffer)
       return
     }
 
     guard let converter = AVAudioConverter(from: inFormat, to: outFormat) else {
-      throw NSError(
-        domain: "AudioRecorderService",
-        code: 4,
-        userInfo: [NSLocalizedDescriptionKey: "AVAudioConverter init failed"]
-      )
+      throw AudioRecorderError.prepareFailed
     }
 
-    let capacity = AVAudioFrameCount(Double(inputBuffer.frameLength) * outFormat.sampleRate / inFormat.sampleRate) + 32
+    let capacity =
+      AVAudioFrameCount(Double(inputBuffer.frameLength) * outFormat.sampleRate / inFormat.sampleRate)
+      + 32
     guard let converted = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: max(capacity, 1))
     else {
-      throw NSError(
-        domain: "AudioRecorderService",
-        code: 5,
-        userInfo: [NSLocalizedDescriptionKey: "PCM buffer alloc failed"]
-      )
+      throw AudioRecorderError.prepareFailed
     }
 
+    // Avoid Sendable warnings from capturing mutable locals in converter callback.
+    final class Once: @unchecked Sendable {
+      var done = false
+      let buffer: AVAudioPCMBuffer
+      init(_ buffer: AVAudioPCMBuffer) { self.buffer = buffer }
+    }
+    let once = Once(inputBuffer)
+
     var convError: NSError?
-    var consumed = false
     let status = converter.convert(to: converted, error: &convError) { _, outStatus in
-      if consumed {
-        outStatus.pointee = .noDataNow
+      if once.done {
+        outStatus.pointee = .endOfStream
         return nil
       }
-      consumed = true
+      once.done = true
       outStatus.pointee = .haveData
-      return inputBuffer
+      return once.buffer
     }
     if let convError { throw convError }
     guard status != .error, converted.frameLength > 0 else {
-      throw NSError(
-        domain: "AudioRecorderService",
-        code: 6,
-        userInfo: [NSLocalizedDescriptionKey: "WAV convert failed"]
-      )
+      throw AudioRecorderError.emptyCapture
     }
     try outputFile.write(from: converted)
   }

@@ -319,7 +319,7 @@ struct RecordingView: View {
       isRecording = true
       recordingStartedAt = Date()
     } catch {
-      recordingAlert = s.recordingStartFailed
+      recordingAlert = (error as? LocalizedError)?.errorDescription ?? s.recordingStartFailed
     }
   }
 
