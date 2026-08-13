@@ -16,8 +16,6 @@
 		5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D1A128C58FCA6A50AB90C91 /* HistoryStore.swift */; };
 		6A8A750D4C20098DD2BC2021 /* LocaleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322FD2758394C3FF13EA1056 /* LocaleStore.swift */; };
 		6C56E086F9D693DFC9B08DB1 /* StringPackRU.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */; };
-		B7C1A2D34E5F678901234ABC /* StringPackUK.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C1A2D34E5F678901234ABD /* StringPackUK.swift */; };
-		B7C1A2D34E5F678901234ABE /* StringPackKA.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C1A2D34E5F678901234ABF /* StringPackKA.swift */; };
 		6CBC8161EE72E16762462520 /* SecondaryScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB38EF60E2450679F313EA9 /* SecondaryScreens.swift */; };
 		70F7F86CC00ADAB715E66785 /* PrivacyPolicyFull.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3CEC570EAB51795E451C80DE /* PrivacyPolicyFull.txt */; };
 		7E5DAF758BFB2DCB287F5644 /* ResearchLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4134BA44A2D502F5B4EB75B /* ResearchLinks.swift */; };
@@ -59,8 +57,6 @@
 		512D8D0A412C425B40AF7FDC /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
 		63BADCC0A3A4EE173FBEDE62 /* VoxeraAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraAPI.swift; sourceTree = "<group>"; };
 		63BCE99317A9E0BED368F14B /* StringPackKZ.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackKZ.swift; sourceTree = "<group>"; };
-		B7C1A2D34E5F678901234ABD /* StringPackUK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackUK.swift; sourceTree = "<group>"; };
-		B7C1A2D34E5F678901234ABF /* StringPackKA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackKA.swift; sourceTree = "<group>"; };
 		6E2A88640C73C608F39DDBF7 /* VoxeraTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraTheme.swift; sourceTree = "<group>"; };
 		74F3E5CB652591729F1042F9 /* AppStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
 		77233FA8CCA9DCEDAB8D9656 /* AnalysisSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisSession.swift; sourceTree = "<group>"; };
@@ -184,10 +180,8 @@
 			isa = PBXGroup;
 			children = (
 				BFC564971443F9590B2C3EBB /* StringPackEN.swift */,
-				B7C1A2D34E5F678901234ABF /* StringPackKA.swift */,
 				63BCE99317A9E0BED368F14B /* StringPackKZ.swift */,
 				E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */,
-				B7C1A2D34E5F678901234ABD /* StringPackUK.swift */,
 				E64086F5CC755D307A03B4EC /* StringPackZH.swift */,
 			);
 			path = Generated;
@@ -335,10 +329,8 @@
 				3E869F0632431D07C8786F2A /* Secrets.generated.swift in Sources */,
 				FD7E012339A7458679617B52 /* SplashView.swift in Sources */,
 				CE581B75F4E8DA2C5A1D14B5 /* StringPackEN.swift in Sources */,
-				B7C1A2D34E5F678901234ABE /* StringPackKA.swift in Sources */,
 				9DE11EA1967C1E803EF690FB /* StringPackKZ.swift in Sources */,
 				6C56E086F9D693DFC9B08DB1 /* StringPackRU.swift in Sources */,
-				B7C1A2D34E5F678901234ABC /* StringPackUK.swift in Sources */,
 				D448079ED4A8564DA4BA5CC8 /* StringPackZH.swift in Sources */,
 				FB4FDFCC31306DCBC2A391A4 /* VoxeraAPI.swift in Sources */,
 				0BB1DFDF4F3CBE59A296FFF1 /* VoxeraApp.swift in Sources */,

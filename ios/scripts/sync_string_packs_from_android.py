@@ -181,18 +181,34 @@ def main():
     app_strings_path.write_text(emit_struct(field_order), encoding="utf-8")
     print("AppStrings fields", len(field_order))
 
-    names = {
-        "ru": "StringPackRU.swift",
-        "en": "StringPackEN.swift",
-        "zh": "StringPackZH.swift",
-        "kz": "StringPackKZ.swift",
-        "uk": "StringPackUK.swift",
-        "ka": "StringPackKA.swift",
-    }
-    for suffix, fname in names.items():
+    # Write RU/EN/ZH/KZ as separate files. Append UK+KA into StringPackRU.swift so Xcode
+    # always compiles AppStrings.uk / .ka with the same target membership as .ru.
+    for suffix, fname in [
+        ("ru", "StringPackRU.swift"),
+        ("en", "StringPackEN.swift"),
+        ("zh", "StringPackZH.swift"),
+        ("kz", "StringPackKZ.swift"),
+    ]:
         text = emit_extension(suffix, packs[suffix], field_order)
         (gen / fname).write_text(text, encoding="utf-8")
         print("wrote", fname, "keys", len(packs[suffix]))
+
+    ru_path = gen / "StringPackRU.swift"
+    merged = (
+        ru_path.read_text(encoding="utf-8").rstrip()
+        + "\n\n"
+        + emit_extension("uk", packs["uk"], field_order).strip()
+        + "\n\n"
+        + emit_extension("ka", packs["ka"], field_order).strip()
+        + "\n"
+    )
+    ru_path.write_text(merged, encoding="utf-8")
+    print("appended uk+ka into StringPackRU.swift")
+    for obsolete in ("StringPackUK.swift", "StringPackKA.swift"):
+        p = gen / obsolete
+        if p.exists():
+            p.unlink()
+            print("removed", obsolete)
 
 
 if __name__ == "__main__":
