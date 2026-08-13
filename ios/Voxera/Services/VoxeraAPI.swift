@@ -35,8 +35,8 @@ final class VoxeraAPI {
     let token = Secrets.voxeraApiToken
     guard !token.isEmpty else { throw VoxeraAPIError.noToken }
 
-    var mime = audioMime ?? "audio/m4a"
-    if mime.isEmpty { mime = "application/octet-stream" }
+    let filename = audioURL.lastPathComponent
+    let mime = AudioUploadMime.normalize(audioMime, fileName: filename)
 
     var request = URLRequest(url: Self.baseURL.appendingPathComponent("integrations/analyze"))
     request.httpMethod = "POST"
@@ -48,7 +48,13 @@ final class VoxeraAPI {
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
     let fileData = try Data(contentsOf: audioURL)
-    let filename = audioURL.lastPathComponent
+    // Tiny / header-only files → same 422 from API ("Could not determine audio duration").
+    guard fileData.count >= 2048 else {
+      throw VoxeraAPIError.status(
+        422,
+        "{\"success\":false,\"error\":\"Audio file too small or empty (\(fileData.count) bytes). Record again or use Debug Test.\"}"
+      )
+    }
 
     var body = Data()
     body.append("--\(boundary)\r\n".data(using: .utf8)!)

@@ -255,11 +255,13 @@ struct RecordingView: View {
       guard case .success(let urls) = result, let url = urls.first else { return }
       guard url.startAccessingSecurityScopedResource() else { return }
       defer { url.stopAccessingSecurityScopedResource() }
-      let dest = FileManager.default.temporaryDirectory.appendingPathComponent("upload.m4a")
+      let ext = url.pathExtension.isEmpty ? "audio" : url.pathExtension
+      let dest = FileManager.default.temporaryDirectory.appendingPathComponent("upload.\(ext)")
       try? FileManager.default.removeItem(at: dest)
       try? FileManager.default.copyItem(at: url, to: dest)
       session.recordedFileURL = dest
-      session.lastAudioMimeType = "audio/m4a"
+      session.lastAudioMimeType = AudioUploadMime.fromContentType(
+        UTType(filenameExtension: ext), fileName: dest.lastPathComponent)
       path.append(AppRoute.processing)
     }
     .onDisappear {
@@ -289,9 +291,9 @@ struct RecordingView: View {
         } else {
           size = 0
         }
-        if size > 0 {
+        if size > 2048 {
           session.recordedFileURL = url
-          session.lastAudioMimeType = nil
+          session.lastAudioMimeType = "audio/wav"
           path.append(AppRoute.processing)
         } else {
           recordingAlert = s.recordingEmptyFile
@@ -306,7 +308,7 @@ struct RecordingView: View {
       recordingAlert = s.micPermissionRequired
       return
     }
-    let url = FileManager.default.temporaryDirectory.appendingPathComponent("recording_\(UUID().uuidString).m4a")
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("recording_\(UUID().uuidString).wav")
     try? FileManager.default.removeItem(at: url)
     do {
       try recorder.startRecording(to: url)

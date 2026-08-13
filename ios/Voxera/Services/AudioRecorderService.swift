@@ -18,23 +18,36 @@ final class AudioRecorderService: NSObject, ObservableObject {
     try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
     try session.setActive(true)
 
+    // WAV/PCM — как Android test.wav: сервер стабильно читает duration
+    // (M4A/AAC на API часто даёт 422 "Could not determine audio duration").
     let settings: [String: Any] = [
-      AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+      AVFormatIDKey: Int(kAudioFormatLinearPCM),
       AVSampleRateKey: 44_100,
       AVNumberOfChannelsKey: 1,
-      AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+      AVLinearPCMBitDepthKey: 16,
+      AVLinearPCMIsFloatKey: false,
+      AVLinearPCMIsBigEndianKey: false,
+      AVLinearPCMIsNonInterleaved: false,
     ]
     fileURL = url
-    recorder = try AVAudioRecorder(url: url, settings: settings)
-    recorder?.prepareToRecord()
-    recorder?.record()
+    let rec = try AVAudioRecorder(url: url, settings: settings)
+    rec.prepareToRecord()
+    guard rec.record() else {
+      throw NSError(
+        domain: "AudioRecorderService",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "AVAudioRecorder.record() failed"]
+      )
+    }
+    recorder = rec
     isRecording = true
   }
 
   func stopRecording() -> URL? {
     recorder?.stop()
-    isRecording = false
     recorder = nil
+    isRecording = false
+    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     return fileURL
   }
 }
