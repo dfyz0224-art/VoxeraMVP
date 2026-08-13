@@ -9,7 +9,7 @@ enum VoxeraAPIError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case .noToken:
-      return "Нет API-токена в сборке. Задайте VOXERA_API_TOKEN в Scheme (Debug) или в Secrets.xcconfig и сделайте Clean Build."
+      return "Нет API-токена в сборке. Для TestFlight: Secrets.xcconfig на Mac → Clean → Archive."
     case .status(let code, let body):
       let snippet = (body ?? "")
         .trimmingCharacters(in: .whitespacesAndNewlines)

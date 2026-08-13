@@ -32,10 +32,15 @@ targets:
         INFOPLIST_FILE: Voxera/Info.plist
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
-        CURRENT_PROJECT_VERSION: "4"
+        CURRENT_PROJECT_VERSION: "5"
         MARKETING_VERSION: "1.0"
         GENERATE_INFOPLIST_FILE: NO
         SWIFT_EMIT_LOC_STRINGS: YES
     configFiles:
       Debug: Voxera/Config.xcconfig
       Release: Voxera/Config.xcconfig
+    preBuildScripts:
+      - name: Generate API Token
+        basedOnDependencyAnalysis: false
+        script: |
+          bash "${SRCROOT}/scripts/GenerateAPIToken.sh"

@@ -32,6 +32,7 @@
 		EE2AD5773859DE9E1A94F3C8 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 058B7141F74A14C38A021234 /* OnboardingView.swift */; };
 		F008E350D80714CD46539BAF /* AudioRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1015339070C0F45AA03216 /* AudioRecorderService.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* AudioUploadMime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D /* AudioUploadMime.swift */; };
+		C1D2E3F405162738495A6B7C /* APIToken.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E3F405162738495A6B7C8D /* APIToken.generated.swift */; };
 		F375F3452F9E4F3100F7E148 /* HistoryMoodPeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */; };
 		FB4FDFCC31306DCBC2A391A4 /* VoxeraAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BADCC0A3A4EE173FBEDE62 /* VoxeraAPI.swift */; };
 		FD7E012339A7458679617B52 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDE78D0BA8CD11DB3394391 /* SplashView.swift */; };
@@ -49,6 +50,7 @@
 		0C40B68329527405A9E8306F /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
 		0F1015339070C0F45AA03216 /* AudioRecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderService.swift; sourceTree = "<group>"; };
 		B2C3D4E5F60718293A4B5C6D /* AudioUploadMime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioUploadMime.swift; sourceTree = "<group>"; };
+		D2E3F405162738495A6B7C8D /* APIToken.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIToken.generated.swift; sourceTree = "<group>"; };
 		1FDE78D0BA8CD11DB3394391 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		26EBF95D2CC6149593C61E6A /* AnalysisModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisModels.swift; sourceTree = "<group>"; };
 		322FD2758394C3FF13EA1056 /* LocaleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleStore.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 		C2E2CD913073627B323EA2D1 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
+				D2E3F405162738495A6B7C8D /* APIToken.generated.swift */,
 				BFC564971443F9590B2C3EBB /* StringPackEN.swift */,
 				63BCE99317A9E0BED368F14B /* StringPackKZ.swift */,
 				E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */,
@@ -223,6 +226,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C147E8A4A77AF087FAFBE848 /* Build configuration list for PBXNativeTarget "Voxera" */;
 			buildPhases = (
+				A9E1F2B3C4D5E6F708192A3B /* Generate API Token */,
 				C698BD23743CFA1ADDE9B0F3 /* Sources */,
 				B9202C3630AD5E7F8A9012B2 /* Frameworks */,
 				2DA406BAD7B865BC133BEAD5 /* Resources */,
@@ -287,6 +291,31 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		A9E1F2B3C4D5E6F708192A3B /* Generate API Token */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Voxera/Secrets.xcconfig",
+				"$(SRCROOT)/scripts/GenerateAPIToken.sh",
+			);
+			name = "Generate API Token";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Voxera/Generated/APIToken.generated.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "bash \"${SRCROOT}/scripts/GenerateAPIToken.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXResourcesBuildPhase section */
 		2DA406BAD7B865BC133BEAD5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -306,6 +335,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2C43FA33A5D2C7D56FA1A27 /* AboutContent.swift in Sources */,
+				C1D2E3F405162738495A6B7C /* APIToken.generated.swift in Sources */,
 				116416C8E6B1A7AE6456B48C /* AnalysisModels.swift in Sources */,
 				8A666AB741C40D17C055CA75 /* AnalysisSession.swift in Sources */,
 				F375F3452F9E4F3100F7E148 /* HistoryMoodPeriod.swift in Sources */,
@@ -472,7 +502,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Voxera/Info.plist;
@@ -496,7 +526,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Voxera/Info.plist;

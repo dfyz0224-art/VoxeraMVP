@@ -17,13 +17,14 @@ open Voxera.xcodeproj
 
 Новые экраны (паритет Android): подписки в Settings, форма входа с подтверждением пароля / «Гостевой режим», кнопка «График состояний» на Result.
 
-**API:** нужен файл **`ios/Voxera/Secrets.xcconfig`** (не Android `secrets.properties`!). Скопируйте `Secrets.xcconfig.example` → `Secrets.xcconfig`, одна строка:
+**API / TestFlight:** нужен файл **`ios/Voxera/Secrets.xcconfig`** (не Android `secrets.properties`!). Скопируйте `Secrets.xcconfig.example` → `Secrets.xcconfig`:
 
 ```text
 VOXERA_API_TOKEN = ваш_токен_как_в_Android
 ```
 
-Пересоберите (**Clean Build Folder**, затем Run). Без этого — `noToken`. В **Debug** можно вместо файла задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables**.
+Перед каждым **Archive → TestFlight** файл должен существовать на Mac — build phase `Generate API Token` вшивает токен в приложение. Без него Release-сборка упадёт с ошибкой или покажет `noToken` на телефоне.  
+В **Debug** можно временно задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables** (на TestFlight это не действует).
 
 **Debug:** кнопка **«Тест»** на экране записи копирует `Resources/audio_test.ogg` (как Android `assets/audio_test.ogg`) и сразу идёт в анализ.
 

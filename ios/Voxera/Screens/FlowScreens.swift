@@ -145,39 +145,44 @@ struct RecordingView: View {
       .frame(width: geo.size.width, height: geo.size.height)
       .overlay(alignment: .top) {
         TimelineView(.periodic(from: .now, by: 0.2)) { timeline in
-          ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 12) {
-              Text(isRecording ? s.recordingInProgress : s.voiceRecording)
-                .font(.system(size: 32, weight: .regular, design: .default))
-                .foregroundColor(titleColor)
-                .multilineTextAlignment(.center)
-              if isRecording {
-                if recordingTimerExpired(at: timeline.date) {
-                  Text(s.tapToStop)
-                    .font(.body)
-                    .foregroundColor(secondaryOnBackground)
-                    .multilineTextAlignment(.center)
-                } else {
-                  Text("\(recordingRemainingSeconds(at: timeline.date)) \(s.secondsShort)")
-                    .font(.system(size: 32, weight: .semibold, design: .default))
-                    .foregroundColor(titleColor)
-                }
+          let titleSize: CGFloat = geo.size.height < 750 ? 26 : 30
+          // Keep tips fully visible above the centered record button (was ~28% and clipped on iPhone 13).
+          let textMaxH = min(geo.size.height * 0.40, max(168, geo.size.height / 2 - RecordingVisualTokens.recordButtonSize / 2 - 24))
+          VStack(spacing: 8) {
+            Text(isRecording ? s.recordingInProgress : s.voiceRecording)
+              .font(.system(size: titleSize, weight: .regular, design: .default))
+              .foregroundColor(titleColor)
+              .multilineTextAlignment(.center)
+              .minimumScaleFactor(0.85)
+              .lineLimit(2)
+            if isRecording {
+              if recordingTimerExpired(at: timeline.date) {
+                Text(s.tapToStop)
+                  .font(.subheadline)
+                  .foregroundColor(secondaryOnBackground)
+                  .multilineTextAlignment(.center)
+                  .fixedSize(horizontal: false, vertical: true)
               } else {
-                Text(s.tapToStart)
-                  .font(.body)
-                  .foregroundColor(secondaryOnBackground)
-                  .multilineTextAlignment(.center)
-                Text(s.saySentences)
-                  .font(.body)
-                  .foregroundColor(secondaryOnBackground)
-                  .multilineTextAlignment(.center)
+                Text("\(recordingRemainingSeconds(at: timeline.date)) \(s.secondsShort)")
+                  .font(.system(size: titleSize, weight: .semibold, design: .default))
+                  .foregroundColor(titleColor)
               }
+            } else {
+              Text(s.tapToStart)
+                .font(.subheadline)
+                .foregroundColor(secondaryOnBackground)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+              Text(s.saySentences)
+                .font(.subheadline)
+                .foregroundColor(secondaryOnBackground)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, max(2, geo.safeAreaInsets.top - 10))
-            .frame(maxWidth: .infinity)
           }
-          .frame(maxHeight: max(120, geo.size.height * 0.28), alignment: .top)
+          .padding(.horizontal, 20)
+          .padding(.top, 4)
+          .frame(maxWidth: .infinity, maxHeight: textMaxH, alignment: .top)
         }
       }
       .overlay(alignment: .bottom) {
@@ -203,14 +208,13 @@ struct RecordingView: View {
                     lineWidth: 1
                   )
               )
-              .padding(.bottom, 12)
+              .padding(.bottom, max(12, geo.safeAreaInsets.bottom))
               .transition(.opacity.combined(with: .move(edge: .bottom)))
           }
         }
         .animation(.easeInOut(duration: 0.25), value: isRecording)
       }
     }
-    .ignoresSafeArea(edges: .bottom)
     .overlay {
       RecordingBreathReader(isRecording: isRecording)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -456,11 +460,11 @@ struct ProcessingView: View {
       switch error as? VoxeraAPIError {
       case .noToken:
         errorText = """
-          Нет API-токена в этой сборке.
-          Надёжнее всего (Debug): Product → Scheme → Edit Scheme → Run → Arguments →
-          Environment Variables → добавить VOXERA_API_TOKEN = ваш_токен → Run.
-          Или Secrets.xcconfig / строка VOXERA_API_TOKEN после #include в Config.xcconfig,
-          затем Product → Clean Build Folder.
+          Нет API-токена в этой сборке (TestFlight/Release).
+          На Mac создайте ios/Voxera/Secrets.xcconfig:
+          VOXERA_API_TOKEN = ваш_токен
+          Затем Clean Build Folder → Archive → Upload в TestFlight.
+          (Переменные Scheme работают только в Debug, не в TestFlight.)
           """
         canRetry = false
       case .status, .decode, .network:
