@@ -29,7 +29,6 @@
 		D448079ED4A8564DA4BA5CC8 /* StringPackZH.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64086F5CC755D307A03B4EC /* StringPackZH.swift */; };
 		E2C43FA33A5D2C7D56FA1A27 /* AboutContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A498BE1D2E89D1C9AF7A066C /* AboutContent.swift */; };
 		E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */; };
-		B7C1A2D34E5F678901234AC0 /* ResultHints.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C1A2D34E5F678901234AC1 /* ResultHints.swift */; };
 		EE2AD5773859DE9E1A94F3C8 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 058B7141F74A14C38A021234 /* OnboardingView.swift */; };
 		F008E350D80714CD46539BAF /* AudioRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1015339070C0F45AA03216 /* AudioRecorderService.swift */; };
 		F375F3452F9E4F3100F7E148 /* HistoryMoodPeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */; };
@@ -68,7 +67,6 @@
 		AF5013032A96D4A7E838E0B6 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		BFC564971443F9590B2C3EBB /* StringPackEN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackEN.swift; sourceTree = "<group>"; };
 		C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowScreens.swift; sourceTree = "<group>"; };
-		B7C1A2D34E5F678901234AC1 /* ResultHints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultHints.swift; sourceTree = "<group>"; };
 		CA57270AF50EC7B77BD8B807 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		CB739D7742354D19B0125241 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D11B1DDDA66072633124DB21 /* VoxeraRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxeraRootView.swift; sourceTree = "<group>"; };
@@ -150,7 +148,6 @@
 				DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */,
 				380A3538AEF74265AE42165C /* AuthCardContent.swift */,
 				C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */,
-				B7C1A2D34E5F678901234AC1 /* ResultHints.swift */,
 				3A9AFCA967A653514358E710 /* ModeSelectView.swift */,
 				058B7141F74A14C38A021234 /* OnboardingView.swift */,
 				7CB38EF60E2450679F313EA9 /* SecondaryScreens.swift */,
@@ -317,7 +314,6 @@
 				7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */,
 				ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */,
 				E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */,
-				B7C1A2D34E5F678901234AC0 /* ResultHints.swift in Sources */,
 				5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */,
 				6A8A750D4C20098DD2BC2021 /* LocaleStore.swift in Sources */,
 				D20AE8F955310A980492380C /* ModeSelectView.swift in Sources */,

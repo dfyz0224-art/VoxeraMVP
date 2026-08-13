@@ -10,7 +10,8 @@ struct HistoryEntry: Codable, Identifiable, Equatable {
 
 @MainActor
 final class HistoryStore: ObservableObject {
-  static let guestAccountKey = "guest"
+  /// Shared across actors; not MainActor-isolated.
+  nonisolated static let guestAccountKey = "guest"
 
   @Published private(set) var entries: [HistoryEntry] = []
 
