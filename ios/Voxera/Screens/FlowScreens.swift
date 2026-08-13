@@ -266,7 +266,10 @@ struct RecordingView: View {
     }
     .onDisappear {
       recordingStartedAt = nil
-      if recorder.isRecording { _ = recorder.stopRecording() }
+      if recorder.isRecording {
+        recorder.cancelRecording()
+        isRecording = false
+      }
     }
     .alert(s.voiceRecording, isPresented: Binding(
       get: { recordingAlert != nil },
@@ -281,7 +284,7 @@ struct RecordingView: View {
   @MainActor
   private func toggleRecord() async {
     if isRecording {
-      let url = recorder.stopRecording()
+      let url = await recorder.stopRecording()
       isRecording = false
       recordingStartedAt = nil
       if let url, FileManager.default.fileExists(atPath: url.path) {
@@ -293,7 +296,8 @@ struct RecordingView: View {
         }
         if size > 2048 {
           session.recordedFileURL = url
-          session.lastAudioMimeType = "audio/wav"
+          let ext = url.pathExtension.lowercased()
+          session.lastAudioMimeType = ext == "wav" ? "audio/wav" : AudioUploadMime.normalize(nil, fileName: url.lastPathComponent)
           path.append(AppRoute.processing)
         } else {
           recordingAlert = s.recordingEmptyFile
