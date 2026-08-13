@@ -1,9 +1,29 @@
 import Foundation
 
-enum VoxeraAPIError: Error {
+enum VoxeraAPIError: Error, LocalizedError {
   case noToken
   case status(Int, String?)
   case decode
+  case network(String)
+
+  var errorDescription: String? {
+    switch self {
+    case .noToken:
+      return "Нет API-токена в сборке. Задайте VOXERA_API_TOKEN в Scheme (Debug) или в Secrets.xcconfig и сделайте Clean Build."
+    case .status(let code, let body):
+      let snippet = (body ?? "")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+      let short = snippet.count > 180 ? String(snippet.prefix(180)) + "…" : snippet
+      if short.isEmpty {
+        return "Сервер ответил HTTP \(code)."
+      }
+      return "Сервер HTTP \(code): \(short)"
+    case .decode:
+      return "Ответ сервера не удалось разобрать (неожиданный JSON)."
+    case .network(let message):
+      return "Сеть: \(message)"
+    }
+  }
 }
 
 final class VoxeraAPI {
@@ -47,7 +67,13 @@ final class VoxeraAPI {
 
     request.httpBody = body
 
-    let (respData, response) = try await URLSession.shared.data(for: request)
+    let respData: Data
+    let response: URLResponse
+    do {
+      (respData, response) = try await URLSession.shared.data(for: request)
+    } catch {
+      throw VoxeraAPIError.network(error.localizedDescription)
+    }
     let rawString = String(data: respData, encoding: .utf8)
 
     guard let http = response as? HTTPURLResponse else {

@@ -1,4 +1,7 @@
-// Base build settings. Copy Secrets.xcconfig.example → Secrets.xcconfig and set VOXERA_API_TOKEN.
-// Default empty first; Secrets.xcconfig (if present) overrides — last assignment wins in xcconfig.
+// Base build settings.
+// 1) Prefer: copy Secrets.xcconfig.example → Secrets.xcconfig and set the token there.
+// 2) Or set VOXERA_API_TOKEN on the line AFTER the include (last assignment wins).
+// 3) Debug without rebuild: Scheme → Run → Environment Variables → VOXERA_API_TOKEN.
+// Do not put // inside the token value — xcconfig treats // as a comment.
 VOXERA_API_TOKEN =
 #include? "Secrets.xcconfig"
