@@ -110,6 +110,8 @@ extension AppStrings {
       languageKz: "Қазақша",
       languageUk: "Українська",
       languageKa: "ქართული",
+      settingsDailyReminders: "Күнделікті еске салу",
+      settingsDailyRemindersSubtitle: "Таңертең және кешке — эмоционалдық күйді тексеру",
       aboutTitle: "Қолданба туралы",
       aboutDescription: "Дауыс бойынша жағдайды тәжірибелік талдау. Медициналық диагноз емес.",
       aboutBriefSectionTitle: "Қысқаша сипаттама",

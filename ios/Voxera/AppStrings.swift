@@ -108,6 +108,8 @@ struct AppStrings: Equatable {
   let languageKz: String
   let languageUk: String
   let languageKa: String
+  let settingsDailyReminders: String
+  let settingsDailyRemindersSubtitle: String
   let aboutTitle: String
   let aboutDescription: String
   let aboutBriefSectionTitle: String

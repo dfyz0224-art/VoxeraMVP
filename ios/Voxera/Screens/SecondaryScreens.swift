@@ -296,6 +296,7 @@ struct SettingsView: View {
           subscriptionsNavCard
           themeCard
           languageCard
+          remindersCard
           themedOutlineButton(s.privacyPolicyShortLink, fg: outlineFg, lightStroke: prefs.themeType == .light ? outlineFg.opacity(0.45) : nil) { path.append(AppRoute.privacyPolicy) }
         }
         .padding(20)
@@ -386,6 +387,24 @@ struct SettingsView: View {
             .cornerRadius(12)
         }
       }
+    }
+  }
+
+  private var remindersCard: some View {
+    ThemedCard(gradientIndex: 4) {
+      Toggle(isOn: Binding(
+        get: { prefs.dailyRemindersEnabled },
+        set: { prefs.setDailyRemindersEnabled($0) }
+      )) {
+        VStack(alignment: .leading, spacing: 4) {
+          Text(s.settingsDailyReminders).font(.headline).foregroundColor(.white)
+          Text(s.settingsDailyRemindersSubtitle)
+            .font(.subheadline)
+            .foregroundColor(.white.opacity(0.8))
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      .tint(.white.opacity(0.85))
     }
   }
 

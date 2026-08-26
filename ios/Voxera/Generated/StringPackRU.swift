@@ -110,6 +110,8 @@ extension AppStrings {
       languageKz: "Қазақша",
       languageUk: "Українська",
       languageKa: "ქართული",
+      settingsDailyReminders: "Ежедневные напоминания",
+      settingsDailyRemindersSubtitle: "Утром и вечером — проверить эмоциональное состояние",
       aboutTitle: "О приложении",
       aboutDescription: "Экспериментальный анализ состояния по голосу. Не является медицинским диагнозом.",
       aboutBriefSectionTitle: "Краткое описание",

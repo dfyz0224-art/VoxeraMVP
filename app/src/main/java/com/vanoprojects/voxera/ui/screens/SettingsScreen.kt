@@ -1,5 +1,9 @@
 package com.vanoprojects.voxera.ui.screens
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,6 +34,7 @@ import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.PreferencesManager
+import com.vanoprojects.voxera.notifications.DailyReminderScheduler
 import com.vanoprojects.voxera.ui.strings.AppLanguage
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
@@ -50,8 +55,17 @@ fun SettingsScreen(
   val scope = rememberCoroutineScope()
   val currentTheme by prefsManager.themeType.collectAsState(initial = ThemeType.GLASS)
   val currentLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
+  val remindersEnabled by prefsManager.dailyRemindersEnabled.collectAsState(initial = true)
   var showLanguageSheet by remember { mutableStateOf(false) }
   val languageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+  val context = LocalContext.current
+  val permissionLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.RequestPermission()
+  ) { granted ->
+    if (granted) {
+      DailyReminderScheduler.reschedule(context, remindersEnabled, currentLanguage)
+    }
+  }
 
   // Фон: для светлой темы - белый, для остальных - VoxeraBackground
   Box(modifier = Modifier.fillMaxSize()) {
@@ -95,6 +109,20 @@ fun SettingsScreen(
         currentLanguage = currentLanguage,
         strings = strings,
         onOpenSheet = { showLanguageSheet = true }
+      )
+
+      Spacer(modifier = Modifier.height(16.dp))
+      DailyRemindersCard(
+        enabled = remindersEnabled,
+        onToggle = { on ->
+          scope.launch {
+            prefsManager.setDailyRemindersEnabled(on)
+            DailyReminderScheduler.reschedule(context, on, currentLanguage)
+            if (on && Build.VERSION.SDK_INT >= 33) {
+              permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+          }
+        }
       )
 
       Spacer(modifier = Modifier.height(18.dp))
@@ -316,6 +344,46 @@ private fun LanguageSelectorCard(
       ) {
         Text(currentLangLabel)
       }
+    }
+  }
+}
+
+@Composable
+private fun DailyRemindersCard(
+  enabled: Boolean,
+  onToggle: (Boolean) -> Unit
+) {
+  val theme = LocalVoxeraTheme.current
+  val colors = theme.colors
+  val strings = LocalStrings.current
+
+  ThemedCard(gradientIndex = 4) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Column(modifier = Modifier.weight(1f)) {
+        TextWithShadow(
+          text = strings.settingsDailyReminders,
+          style = MaterialTheme.typography.titleMedium,
+          color = colors.textPrimary,
+          fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TextWithShadow(
+          text = strings.settingsDailyRemindersSubtitle,
+          style = cardParagraphTextStyle(),
+          color = colors.textSecondary
+        )
+      }
+      Switch(
+        checked = enabled,
+        onCheckedChange = onToggle,
+        colors = SwitchDefaults.colors(
+          checkedThumbColor = colors.textPrimary,
+          checkedTrackColor = colors.buttonBackground
+        )
+      )
     }
   }
 }

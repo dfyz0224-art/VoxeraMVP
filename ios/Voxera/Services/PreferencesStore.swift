@@ -12,6 +12,7 @@ final class PreferencesStore: ObservableObject {
   @Published private(set) var consentGiven: Bool
   @Published private(set) var onboardingCompleted: Bool
   @Published private(set) var authCompleted: Bool
+  @Published private(set) var dailyRemindersEnabled: Bool
   @Published var profilePhotoPath: String?
   @Published var profilePhone: String?
 
@@ -24,6 +25,7 @@ final class PreferencesStore: ObservableObject {
     static let auth = "auth_completed"
     static let photo = "profile_photo_path"
     static let phone = "profile_phone"
+    static let reminders = "daily_reminders_enabled"
   }
 
   init() {
@@ -42,6 +44,11 @@ final class PreferencesStore: ObservableObject {
     } else {
       authCompleted = d.bool(forKey: K.auth)
     }
+    if d.object(forKey: K.reminders) == nil {
+      dailyRemindersEnabled = true
+    } else {
+      dailyRemindersEnabled = d.bool(forKey: K.reminders)
+    }
     profilePhotoPath = d.string(forKey: K.photo)
     profilePhone = d.string(forKey: K.phone)
   }
@@ -54,6 +61,11 @@ final class PreferencesStore: ObservableObject {
   func setLanguage(_ l: AppLanguage) {
     appLanguage = l
     d.set(l.rawValue, forKey: K.lang)
+  }
+
+  func setDailyRemindersEnabled(_ v: Bool) {
+    dailyRemindersEnabled = v
+    d.set(v, forKey: K.reminders)
   }
 
   func setConsentGiven(_ v: Bool) {

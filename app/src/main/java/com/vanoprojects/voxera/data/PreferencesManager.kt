@@ -23,6 +23,7 @@ class PreferencesManager(private val context: Context) {
         private val AUTH_COMPLETED_KEY = booleanPreferencesKey("auth_completed")
         private val PROFILE_PHOTO_PATH_KEY = stringPreferencesKey("profile_photo_path")
         private val PROFILE_PHONE_KEY = stringPreferencesKey("profile_phone")
+        private val DAILY_REMINDERS_KEY = booleanPreferencesKey("daily_reminders_enabled")
     }
 
     val consentGiven: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -114,6 +115,17 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             if (phone != null) preferences[PROFILE_PHONE_KEY] = phone
             else preferences.remove(PROFILE_PHONE_KEY)
+        }
+    }
+
+    /** Morning + evening local reminders. Default: on. */
+    val dailyRemindersEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DAILY_REMINDERS_KEY] ?: true
+    }
+
+    suspend fun setDailyRemindersEnabled(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DAILY_REMINDERS_KEY] = value
         }
     }
 

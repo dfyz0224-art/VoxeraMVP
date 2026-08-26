@@ -1,6 +1,10 @@
 package com.vanoprojects.voxera
 
 import com.google.firebase.auth.FirebaseAuth
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
@@ -21,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.data.api.VoxeraApiClient
 import com.vanoprojects.voxera.data.isAllowedIntoApp
+import com.vanoprojects.voxera.notifications.DailyReminderScheduler
 import com.vanoprojects.voxera.ui.nav.VoxeraNavHost
 import com.vanoprojects.voxera.ui.strings.AppLanguage
 import com.vanoprojects.voxera.ui.strings.LocalStrings
@@ -56,6 +61,18 @@ fun VoxeraApp() {
     currentUser != null -> currentUser.isAllowedIntoApp()
     authCompletedByPrefs == true -> true
     else -> false
+  }
+  val remindersEnabled by prefsManager.dailyRemindersEnabled.collectAsState(initial = true)
+  val notifPermission = rememberLauncherForActivityResult(
+    ActivityResultContracts.RequestPermission()
+  ) { /* system may still block notifications */ }
+  LaunchedEffect(remindersEnabled, appLanguage, onboardingCompleted, authCompleted) {
+    if (onboardingCompleted == true && authCompleted) {
+      if (Build.VERSION.SDK_INT >= 33) {
+        notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
+      DailyReminderScheduler.reschedule(context, remindersEnabled, appLanguage)
+    }
   }
   val strings = when (appLanguage) {
     AppLanguage.RU -> Strings.Ru

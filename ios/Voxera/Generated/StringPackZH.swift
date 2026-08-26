@@ -110,6 +110,8 @@ extension AppStrings {
       languageKz: "Қазақша",
       languageUk: "Українська",
       languageKa: "ქართული",
+      settingsDailyReminders: "每日提醒",
+      settingsDailyRemindersSubtitle: "早晚提醒您检查情绪状态",
       aboutTitle: "关于",
       aboutDescription: "实验性语音状态分析。非医学诊断。",
       aboutBriefSectionTitle: "简要说明",

@@ -110,6 +110,8 @@ extension AppStrings {
       languageKz: "Қазақша",
       languageUk: "Українська",
       languageKa: "ქართული",
+      settingsDailyReminders: "Daily reminders",
+      settingsDailyRemindersSubtitle: "Morning and evening — check your emotional state",
       aboutTitle: "About",
       aboutDescription: "Experimental voice-based state analysis. Not a medical diagnosis.",
       aboutBriefSectionTitle: "Brief overview",
