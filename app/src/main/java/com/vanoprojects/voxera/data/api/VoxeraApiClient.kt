@@ -11,11 +11,16 @@ import java.util.concurrent.TimeUnit
 object VoxeraApiClient {
     private const val BASE_URL = "https://tg.voxera.kz/api/v1/"
 
+    /** ISO-ish API codes: ru, en, zh, kz, uk, ka — mirrors app language. */
+    @Volatile
+    var languageCode: String = "ru"
+
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
                 .addHeader("Accept", "application/json")
                 .addHeader("Authorization", "Bearer ${BuildConfig.VOXERA_API_TOKEN}")
+                .addHeader("Language", languageCode)
                 .build()
             chain.proceed(request)
         }

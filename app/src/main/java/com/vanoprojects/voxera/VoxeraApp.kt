@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.vanoprojects.voxera.data.PreferencesManager
+import com.vanoprojects.voxera.data.api.VoxeraApiClient
 import com.vanoprojects.voxera.data.isAllowedIntoApp
 import com.vanoprojects.voxera.ui.nav.VoxeraNavHost
 import com.vanoprojects.voxera.ui.strings.AppLanguage
@@ -43,6 +45,10 @@ fun VoxeraApp() {
     val listener = FirebaseAuth.AuthStateListener { firebaseUser = it.currentUser }
     auth.addAuthStateListener(listener)
     onDispose { auth.removeAuthStateListener(listener) }
+  }
+  // Keep API Language header in sync with UI language (ru/en/zh/kz/uk/ka).
+  LaunchedEffect(appLanguage) {
+    VoxeraApiClient.languageCode = appLanguage.name.lowercase()
   }
   // Guest: prefs only. Signed-in email/password: must be verified.
   val currentUser = firebaseUser

@@ -29,7 +29,12 @@ enum VoxeraAPIError: Error, LocalizedError {
 final class VoxeraAPI {
   private static let baseURL = URL(string: "https://tg.voxera.kz/api/v1/")!
 
-  static func analyze(audioURL: URL, audioMime: String?, analysisType: String) async throws -> (
+  static func analyze(
+    audioURL: URL,
+    audioMime: String?,
+    analysisType: String,
+    language: AppLanguage = .ru
+  ) async throws -> (
     AnalysisResponse, String?
   ) {
     let token = Secrets.voxeraApiToken
@@ -42,6 +47,8 @@ final class VoxeraAPI {
     request.httpMethod = "POST"
     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Accept")
+    // API docs: header Language = ru|en|zh|kz|uk|ka — drives label / errors / AI description.
+    request.setValue(language.rawValue, forHTTPHeaderField: "Language")
     request.timeoutInterval = 180
 
     let boundary = "Boundary-\(UUID().uuidString)"

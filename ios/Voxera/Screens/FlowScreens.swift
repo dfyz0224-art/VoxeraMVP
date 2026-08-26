@@ -386,6 +386,7 @@ struct ProcessingView: View {
   @EnvironmentObject private var session: AnalysisSession
   @EnvironmentObject private var history: HistoryStore
   @EnvironmentObject private var locale: LocaleStore
+  @EnvironmentObject private var prefs: PreferencesStore
   @State private var errorText: String?
   @State private var isRunning = false
   @State private var canRetry = false
@@ -440,7 +441,8 @@ struct ProcessingView: View {
       let (resp, raw) = try await VoxeraAPI.analyze(
         audioURL: url,
         audioMime: session.lastAudioMimeType,
-        analysisType: session.analysisType
+        analysisType: session.analysisType,
+        language: prefs.appLanguage
       )
       session.lastAnalysisResponse = resp
       session.lastRawApiResponse = raw
