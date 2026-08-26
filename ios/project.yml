@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: com.vanoprojects
   deploymentTarget:
     iOS: "17.0"
-  xcodeVersion: "16.0"
+  xcodeVersion: "15.0"
 packages:
   LiquidGlass:
     url: https://github.com/BarredEwe/LiquidGlass

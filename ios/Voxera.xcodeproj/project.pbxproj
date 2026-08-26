@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -280,11 +280,9 @@
 				en,
 			);
 			mainGroup = F98E9C30C75071AD35EC9043;
-			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E703193B2C7C8C9AA0B12EF4 /* XCRemoteSwiftPackageReference "LiquidGlass" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 6763055F5B2E4DA561570FF6 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
