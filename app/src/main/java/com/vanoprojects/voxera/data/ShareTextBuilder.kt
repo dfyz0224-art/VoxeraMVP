@@ -9,12 +9,10 @@ import com.vanoprojects.voxera.data.model.EmoScale
 import com.vanoprojects.voxera.data.model.PsyType
 import com.vanoprojects.voxera.ui.strings.EmoScaleNames
 import com.vanoprojects.voxera.ui.strings.Strings
+import kotlin.math.roundToInt
 
 private fun formatPsyTypeName(name: String): String =
   name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-
-private fun stripHtml(html: String): String =
-  HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
 
 private fun extractDescriptionFromJsonString(jsonStr: String): String = try {
   val json = Gson().fromJson(jsonStr, JsonObject::class.java) ?: return ""
@@ -51,7 +49,7 @@ private fun truncateDescription(rawHtml: String, brief: Boolean): String {
   return plain.take(BRIEF_DESC_MAX).trimEnd() + "…"
 }
 
-/** Paragraph breaks before "2. …", "3. …" for readable share / display plain text. */
+/** Paragraph breaks before "2. …"; title on its own line, then body. */
 private fun formatEmostateDescriptionForShare(raw: String): String {
   if (raw.isBlank()) return raw
   val plain = HtmlCompat.fromHtml(raw, HtmlCompat.FROM_HTML_MODE_LEGACY)
@@ -59,10 +57,22 @@ private fun formatEmostateDescriptionForShare(raw: String): String {
     .replace("\r\n", "\n")
     .replace('\r', '\n')
     .trim()
-  return plain
-    .replace(Regex("""(?<!^)\s+(?=\d+\.\s+)"""), "\n\n")
+  val withParagraphs = plain
+    .replace(Regex("""(?<!^)\s+(?=\d+\.\s*\S)"""), "\n\n")
     .replace(Regex("""\n{3,}"""), "\n\n")
-    .trim()
+  return withParagraphs.split("\n\n").joinToString("\n\n") { paragraph ->
+    val trimmed = paragraph.trim()
+    val match = Regex("""^(\d+\.\s*)(\S+)\s*(.*)$""", RegexOption.DOT_MATCHES_ALL)
+      .matchEntire(trimmed)
+    if (match != null) {
+      val prefix = match.groupValues[1]
+      val title = match.groupValues[2]
+      val body = match.groupValues[3].trim()
+      if (body.isEmpty()) "$prefix$title" else "$prefix$title\n$body"
+    } else {
+      trimmed
+    }
+  }.trim()
 }
 
 /**
@@ -94,10 +104,10 @@ fun buildSharePlainText(
         append("\n\n")
         if (briefOnly) {
           val lead = sorted.first()
-          append("${strings.leadingType}: ${formatPsyTypeName(lead.name)} (${"%.2f".format(lead.value)}%)\n")
+          append("${strings.leadingType}: ${formatPsyTypeName(lead.name)} (${lead.value.roundToInt()}%)\n")
           val active = sorted.getOrNull(1)
           if (active != null) {
-            append("${strings.activeType}: ${formatPsyTypeName(active.name)} (${"%.2f".format(active.value)}%)\n")
+            append("${strings.activeType}: ${formatPsyTypeName(active.name)} (${active.value.roundToInt()}%)\n")
           }
           if (desc.isNotEmpty()) {
             append("\n")
@@ -105,11 +115,11 @@ fun buildSharePlainText(
           }
         } else {
           sorted.forEach { pt ->
-            append("${formatPsyTypeName(pt.name)}: ${"%.2f".format(pt.value)}%\n")
+            append("${formatPsyTypeName(pt.name)}: ${pt.value.roundToInt()}%\n")
           }
           if (descRaw.isNotEmpty()) {
             append("\n")
-            append(stripHtml(descRaw))
+            append(formatEmostateDescriptionForShare(descRaw))
           }
         }
       }
@@ -164,7 +174,7 @@ fun sharePreviewLines(
       if (types.isEmpty()) return strings.shareNoData to ""
       val lead = types.maxByOrNull { it.value }!!
       strings.psytypeResultTitle to
-        "${strings.leadingType}: ${formatPsyTypeName(lead.name)} (${"%.2f".format(lead.value)}%)"
+        "${strings.leadingType}: ${formatPsyTypeName(lead.name)} (${lead.value.roundToInt()}%)"
     }
     else -> {
       val scales = result.emoScales.orEmpty()

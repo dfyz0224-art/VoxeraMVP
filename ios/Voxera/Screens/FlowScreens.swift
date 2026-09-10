@@ -494,7 +494,7 @@ private func stripHtmlTagsIOS(_ html: String) -> String {
     .trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-/// Android formatEmostateDescriptionPlain: paragraphs before "2. …", "3. …".
+/// Android formatEmostateDescriptionPlain: paragraphs; title on its own line, then body.
 private func formatEmostateDescriptionPlainIOS(_ raw: String) -> String {
   let plain = stripHtmlTagsIOS(raw)
     .replacingOccurrences(of: "\r\n", with: "\n")
@@ -502,15 +502,40 @@ private func formatEmostateDescriptionPlainIOS(_ raw: String) -> String {
     .trimmingCharacters(in: .whitespacesAndNewlines)
   guard !plain.isEmpty else { return plain }
   let spaced = plain.replacingOccurrences(
-    of: #"(?<!^)\s+(?=\d+\.\s+)"#,
+    of: #"(?<!^)\s+(?=\d+\.\s*\S)"#,
     with: "\n\n",
     options: .regularExpression
   )
-  return spaced.replacingOccurrences(
+  let collapsed = spaced.replacingOccurrences(
     of: #"\n{3,}"#,
     with: "\n\n",
     options: .regularExpression
-  ).trimmingCharacters(in: .whitespacesAndNewlines)
+  )
+  let paragraphs = collapsed.components(separatedBy: "\n\n")
+  let formatted = paragraphs.map { paragraph ->
+    let trimmed = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let regex = try? NSRegularExpression(pattern: #"^(\d+\.\s*)(\S+)\s*(.*)$"#, options: [.dotMatchesLineSeparators]),
+          let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
+          match.numberOfRanges >= 3,
+          let prefixRange = Range(match.range(at: 1), in: trimmed),
+          let titleRange = Range(match.range(at: 2), in: trimmed)
+    else {
+      return trimmed
+    }
+    let prefix = String(trimmed[prefixRange])
+    let title = String(trimmed[titleRange])
+    let body: String
+    if match.numberOfRanges >= 4, let bodyRange = Range(match.range(at: 3), in: trimmed) {
+      body = String(trimmed[bodyRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+    } else {
+      body = ""
+    }
+    if body.isEmpty {
+      return "\(prefix)\(title)"
+    }
+    return "\(prefix)\(title)\n\(body)"
+  }
+  return formatted.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 private func formatEmostateDescriptionTextIOS(_ raw: String) -> Text {
@@ -519,15 +544,23 @@ private func formatEmostateDescriptionTextIOS(_ raw: String) -> Text {
   let paragraphs = plain.components(separatedBy: "\n\n")
   for (index, paragraph) in paragraphs.enumerated() {
     if index > 0 { result = result + Text("\n\n") }
-    if let match = paragraph.range(of: #"^\d+\.\s+\S+"#, options: .regularExpression) {
-      let head = String(paragraph[match])
-      let rest = String(paragraph[match.upperBound...])
-      result = result + Text(head).fontWeight(.bold) + Text(rest)
+    let lines = paragraph.components(separatedBy: "\n")
+    if let first = lines.first,
+       first.range(of: #"^\d+\.\s*\S+"#, options: .regularExpression) != nil {
+      result = result + Text(first).fontWeight(.bold)
+      if lines.count > 1 {
+        let rest = lines.dropFirst().joined(separator: "\n")
+        result = result + Text("\n\(rest)")
+      }
     } else {
       result = result + Text(paragraph)
     }
   }
   return result
+}
+
+private func formatPsyPercentIOS(_ value: Double) -> String {
+  String(Int(value.rounded()))
 }
 
 @MainActor
@@ -891,7 +924,7 @@ struct ResultView: View {
     let sorted = types.sorted { $0.value > $1.value }
     let leading = sorted.first
     let active = sorted.dropFirst().first
-    let desc = stripHtmlTagsIOS(descriptionRaw)
+    let desc = formatEmostateDescriptionPlainIOS(descriptionRaw)
 
     Text(s.psytypeResultTitle)
       .font(.title3.weight(.semibold))
@@ -918,7 +951,7 @@ struct ResultView: View {
         .font(.headline)
         .foregroundColor(titleColor)
         .padding(.top, 12)
-      Text(desc)
+      formatEmostateDescriptionTextIOS(descriptionRaw)
         .font(.body)
         .foregroundColor(secondaryColor)
         .padding(14)
@@ -941,10 +974,10 @@ struct ResultView: View {
     let l = leading ?? ("—", 0)
     let a = active ?? ("—", 0)
     return VStack(alignment: .leading, spacing: 10) {
-      Text("\(s.leadingType): \(l.0) (\(String(format: "%.2f", l.1))%)")
+      Text("\(s.leadingType): \(l.0) (\(formatPsyPercentIOS(l.1))%)")
         .font(.headline)
         .foregroundColor(themeColors.textPrimary)
-      Text("\(s.activeType): \(a.0) (\(String(format: "%.2f", a.1))%)")
+      Text("\(s.activeType): \(a.0) (\(formatPsyPercentIOS(a.1))%)")
         .font(.subheadline.weight(.semibold))
         .foregroundColor(themeColors.textPrimary)
     }
@@ -968,7 +1001,7 @@ struct ResultView: View {
           .font(.body.weight(.medium))
           .foregroundColor(themeColors.textPrimary)
         Spacer()
-        Text("\(String(format: "%.2f", value))%")
+        Text("\(formatPsyPercentIOS(value))%")
           .font(.body.weight(.semibold))
           .foregroundColor(themeColors.textPrimary)
         Button {
@@ -1125,11 +1158,11 @@ private func buildSharePlainTextIOS(
     lines.append(s.psytypeResultTitle)
     lines.append("")
     if let lead = types.first {
-      lines.append("\(s.leadingType): \(formatPsyTypeNameIOS(lead.name)) (\(String(format: "%.2f", lead.value))%)")
+      lines.append("\(s.leadingType): \(formatPsyTypeNameIOS(lead.name)) (\(formatPsyPercentIOS(lead.value))%)")
     }
     if types.count > 1 {
       let act = types[1]
-      lines.append("\(s.activeType): \(formatPsyTypeNameIOS(act.name)) (\(String(format: "%.2f", act.value))%)")
+      lines.append("\(s.activeType): \(formatPsyTypeNameIOS(act.name)) (\(formatPsyPercentIOS(act.value))%)")
     }
   } else {
     let scales = (result.emoScales ?? []).sorted { $0.value > $1.value }
@@ -1140,7 +1173,7 @@ private func buildSharePlainTextIOS(
       lines.append("\(MoodStatisticsData.emoScaleDisplayName(apiName: sc.name, language: lang)): \(sc.value)")
     }
   }
-  let desc = stripHtmlTagsIOS(extractDescriptionFromSession(session))
+  let desc = formatEmostateDescriptionPlainIOS(extractDescriptionFromSession(session))
   if !desc.isEmpty {
     lines.append("")
     lines.append(desc)
@@ -1163,7 +1196,7 @@ private func sharePreviewLinesIOS(
     if types.isEmpty { return (s.shareNoData, "") }
     guard let lead = types.max(by: { $0.value < $1.value }) else { return (s.shareNoData, "") }
     let line =
-      "\(s.leadingType): \(formatPsyTypeNameIOS(lead.name)) (\(String(format: "%.2f", lead.value))%)"
+      "\(s.leadingType): \(formatPsyTypeNameIOS(lead.name)) (\(formatPsyPercentIOS(lead.value))%)"
     return (s.psytypeResultTitle, line)
   } else {
     let scales = result.emoScales ?? []

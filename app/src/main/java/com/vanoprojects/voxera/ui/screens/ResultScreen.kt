@@ -54,6 +54,7 @@ import com.vanoprojects.voxera.ui.strings.EmoScaleNames
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.strings.Strings
 import com.vanoprojects.voxera.ui.theme.*
+import kotlin.math.roundToInt
 
 private fun extractDescriptionFromRawJson(): String {
     val raw = AnalysisSession.lastRawApiResponse
@@ -93,7 +94,7 @@ private fun extractDescriptionFromJsonString(jsonStr: String): String = try {
 
 /**
  * API often returns "1. Состояние … 2. Риски … 3. Рекомендация …" as one line.
- * Split into paragraphs and bold the section titles for HtmlCompat display.
+ * Split into paragraphs; put each numbered title on its own line, then body.
  */
 private fun formatEmostateDescriptionHtml(raw: String): String {
   if (raw.isBlank()) return raw
@@ -103,14 +104,26 @@ private fun formatEmostateDescriptionHtml(raw: String): String {
     .replace('\r', '\n')
     .trim()
   val withParagraphs = plain
-    .replace(Regex("""(?<!^)\s+(?=\d+\.\s+)"""), "\n\n")
+    .replace(Regex("""(?<!^)\s+(?=\d+\.\s*\S)"""), "\n\n")
     .replace(Regex("""\n{3,}"""), "\n\n")
-  val withBoldTitles = withParagraphs.replace(
-    Regex("""(?m)^(\d+\.\s*)(\S+)""")
-  ) { match ->
-    "${match.groupValues[1]}<b>${match.groupValues[2]}</b>"
+  val withTitles = withParagraphs.split("\n\n").joinToString("\n\n") { paragraph ->
+    val trimmed = paragraph.trim()
+    val match = Regex("""^(\d+\.\s*)(\S+)\s*(.*)$""", RegexOption.DOT_MATCHES_ALL)
+      .matchEntire(trimmed)
+    if (match != null) {
+      val prefix = match.groupValues[1]
+      val title = match.groupValues[2]
+      val body = match.groupValues[3].trim()
+      if (body.isEmpty()) {
+        "$prefix<b>$title</b>"
+      } else {
+        "$prefix<b>$title</b>\n$body"
+      }
+    } else {
+      trimmed
+    }
   }
-  return withBoldTitles
+  return withTitles
     .split("\n\n")
     .joinToString("<br/><br/>") { paragraph ->
       paragraph.trim().replace("\n", "<br/>")
@@ -375,7 +388,8 @@ private fun PsytypeResultContent(
   val scrollState = rememberScrollState()
   val psyTypes = response.result?.psyTypes ?: emptyList()
   val fromModel = response.result?.description.orEmpty()
-  val description = fromModel.ifEmpty { extractDescriptionFromRawJson() }
+  val descriptionRaw = fromModel.ifEmpty { extractDescriptionFromRawJson() }
+  val description = formatEmostateDescriptionHtml(descriptionRaw)
   Log.d("DescriptionExtract", "Psytype: fromModel=${fromModel.length}, final description=${description.length}, showCard=${description.isNotEmpty()}")
   val sorted = psyTypes.sortedByDescending { it.value }
   val leading = sorted.getOrNull(0)
@@ -499,14 +513,14 @@ private fun LeadingActiveCard(
   ) {
     Column(modifier = Modifier.fillMaxWidth()) {
       Text(
-        text = "$leadingLabel: ${leadingType.first} (${"%.2f".format(leadingType.second)}%)",
+        text = "$leadingLabel: ${leadingType.first} (${leadingType.second.roundToInt()}%)",
         style = MaterialTheme.typography.titleMedium,
         color = textColor,
         fontWeight = FontWeight.SemiBold
       )
       Spacer(modifier = Modifier.height(8.dp))
       Text(
-        text = "$activeLabel: ${activeType.first} (${"%.2f".format(activeType.second)}%)",
+        text = "$activeLabel: ${activeType.first} (${activeType.second.roundToInt()}%)",
         style = MaterialTheme.typography.titleMedium,
         color = textColor,
         fontWeight = FontWeight.Medium
@@ -525,7 +539,7 @@ private fun PsyTypeCard(
 ) {
   val cardShape = RoundedCornerShape(12.dp)
   val progress = (value / 100.0).toFloat().coerceIn(0f, 1f)
-  val percentStr = "%.2f".format(value)
+  val percentStr = value.roundToInt().toString()
 
   val cardGradient = when (theme.type) {
     ThemeType.LIGHT -> listOf(
