@@ -512,30 +512,23 @@ private func formatEmostateDescriptionPlainIOS(_ raw: String) -> String {
     options: .regularExpression
   )
   let paragraphs = collapsed.components(separatedBy: "\n\n")
-  let formatted = paragraphs.map { paragraph ->
-    let trimmed = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let regex = try? NSRegularExpression(pattern: #"^(\d+\.\s*)(\S+)\s*(.*)$"#, options: [.dotMatchesLineSeparators]),
-          let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
-          match.numberOfRanges >= 3,
-          let prefixRange = Range(match.range(at: 1), in: trimmed),
-          let titleRange = Range(match.range(at: 2), in: trimmed)
-    else {
-      return trimmed
-    }
-    let prefix = String(trimmed[prefixRange])
-    let title = String(trimmed[titleRange])
-    let body: String
-    if match.numberOfRanges >= 4, let bodyRange = Range(match.range(at: 3), in: trimmed) {
-      body = String(trimmed[bodyRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-    } else {
-      body = ""
-    }
-    if body.isEmpty {
-      return "\(prefix)\(title)"
-    }
-    return "\(prefix)\(title)\n\(body)"
+  let formatted = paragraphs.map { paragraph in
+    splitNumberedTitleAndBodyIOS(paragraph.trimmingCharacters(in: .whitespacesAndNewlines))
   }
   return formatted.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+/// "1. Состояние Тонус средний…" → "1. Состояние\nТонус средний…"
+private func splitNumberedTitleAndBodyIOS(_ paragraph: String) -> String {
+  guard let titleRange = paragraph.range(of: #"^\d+\.\s*\S+"#, options: .regularExpression) else {
+    return paragraph
+  }
+  let head = String(paragraph[titleRange])
+  let rest = String(paragraph[titleRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+  if rest.isEmpty {
+    return head
+  }
+  return "\(head)\n\(rest)"
 }
 
 private func formatEmostateDescriptionTextIOS(_ raw: String) -> Text {
