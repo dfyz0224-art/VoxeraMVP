@@ -3,7 +3,7 @@ import Security
 
 /// Keychain-backed email/password remember store (Android CredentialStore parity).
 enum CredentialStore {
-  private static let service = "com.vanoprojects.voxera.credentials"
+  private static let service = "com.vanoprojects.voxera.app.credentials"
   private static let emailKey = "email"
   private static let passwordKey = "password"
   private static let rememberKey = "remember_enabled"

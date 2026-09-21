@@ -34,7 +34,7 @@ VOXERA_API_TOKEN = ваш_токен_как_в_Android
 
 1. Скопируйте `Voxera/Secrets.xcconfig.example` → `Voxera/Secrets.xcconfig` и пропишите `VOXERA_API_TOKEN` (как `VOXERA_API_TOKEN` в Android `secrets.properties`).
 2. Скопируйте из Firebase Console **`GoogleService-Info.plist`** в `Voxera/` (iOS-приложение в той же Firebase-проекте, что Android).
-3. В Xcode: **Signing & Capabilities** — свой Team, **Automatically manage signing**.
+3. В Xcode: **Signing & Capabilities** — свой Team, **Automatically manage signing**. Bundle ID: **`com.vanoprojects.voxera.app`** (тот же в App Store Connect).
 
 ## Зависимости
 

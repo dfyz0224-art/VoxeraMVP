@@ -29,7 +29,7 @@ targets:
       - path: Voxera/Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vanoprojects.voxera
+        PRODUCT_BUNDLE_IDENTIFIER: com.vanoprojects.voxera.app
         INFOPLIST_FILE: Voxera/Info.plist
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
