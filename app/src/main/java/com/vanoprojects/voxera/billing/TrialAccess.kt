@@ -29,7 +29,24 @@ object TrialAccess {
   }
 
   fun canAnalyze(context: Context, uid: String?): Boolean {
-    if (uid.isNullOrBlank()) return false
-    return isInTrial(context, uid) || EntitlementStore.hasActiveSubscription
+    val account = accountId(context, uid)
+    return isInTrial(context, account) || EntitlementStore.hasActiveSubscription
   }
+
+  /** Stable id for guest mode so the 7-day trial is not restarted on every launch. */
+  fun accountId(context: Context, firebaseUid: String?): String {
+    if (!firebaseUid.isNullOrBlank()) return firebaseUid
+    return guestUid(context)
+  }
+
+  fun guestUid(context: Context): String {
+    val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    val existing = prefs.getString(GUEST_KEY, null)
+    if (!existing.isNullOrBlank()) return existing
+    val created = "guest-" + java.util.UUID.randomUUID().toString()
+    prefs.edit().putString(GUEST_KEY, created).apply()
+    return created
+  }
+
+  private const val GUEST_KEY = "guest_uid"
 }

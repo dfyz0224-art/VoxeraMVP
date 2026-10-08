@@ -81,8 +81,9 @@ struct ModeSelectView: View {
     let iconSize: CGFloat = height < 130 ? 72 : 88
     let fontSize: CGFloat = height < 130 ? 15 : 17
     return ThemedCard(gradientIndex: gradient, onTap: {
+      let accountId = auth.userId ?? (prefs.authCompleted ? "guest" : nil)
       let allowed = TrialAccess.canAnalyze(
-        uid: auth.userId,
+        uid: accountId,
         hasSubscription: subscriptions.activeProductId != nil
       )
       if !allowed {

@@ -1,9 +1,11 @@
 import SwiftUI
+import AuthenticationServices
 import UIKit
 
 struct AuthView: View {
   @Binding var path: NavigationPath
   @EnvironmentObject private var locale: LocaleStore
+  @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var auth: GoogleAuthSession
 
   var s: AppStrings { locale.strings }
@@ -40,6 +42,20 @@ struct AuthView: View {
               }
               .buttonStyle(.borderedProminent)
               .tint(.white.opacity(0.35))
+              .frame(maxWidth: .infinity)
+              SignInWithAppleButton(.signIn) { request in
+                auth.prepareAppleRequest(request)
+              } onCompletion: { result in
+                auth.completeApple(result)
+              }
+              .signInWithAppleButtonStyle(.white)
+              .frame(height: 48)
+              .frame(maxWidth: .infinity)
+              Button(s.authSkip) {
+                TrialAccess.startIfNeeded(uid: "guest")
+                prefs.setAuthCompleted(true)
+              }
+              .foregroundColor(.white.opacity(0.9))
               .frame(maxWidth: .infinity)
             }
           }

@@ -44,6 +44,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vanoprojects.voxera.app
         INFOPLIST_FILE: Voxera/Info.plist
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Voxera/Voxera.entitlements
         DEVELOPMENT_TEAM: ""
         CURRENT_PROJECT_VERSION: "7"
         MARKETING_VERSION: "1.0"

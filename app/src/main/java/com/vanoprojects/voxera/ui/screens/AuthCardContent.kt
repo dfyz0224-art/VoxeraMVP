@@ -55,9 +55,11 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.OAuthProvider
+import com.vanoprojects.voxera.billing.TrialAccess
+import com.vanoprojects.voxera.billing.findActivity
 import com.vanoprojects.voxera.BuildConfig
 import com.vanoprojects.voxera.R
-import com.vanoprojects.voxera.billing.TrialAccess
 import com.vanoprojects.voxera.data.CredentialStore
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.data.isAllowedIntoApp
@@ -199,6 +201,31 @@ fun AuthCardContent(
       } finally {
         isLoading = false
       }
+    }
+  }
+
+  fun signInWithApple() {
+    val activity = context.findActivity() ?: return
+    val provider = OAuthProvider.newBuilder("apple.com")
+      .setScopes(listOf("email", "name"))
+      .build()
+    isLoading = true
+    errorMessage = null
+    val pending = auth.pendingAuthResult
+    val task = pending ?: auth.startActivityForSignInWithProvider(activity, provider)
+    task.addOnSuccessListener {
+      val uid = auth.currentUser?.uid
+      if (uid != null) TrialAccess.startIfNeeded(context, uid)
+      isLoading = false
+      scope.launch {
+        prefsManager.setAuthCompleted(true)
+        onAuthComplete()
+      }
+    }.addOnFailureListener { e ->
+      isLoading = false
+      if ((e as? FirebaseAuthException)?.errorCode == "ERROR_WEB_CONTEXT_CANCELED") return@addOnFailureListener
+      Log.e(TAG_GOOGLE_AUTH, "Apple sign-in failed", e)
+      errorMessage = strings.authErrorGeneric
     }
   }
 
@@ -399,6 +426,20 @@ fun AuthCardContent(
           GoogleSignInButton(
             text = strings.authGoogle,
             onClick = { signInWithGoogle() },
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        ThemedOutlinedButton(
+          text = appleSignInLabel(strings),
+          onClick = { signInWithApple() },
+          modifier = Modifier.fillMaxWidth()
+        )
+        if (showSkipButton) {
+          Spacer(modifier = Modifier.height(12.dp))
+          ThemedOutlinedButton(
+            text = strings.authSkip,
+            onClick = onSkip,
             modifier = Modifier.fillMaxWidth()
           )
         }
@@ -645,4 +686,12 @@ private fun GoogleSignInButton(
     Spacer(modifier = Modifier.width(12.dp))
     Text(text = text, style = MaterialTheme.typography.bodyLarge)
   }
+}
+
+private fun appleSignInLabel(strings: Strings): String = when (strings) {
+  Strings.Ru, Strings.Uk -> "Войти через Apple"
+  Strings.Zh -> "通过 Apple 登录"
+  Strings.Kz -> "Apple арқылы кіру"
+  Strings.Ka -> "Apple-ით შესვლა"
+  else -> "Sign in with Apple"
 }

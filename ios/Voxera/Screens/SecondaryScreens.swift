@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import AuthenticationServices
 
 @MainActor
 private func themedOutlineButton(
@@ -937,6 +938,13 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.white.opacity(0.35))
+                SignInWithAppleButton(.signIn) { request in
+                  auth.prepareAppleRequest(request)
+                } onCompletion: { result in
+                  auth.completeApple(result)
+                }
+                .signInWithAppleButtonStyle(.white)
+                .frame(height: 48)
               }
             }
           }

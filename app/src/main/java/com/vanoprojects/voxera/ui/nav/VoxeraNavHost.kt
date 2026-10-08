@@ -124,7 +124,7 @@ fun VoxeraNavHost(
         onModeChosen = { mode ->
           if (mode == "history") {
             navController.navigate(Routes.History)
-          } else if (!TrialAccess.canAnalyze(context, FirebaseAuth.getInstance().currentUser?.uid)) {
+          } else if (!TrialAccess.canAnalyze(context, TrialAccess.accountId(context, FirebaseAuth.getInstance().currentUser?.uid))) {
             navController.navigate(Routes.Subscriptions)
           } else {
             AnalysisSession.analysisType = when (mode) {
@@ -150,7 +150,7 @@ fun VoxeraNavHost(
         onAccept = {
           scope.launch {
             onConsentGiven()
-            if (!TrialAccess.canAnalyze(context, FirebaseAuth.getInstance().currentUser?.uid)) {
+            if (!TrialAccess.canAnalyze(context, TrialAccess.accountId(context, FirebaseAuth.getInstance().currentUser?.uid))) {
               navController.navigate(Routes.Subscriptions) {
                 popUpTo(Routes.Mode) { inclusive = false }
               }

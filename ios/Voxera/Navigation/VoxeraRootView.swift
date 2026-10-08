@@ -35,7 +35,7 @@ struct VoxeraRootView: View {
         Group {
           if !prefs.onboardingCompleted {
             OnboardingView(path: $path)
-          } else if auth.userId == nil {
+          } else if auth.userId == nil && !prefs.authCompleted {
             AuthView(path: $path)
           } else {
             ModeSelectView(path: $path)

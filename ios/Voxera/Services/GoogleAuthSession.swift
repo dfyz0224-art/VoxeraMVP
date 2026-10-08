@@ -1,4 +1,6 @@
 import Foundation
+import AuthenticationServices
+import CryptoKit
 import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
@@ -20,6 +22,7 @@ final class GoogleAuthSession: ObservableObject {
   @Published var message: String?
 
   private var listener: AuthStateDidChangeListenerHandle?
+  private var currentNonce: String?
 
   init() {
     FirebaseBootstrap.configureIfPossible()
@@ -79,5 +82,63 @@ final class GoogleAuthSession: ObservableObject {
     GIDSignIn.sharedInstance.signOut()
     try? Auth.auth().signOut()
     userId = nil
+  }
+
+  func prepareAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
+    let nonce = Self.randomNonce()
+    currentNonce = nonce
+    request.requestedScopes = [.fullName, .email]
+    request.nonce = Self.sha256(nonce)
+  }
+
+  func completeApple(_ result: Result<ASAuthorization, Error>) {
+    switch result {
+    case .failure(let error):
+      if (error as NSError).code == ASAuthorizationError.canceled.rawValue { return }
+      message = error.localizedDescription
+    case .success(let authorization):
+      guard let apple = authorization.credential as? ASAuthorizationAppleIDCredential,
+            let tokenData = apple.identityToken,
+            let token = String(data: tokenData, encoding: .utf8),
+            let nonce = currentNonce else {
+        message = "Apple sign-in did not return a token."
+        return
+      }
+      FirebaseBootstrap.configureIfPossible()
+      guard FirebaseBootstrap.isReady else {
+        message = "Add GoogleService-Info.plist before signing in with Apple."
+        return
+      }
+      let credential = OAuthProvider.appleCredential(
+        withIDToken: token,
+        rawNonce: nonce,
+        fullName: apple.fullName
+      )
+      Auth.auth().signIn(with: credential) { _, error in
+        Task { @MainActor in
+          if let error {
+            self.message = error.localizedDescription
+          } else if let uid = Auth.auth().currentUser?.uid {
+            TrialAccess.startIfNeeded(uid: uid)
+            self.message = nil
+          }
+        }
+      }
+    }
+  }
+
+  private static func randomNonce(length: Int = 32) -> String {
+    let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+    var bytes = [UInt8](repeating: 0, count: length)
+    let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+    if status != errSecSuccess {
+      return UUID().uuidString.replacingOccurrences(of: "-", with: "")
+    }
+    return String(bytes.map { charset[Int($0) % charset.count] })
+  }
+
+  private static func sha256(_ input: String) -> String {
+    let hashed = SHA256.hash(data: Data(input.utf8))
+    return hashed.map { String(format: "%02x", $0) }.joined()
   }
 }

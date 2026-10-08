@@ -12,15 +12,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.billing.TrialAccess
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(
@@ -30,6 +33,8 @@ fun AuthScreen(
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
 
   Box(modifier = Modifier.fillMaxSize()) {
     when (theme.type) {
@@ -97,8 +102,14 @@ fun AuthScreen(
         AuthCardContent(
           prefsManager = prefsManager,
           onAuthComplete = onComplete,
-          onSkip = {},
-          showSkipButton = false,
+          onSkip = {
+            TrialAccess.startIfNeeded(context, TrialAccess.guestUid(context))
+            scope.launch {
+              prefsManager.setAuthCompleted(true)
+              onComplete()
+            }
+          },
+          showSkipButton = true,
           googleOnly = true
         )
       }

@@ -43,6 +43,7 @@ fun VoxeraApp() {
   val appLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
   val consentGiven by prefsManager.consentGiven.collectAsState(initial = false)
   val onboardingCompleted by prefsManager.onboardingCompleted.collectAsState(initial = null)
+  val authCompletedByPrefs by prefsManager.authCompleted.collectAsState(initial = null)
   var firebaseUser by remember {
     mutableStateOf(FirebaseAuth.getInstance().currentUser)
   }
@@ -57,11 +58,12 @@ fun VoxeraApp() {
     VoxeraApiClient.languageCode = appLanguage.name.lowercase()
   }
   val currentUser = firebaseUser
-  val authCompleted = currentUser?.isAllowedIntoApp() == true
-  LaunchedEffect(currentUser?.uid) {
-    val uid = currentUser?.uid ?: return@LaunchedEffect
+  val authCompleted = currentUser?.isAllowedIntoApp() == true || authCompletedByPrefs == true
+  LaunchedEffect(currentUser?.uid, authCompletedByPrefs) {
+    if (currentUser == null && authCompletedByPrefs != true) return@LaunchedEffect
+    val uid = TrialAccess.accountId(context, currentUser?.uid)
     TrialAccess.startIfNeeded(context, uid)
-    refreshPlaySubscription(context)
+    if (currentUser != null) refreshPlaySubscription(context)
   }
   val remindersEnabled by prefsManager.dailyRemindersEnabled.collectAsState(initial = true)
   val notifPermission = rememberLauncherForActivityResult(
