@@ -50,6 +50,7 @@
 /* Begin PBXFileReference section */
 		058B7141F74A14C38A021234 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		0C40B68329527405A9E8306F /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
+		A91C4E2B7D6F4803A5C8E1B0 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		0F1015339070C0F45AA03216 /* AudioRecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderService.swift; sourceTree = "<group>"; };
 		B2C3D4E5F60718293A4B5C6D /* AudioUploadMime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioUploadMime.swift; sourceTree = "<group>"; };
 		D2E3F405162738495A6B7C8D /* APIToken.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIToken.generated.swift; sourceTree = "<group>"; };
@@ -118,6 +119,7 @@
 				F24C7A32F48037E39DF099C4 /* Info.plist */,
 				322FD2758394C3FF13EA1056 /* LocaleStore.swift */,
 				EAC4FB764A0C16824F50729C /* Secrets.generated.swift */,
+				A91C4E2B7D6F4803A5C8E1B0 /* Secrets.xcconfig */,
 				0C40B68329527405A9E8306F /* Secrets.xcconfig.example */,
 				36F86A8F56112BDA8FBA5C92 /* VoxeraApp.swift */,
 				0FCA5F89D30C94BE493B23B0 /* About */,
