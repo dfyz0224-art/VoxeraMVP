@@ -111,8 +111,7 @@ Desktop.ini
 /android/app/profile
 /android/app/release
 
-# iOS local secrets (use Secrets.xcconfig.example)
-ios/Voxera/Secrets.xcconfig
+# Firebase config stays local (download from Firebase Console).
 ios/Voxera/GoogleService-Info.plist
 
 # Python

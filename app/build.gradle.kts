@@ -86,6 +86,7 @@ dependencies {
   implementation("com.google.firebase:firebase-analytics")
   implementation("com.google.firebase:firebase-auth")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
+  implementation("com.android.billingclient:billing-ktx:7.1.1")
   implementation("io.coil-kt:coil-compose:2.5.0")
   implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

@@ -17,13 +17,7 @@ open Voxera.xcodeproj
 
 Новые экраны (паритет Android): подписки в Settings, форма входа с подтверждением пароля / «Гостевой режим», кнопка «График состояний» на Result.
 
-**API / TestFlight:** нужен файл **`ios/Voxera/Secrets.xcconfig`** (не Android `secrets.properties`!). Скопируйте `Secrets.xcconfig.example` → `Secrets.xcconfig`:
-
-```text
-VOXERA_API_TOKEN = ваш_токен_как_в_Android
-```
-
-Перед каждым **Archive → TestFlight** файл должен существовать на Mac — build phase `Generate API Token` вшивает токен в приложение. Без него Release-сборка упадёт с ошибкой или покажет `noToken` на телефоне.  
+**API / TestFlight:** файл **`ios/Voxera/Secrets.xcconfig`** уже в репозитории. Перед Archive замените `paste_token_here` на тот же `VOXERA_API_TOKEN`, что в Android `secrets.properties`. Без настоящего токена Release-сборка упадёт или покажет `noToken`.  
 В **Debug** можно временно задать `VOXERA_API_TOKEN` в **Scheme → Run → Environment Variables** (на TestFlight это не действует).
 
 **Debug:** кнопка **«Тест»** на экране записи копирует `Resources/audio_test.ogg` (как Android `assets/audio_test.ogg`) и сразу идёт в анализ.
@@ -32,7 +26,7 @@ VOXERA_API_TOKEN = ваш_токен_как_в_Android
 
 ## Секреты
 
-1. Скопируйте `Voxera/Secrets.xcconfig.example` → `Voxera/Secrets.xcconfig` и пропишите `VOXERA_API_TOKEN` (как `VOXERA_API_TOKEN` в Android `secrets.properties`).
+1. В `Voxera/Secrets.xcconfig` пропишите `VOXERA_API_TOKEN` (как в Android `secrets.properties`). Файл уже в git, значение `paste_token_here` нужно заменить.
 2. Скопируйте из Firebase Console **`GoogleService-Info.plist`** в `Voxera/` (iOS-приложение в той же Firebase-проекте, что Android).
 3. В Xcode: **Signing & Capabilities** — свой Team, **Automatically manage signing**. Bundle ID: **`com.vanoprojects.voxera.app`** (тот же в App Store Connect).
 

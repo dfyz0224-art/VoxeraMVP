@@ -43,6 +43,7 @@
 		A8301B252F9C4D6E7F8091A1 /* LiquidGlass in Frameworks */ = {isa = PBXBuildFile; productRef = E703193B2C7C8C9AA0B12EF6 /* LiquidGlass */; };
 		ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A3538AEF74265AE42165C /* AuthCardContent.swift */; };
 		7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */; };
+		C8F5B02D3E9A4F7B0D2C1E22 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E4A91C2D8F4E6A9C1B0D11 /* SubscriptionStore.swift */; };
 		E566F43D3DD14CE38A005CB5 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */; };
 /* End PBXBuildFile section */
 
@@ -85,6 +86,7 @@
 		F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryMoodPeriod.swift; sourceTree = "<group>"; };
 		380A3538AEF74265AE42165C /* AuthCardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCardContent.swift; sourceTree = "<group>"; };
 		DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionsView.swift; sourceTree = "<group>"; };
+		B7E4A91C2D8F4E6A9C1B0D11 /* SubscriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStore.swift; sourceTree = "<group>"; };
 		8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -152,6 +154,7 @@
 			children = (
 				AF5013032A96D4A7E838E0B6 /* AuthView.swift */,
 				DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */,
+				B7E4A91C2D8F4E6A9C1B0D11 /* SubscriptionStore.swift */,
 				380A3538AEF74265AE42165C /* AuthCardContent.swift */,
 				C267ECCA8214624E3D87F5D3 /* FlowScreens.swift */,
 				3A9AFCA967A653514358E710 /* ModeSelectView.swift */,
@@ -346,6 +349,7 @@
 				2FA08539A83EE845C644097E /* AuthView.swift in Sources */,
 				E566F43D3DD14CE38A005CB5 /* CredentialStore.swift in Sources */,
 				7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */,
+				C8F5B02D3E9A4F7B0D2C1E22 /* SubscriptionStore.swift in Sources */,
 				ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */,
 				E82F43EBA80983B83148068E /* FlowScreens.swift in Sources */,
 				5EDBA999536F74AFC66FB08C /* HistoryStore.swift in Sources */,
