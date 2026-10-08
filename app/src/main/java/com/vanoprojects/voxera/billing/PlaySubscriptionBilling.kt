@@ -181,10 +181,15 @@ class PlaySubscriptionBilling(context: Context) {
       main.post {
         if (result.responseCode != BillingClient.BillingResponseCode.OK) return@post
         purchases.forEach { handlePurchase(it) }
-        if (purchases.none { it.purchaseState == Purchase.PurchaseState.PURCHASED }) {
+        val owns = purchases.any { purchase ->
+          purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+            purchase.products.any { VoxeraSubscriptionProduct.rank(it) > 0 }
+        }
+        if (!owns) {
           activeProductId = null
           activePurchaseToken = null
         }
+        EntitlementStore.hasActiveSubscription = owns
       }
     }
   }
@@ -193,10 +198,11 @@ class PlaySubscriptionBilling(context: Context) {
     if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
     val id = purchase.products.maxByOrNull { VoxeraSubscriptionProduct.rank(it) } ?: return
     if (VoxeraSubscriptionProduct.rank(id) == 0) return
-    if (VoxeraSubscriptionProduct.rank(id) >= VoxeraSubscriptionProduct.rank(activeProductId)) {
-      activeProductId = id
-      activePurchaseToken = purchase.purchaseToken
-    }
+        if (VoxeraSubscriptionProduct.rank(id) >= VoxeraSubscriptionProduct.rank(activeProductId)) {
+          activeProductId = id
+          activePurchaseToken = purchase.purchaseToken
+          EntitlementStore.hasActiveSubscription = true
+        }
     if (!purchase.isAcknowledged) {
       val ack = AcknowledgePurchaseParams.newBuilder()
         .setPurchaseToken(purchase.purchaseToken)
@@ -220,4 +226,37 @@ fun Context.findActivity(): Activity? {
     current = current.baseContext
   }
   return null
+}
+
+/** Updates [EntitlementStore] from Play subscriptions without opening the plans screen. */
+fun refreshPlaySubscription(context: Context) {
+  val appContext = context.applicationContext
+  val client = BillingClient.newBuilder(appContext)
+    .setListener { _, _ -> }
+    .enablePendingPurchases(
+      PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+    )
+    .build()
+  client.startConnection(object : BillingClientStateListener {
+    override fun onBillingSetupFinished(result: BillingResult) {
+      if (result.responseCode != BillingClient.BillingResponseCode.OK) {
+        client.endConnection()
+        return
+      }
+      val params = QueryPurchasesParams.newBuilder()
+        .setProductType(BillingClient.ProductType.SUBS)
+        .build()
+      client.queryPurchasesAsync(params) { queryResult, purchases ->
+        if (queryResult.responseCode == BillingClient.BillingResponseCode.OK) {
+          EntitlementStore.hasActiveSubscription = purchases.any { purchase ->
+            purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+              purchase.products.any { VoxeraSubscriptionProduct.rank(it) > 0 }
+          }
+        }
+        client.endConnection()
+      }
+    }
+
+    override fun onBillingServiceDisconnected() {}
+  })
 }

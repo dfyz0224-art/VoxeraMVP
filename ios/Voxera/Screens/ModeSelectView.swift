@@ -6,6 +6,8 @@ struct ModeSelectView: View {
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var session: AnalysisSession
   @EnvironmentObject private var locale: LocaleStore
+  @EnvironmentObject private var auth: GoogleAuthSession
+  @StateObject private var subscriptions = SubscriptionStore()
 
   var s: AppStrings { locale.strings }
 
@@ -71,6 +73,7 @@ struct ModeSelectView: View {
         }
         .padding(.horizontal, 20)
       }
+      .task { await subscriptions.load() }
     }
   }
 
@@ -78,6 +81,14 @@ struct ModeSelectView: View {
     let iconSize: CGFloat = height < 130 ? 72 : 88
     let fontSize: CGFloat = height < 130 ? 15 : 17
     return ThemedCard(gradientIndex: gradient, onTap: {
+      let allowed = TrialAccess.canAnalyze(
+        uid: auth.userId,
+        hasSubscription: subscriptions.activeProductId != nil
+      )
+      if !allowed {
+        path.append(AppRoute.subscriptions)
+        return
+      }
       session.analysisType = tag == "quick" ? "psytype" : "emostate"
       if prefs.consentGiven {
         path.append(AppRoute.recording)

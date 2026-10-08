@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
+import com.vanoprojects.voxera.billing.TrialAccess
+import com.vanoprojects.voxera.billing.refreshPlaySubscription
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.data.api.VoxeraApiClient
 import com.vanoprojects.voxera.data.isAllowedIntoApp
@@ -41,7 +43,6 @@ fun VoxeraApp() {
   val appLanguage by prefsManager.appLanguage.collectAsState(initial = AppLanguage.RU)
   val consentGiven by prefsManager.consentGiven.collectAsState(initial = false)
   val onboardingCompleted by prefsManager.onboardingCompleted.collectAsState(initial = null)
-  val authCompletedByPrefs by prefsManager.authCompleted.collectAsState(initial = null)
   var firebaseUser by remember {
     mutableStateOf(FirebaseAuth.getInstance().currentUser)
   }
@@ -55,12 +56,12 @@ fun VoxeraApp() {
   LaunchedEffect(appLanguage) {
     VoxeraApiClient.languageCode = appLanguage.name.lowercase()
   }
-  // Guest: prefs only. Signed-in email/password: must be verified.
   val currentUser = firebaseUser
-  val authCompleted = when {
-    currentUser != null -> currentUser.isAllowedIntoApp()
-    authCompletedByPrefs == true -> true
-    else -> false
+  val authCompleted = currentUser?.isAllowedIntoApp() == true
+  LaunchedEffect(currentUser?.uid) {
+    val uid = currentUser?.uid ?: return@LaunchedEffect
+    TrialAccess.startIfNeeded(context, uid)
+    refreshPlaySubscription(context)
   }
   val remindersEnabled by prefsManager.dailyRemindersEnabled.collectAsState(initial = true)
   val notifPermission = rememberLauncherForActivityResult(

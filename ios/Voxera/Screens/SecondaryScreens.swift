@@ -883,12 +883,13 @@ struct ProfileView: View {
   @EnvironmentObject private var prefs: PreferencesStore
   @EnvironmentObject private var locale: LocaleStore
   @EnvironmentObject private var history: HistoryStore
+  @EnvironmentObject private var auth: GoogleAuthSession
   @State private var authEpoch = 0
   var s: AppStrings { locale.strings }
 
   private var signedIn: Bool {
     _ = authEpoch
-    return AuthBackend.isSignedIn
+    return auth.isSignedIn
   }
 
   var body: some View {
@@ -903,11 +904,11 @@ struct ProfileView: View {
                 Text(s.profile)
                   .font(.headline)
                   .foregroundColor(.white)
-                Text(AuthBackend.currentEmail ?? s.userName)
+                Text(auth.email ?? s.userName)
                   .font(.system(size: 17))
                   .foregroundColor(.white.opacity(0.85))
                 Button {
-                  AuthBackend.signOut()
+                  auth.signOut()
                   prefs.setProfilePhotoPath(nil)
                   prefs.setProfilePhone(nil)
                   history.setAccountKey(HistoryStore.guestAccountKey)
@@ -924,10 +925,19 @@ struct ProfileView: View {
             }
           } else {
             ThemedCard(gradientIndex: 0) {
-              AuthCardContent(
-                showSkipButton: false,
-                onAuthComplete: { authEpoch += 1 }
-              )
+              VStack(alignment: .leading, spacing: 12) {
+                if let message = auth.message, !message.isEmpty {
+                  Text(message)
+                    .font(.footnote)
+                    .foregroundColor(.white)
+                }
+                Button(s.authGoogle) {
+                  guard let controller = topViewController() else { return }
+                  auth.signIn(presenting: controller)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.white.opacity(0.35))
+              }
             }
           }
           Spacer().frame(minHeight: 80)

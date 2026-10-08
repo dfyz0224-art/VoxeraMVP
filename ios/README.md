@@ -27,8 +27,8 @@ open Voxera.xcodeproj
 ## Секреты
 
 1. В `Voxera/Secrets.xcconfig` пропишите `VOXERA_API_TOKEN` (как в Android `secrets.properties`). Файл уже в git, значение `paste_token_here` нужно заменить.
-2. Скопируйте из Firebase Console **`GoogleService-Info.plist`** в `Voxera/` (iOS-приложение в той же Firebase-проекте, что Android).
-3. В Xcode: **Signing & Capabilities** — свой Team, **Automatically manage signing**. Bundle ID: **`com.vanoprojects.voxera.app`** (тот же в App Store Connect).
+2. В Firebase добавьте iOS-приложение `com.vanoprojects.voxera.app`, скачайте **`GoogleService-Info.plist`** в `Voxera/` и добавьте его в таргет Xcode. В `Voxera/Google.xcconfig` замените `REPLACE_ME` на значение **REVERSED_CLIENT_ID** из этого plist.
+3. В Xcode: **Signing & Capabilities** — свой Team, **Automatically manage signing**. Bundle ID: **`com.vanoprojects.voxera.app`** (тот же в App Store Connect). **File → Packages → Resolve Package Versions** после pull (Firebase и Google Sign-In).
 
 ## Зависимости
 

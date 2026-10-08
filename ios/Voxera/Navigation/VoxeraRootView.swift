@@ -24,6 +24,8 @@ struct VoxeraRootView: View {
   @EnvironmentObject private var history: HistoryStore
   @EnvironmentObject private var locale: LocaleStore
 
+  @EnvironmentObject private var auth: GoogleAuthSession
+
   @State private var splashDone = false
   @State private var path = NavigationPath()
 
@@ -33,7 +35,7 @@ struct VoxeraRootView: View {
         Group {
           if !prefs.onboardingCompleted {
             OnboardingView(path: $path)
-          } else if !prefs.authCompleted {
+          } else if auth.userId == nil {
             AuthView(path: $path)
           } else {
             ModeSelectView(path: $path)
@@ -64,10 +66,10 @@ struct VoxeraRootView: View {
         locale.update(language: new)
       }
       .onAppear {
-        history.setAccountKey(AuthBackend.isSignedIn ? AuthBackend.accountKey() : HistoryStore.guestAccountKey)
+        history.setAccountKey(auth.userId ?? HistoryStore.guestAccountKey)
       }
-      .onChange(of: prefs.authCompleted) { _, _ in
-        history.setAccountKey(AuthBackend.isSignedIn ? AuthBackend.accountKey() : HistoryStore.guestAccountKey)
+      .onChange(of: auth.userId) { _, uid in
+        history.setAccountKey(uid ?? HistoryStore.guestAccountKey)
       }
 
       if !splashDone {

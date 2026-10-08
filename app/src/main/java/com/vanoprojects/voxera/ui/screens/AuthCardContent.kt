@@ -42,6 +42,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -56,6 +57,7 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.vanoprojects.voxera.BuildConfig
 import com.vanoprojects.voxera.R
+import com.vanoprojects.voxera.billing.TrialAccess
 import com.vanoprojects.voxera.data.CredentialStore
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.data.isAllowedIntoApp
@@ -77,7 +79,8 @@ fun AuthCardContent(
   onAuthComplete: () -> Unit,
   onSkip: () -> Unit,
   modifier: Modifier = Modifier,
-  showSkipButton: Boolean = true
+  showSkipButton: Boolean = true,
+  googleOnly: Boolean = false
 ) {
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
@@ -114,6 +117,7 @@ fun AuthCardContent(
   )
 
   LaunchedEffect(Unit) {
+    if (googleOnly) return@LaunchedEffect
     rememberPassword = credentialStore.isRememberEnabled()
     credentialStore.load()?.let { (savedEmail, savedPassword) ->
       email = savedEmail
@@ -155,7 +159,7 @@ fun AuthCardContent(
   }
 
   LaunchedEffect(rememberPassword, isRegisterMode) {
-    if (autoLoginAttempted || isRegisterMode || !rememberPassword) return@LaunchedEffect
+    if (googleOnly || autoLoginAttempted || isRegisterMode || !rememberPassword) return@LaunchedEffect
     val saved = credentialStore.load() ?: return@LaunchedEffect
     email = saved.first
     password = saved.second
@@ -184,6 +188,8 @@ fun AuthCardContent(
       try {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential).await()
+        val uid = auth.currentUser?.uid
+        if (uid != null) TrialAccess.startIfNeeded(context, uid)
         if (!rememberPassword) credentialStore.clear()
         prefsManager.setAuthCompleted(true)
         onAuthComplete()
@@ -374,6 +380,30 @@ fun AuthCardContent(
 
   Box(modifier = modifier) {
     Column(modifier = Modifier.fillMaxWidth()) {
+      if (googleOnly) {
+        errorMessage?.let { msg ->
+          Text(
+            text = msg,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFFFFB4AB)
+          )
+          Spacer(modifier = Modifier.height(12.dp))
+        }
+        if (webClientId.isNullOrBlank()) {
+          Text(
+            text = strings.authErrorGeneric,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFFFFB4AB)
+          )
+        } else {
+          GoogleSignInButton(
+            text = strings.authGoogle,
+            onClick = { signInWithGoogle() },
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+        return@Column
+      }
       OutlinedTextField(
         value = email,
         onValueChange = { email = it; errorMessage = null; infoMessage = null },

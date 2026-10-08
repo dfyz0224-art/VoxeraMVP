@@ -96,7 +96,8 @@ fun ProfileScreen(
               prefsManager = prefsManager,
               onAuthComplete = { authEpoch++ },
               onSkip = {},
-              showSkipButton = false
+              showSkipButton = false,
+              googleOnly = true
             )
           }
         } else {

@@ -28,6 +28,15 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Запись голоса нужна для анализа эмоционального состояния и психотипа.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,3 +1,4 @@
 // Base build settings. Secrets.xcconfig (same folder) must set VOXERA_API_TOKEN for Archive/TestFlight.
 // Do not assign an empty VOXERA_API_TOKEN after the include — last assignment wins.
 #include? "Secrets.xcconfig"
+#include? "Google.xcconfig"

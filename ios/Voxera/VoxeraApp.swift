@@ -1,10 +1,12 @@
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct VoxeraApp: App {
   @StateObject private var prefs = PreferencesStore()
   @StateObject private var history = HistoryStore()
   @StateObject private var locale = LocaleStore()
+  @StateObject private var auth = GoogleAuthSession()
 
   var body: some Scene {
     WindowGroup {
@@ -13,7 +15,11 @@ struct VoxeraApp: App {
         .environmentObject(AnalysisSession.shared)
         .environmentObject(history)
         .environmentObject(locale)
+        .environmentObject(auth)
         .preferredColorScheme(.dark)
+        .onOpenURL { url in
+          GIDSignIn.sharedInstance.handle(url)
+        }
         .onAppear {
           locale.update(language: prefs.appLanguage)
           Task {

@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+import com.vanoprojects.voxera.billing.TrialAccess
 import com.vanoprojects.voxera.data.AnalysisSession
 import com.vanoprojects.voxera.data.AnalysisUploadCoordinator
 import com.vanoprojects.voxera.data.HistoryRepository
@@ -123,6 +124,8 @@ fun VoxeraNavHost(
         onModeChosen = { mode ->
           if (mode == "history") {
             navController.navigate(Routes.History)
+          } else if (!TrialAccess.canAnalyze(context, FirebaseAuth.getInstance().currentUser?.uid)) {
+            navController.navigate(Routes.Subscriptions)
           } else {
             AnalysisSession.analysisType = when (mode) {
               "quick" -> "psytype"
@@ -147,8 +150,14 @@ fun VoxeraNavHost(
         onAccept = {
           scope.launch {
             onConsentGiven()
-            navController.navigate(Routes.Recording) {
-              popUpTo(Routes.Mode) { inclusive = false }
+            if (!TrialAccess.canAnalyze(context, FirebaseAuth.getInstance().currentUser?.uid)) {
+              navController.navigate(Routes.Subscriptions) {
+                popUpTo(Routes.Mode) { inclusive = false }
+              }
+            } else {
+              navController.navigate(Routes.Recording) {
+                popUpTo(Routes.Mode) { inclusive = false }
+              }
             }
           }
         }

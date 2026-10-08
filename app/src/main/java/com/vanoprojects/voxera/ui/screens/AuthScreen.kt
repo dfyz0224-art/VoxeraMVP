@@ -21,7 +21,6 @@ import com.vanoprojects.voxera.R
 import com.vanoprojects.voxera.data.PreferencesManager
 import com.vanoprojects.voxera.ui.strings.LocalStrings
 import com.vanoprojects.voxera.ui.theme.*
-import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(
@@ -31,14 +30,6 @@ fun AuthScreen(
   val theme = LocalVoxeraTheme.current
   val colors = theme.colors
   val strings = LocalStrings.current
-  val scope = rememberCoroutineScope()
-
-  fun onSkip() {
-    scope.launch {
-      prefsManager.setAuthCompleted(true)
-      onComplete()
-    }
-  }
 
   Box(modifier = Modifier.fillMaxSize()) {
     when (theme.type) {
@@ -106,8 +97,9 @@ fun AuthScreen(
         AuthCardContent(
           prefsManager = prefsManager,
           onAuthComplete = onComplete,
-          onSkip = { onSkip() },
-          showSkipButton = true
+          onSkip = {},
+          showSkipButton = false,
+          googleOnly = true
         )
       }
 

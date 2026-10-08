@@ -45,6 +45,11 @@
 		7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */; };
 		C8F5B02D3E9A4F7B0D2C1E22 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E4A91C2D8F4E6A9C1B0D11 /* SubscriptionStore.swift */; };
 		E566F43D3DD14CE38A005CB5 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */; };
+		C0FFEE010000000000000003 /* TrialAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE010000000000000001 /* TrialAccess.swift */; };
+		C0FFEE010000000000000004 /* GoogleAuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE010000000000000002 /* GoogleAuthSession.swift */; };
+		A1B2C3D4E5F60718293A4B06 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B03 /* FirebaseCore */; };
+		A1B2C3D4E5F60718293A4B07 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B04 /* FirebaseAuth */; };
+		A1B2C3D4E5F60718293A4B08 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B05 /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +94,8 @@
 		DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionsView.swift; sourceTree = "<group>"; };
 		B7E4A91C2D8F4E6A9C1B0D11 /* SubscriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStore.swift; sourceTree = "<group>"; };
 		8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		C0FFEE010000000000000001 /* TrialAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialAccess.swift; sourceTree = "<group>"; };
+		C0FFEE010000000000000002 /* GoogleAuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleAuthSession.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -200,6 +207,8 @@
 			isa = PBXGroup;
 			children = (
 				8A64C2AF6C7C424BB39321A5 /* CredentialStore.swift */,
+				C0FFEE010000000000000001 /* TrialAccess.swift */,
+				C0FFEE010000000000000002 /* GoogleAuthSession.swift */,
 				0F1015339070C0F45AA03216 /* AudioRecorderService.swift */,
 				B2C3D4E5F60718293A4B5C6D /* AudioUploadMime.swift */,
 				F5A6B708192A3B4C5D6E7F80 /* DailyReminderScheduler.swift */,
@@ -246,6 +255,9 @@
 			name = Voxera;
 			packageProductDependencies = (
 				E703193B2C7C8C9AA0B12EF6 /* LiquidGlass */,
+				A1B2C3D4E5F60718293A4B03 /* FirebaseCore */,
+				A1B2C3D4E5F60718293A4B04 /* FirebaseAuth */,
+				A1B2C3D4E5F60718293A4B05 /* GoogleSignIn */,
 			);
 			productName = Voxera;
 			productReference = A7773004CC9FA74FFC95A4F3 /* Voxera.app */;
@@ -259,6 +271,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				A8301B252F9C4D6E7F8091A1 /* LiquidGlass in Frameworks */,
+				A1B2C3D4E5F60718293A4B06 /* FirebaseCore in Frameworks */,
+				A1B2C3D4E5F60718293A4B07 /* FirebaseAuth in Frameworks */,
+				A1B2C3D4E5F60718293A4B08 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +302,8 @@
 			mainGroup = F98E9C30C75071AD35EC9043;
 			packageReferences = (
 				E703193B2C7C8C9AA0B12EF4 /* XCRemoteSwiftPackageReference "LiquidGlass" */,
+				A1B2C3D4E5F60718293A4B01 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1B2C3D4E5F60718293A4B02 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = 6763055F5B2E4DA561570FF6 /* Products */;
 			projectDirPath = "";
@@ -350,6 +367,8 @@
 				E4F5A6B708192A3B4C5D6E7F /* DailyReminderScheduler.swift in Sources */,
 				2FA08539A83EE845C644097E /* AuthView.swift in Sources */,
 				E566F43D3DD14CE38A005CB5 /* CredentialStore.swift in Sources */,
+				C0FFEE010000000000000003 /* TrialAccess.swift in Sources */,
+				C0FFEE010000000000000004 /* GoogleAuthSession.swift in Sources */,
 				7FE6387F55FA4046A418341A /* SubscriptionsView.swift in Sources */,
 				C8F5B02D3E9A4F7B0D2C1E22 /* SubscriptionStore.swift in Sources */,
 				ED70CC251A8E41FF80AE3BE0 /* AuthCardContent.swift in Sources */,
@@ -581,6 +600,22 @@
 				minimumVersion = 0.8.0;
 			};
 		};
+		A1B2C3D4E5F60718293A4B01 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B02 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -588,6 +623,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E703193B2C7C8C9AA0B12EF4 /* XCRemoteSwiftPackageReference "LiquidGlass" */;
 			productName = LiquidGlass;
+		};
+		A1B2C3D4E5F60718293A4B03 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B01 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A1B2C3D4E5F60718293A4B04 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B01 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A1B2C3D4E5F60718293A4B05 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B02 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
