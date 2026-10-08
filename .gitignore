@@ -112,7 +112,6 @@ Desktop.ini
 /android/app/release
 
 # Firebase config stays local (download from Firebase Console).
-ios/Voxera/GoogleService-Info.plist
 
 # Python
 __pycache__/

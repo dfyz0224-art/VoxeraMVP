@@ -1,3 +1,3 @@
 // Reversed client id from Firebase GoogleService-Info.plist (key REVERSED_CLIENT_ID).
 // Required so Google Sign-In can return to the app. Not the API token.
-GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.REPLACE_ME
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.968760954193-nglcojqccod7bnvltu4lfuv56366392n

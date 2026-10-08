@@ -18,6 +18,7 @@
 		6C56E086F9D693DFC9B08DB1 /* StringPackRU.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A9CF64E291877ADCA2D373 /* StringPackRU.swift */; };
 		6CBC8161EE72E16762462520 /* SecondaryScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB38EF60E2450679F313EA9 /* SecondaryScreens.swift */; };
 		70F7F86CC00ADAB715E66785 /* PrivacyPolicyFull.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3CEC570EAB51795E451C80DE /* PrivacyPolicyFull.txt */; };
+		B1C2D3E4F5061728394A5B6C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C1D2E3F405162738495A6B70 /* GoogleService-Info.plist */; };
 		7E5DAF758BFB2DCB287F5644 /* ResearchLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4134BA44A2D502F5B4EB75B /* ResearchLinks.swift */; };
 		851B168513FB4441D67A7592 /* PrivacyPolicyFullEN.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57734EB2F7D81911ECF837E /* PrivacyPolicyFullEN.swift */; };
 		8A666AB741C40D17C055CA75 /* AnalysisSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77233FA8CCA9DCEDAB8D9656 /* AnalysisSession.swift */; };
@@ -89,6 +90,7 @@
 		E64086F5CC755D307A03B4EC /* StringPackZH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringPackZH.swift; sourceTree = "<group>"; };
 		EAC4FB764A0C16824F50729C /* Secrets.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.generated.swift; sourceTree = "<group>"; };
 		F24C7A32F48037E39DF099C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C1D2E3F405162738495A6B70 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F375F3442F9E4F3100F7E148 /* HistoryMoodPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryMoodPeriod.swift; sourceTree = "<group>"; };
 		380A3538AEF74265AE42165C /* AuthCardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCardContent.swift; sourceTree = "<group>"; };
 		DC9F64294C124C1DA590F6B1 /* SubscriptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionsView.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 				CB739D7742354D19B0125241 /* Assets.xcassets */,
 				CA57270AF50EC7B77BD8B807 /* Config.xcconfig */,
 				F24C7A32F48037E39DF099C4 /* Info.plist */,
+				C1D2E3F405162738495A6B70 /* GoogleService-Info.plist */,
 				322FD2758394C3FF13EA1056 /* LocaleStore.swift */,
 				EAC4FB764A0C16824F50729C /* Secrets.generated.swift */,
 				A91C4E2B7D6F4803A5C8E1B0 /* Secrets.xcconfig */,
@@ -344,6 +347,7 @@
 			files = (
 				2E1299B63254FFADFA6F8050 /* Assets.xcassets in Resources */,
 				70F7F86CC00ADAB715E66785 /* PrivacyPolicyFull.txt in Resources */,
+				B1C2D3E4F5061728394A5B6C /* GoogleService-Info.plist in Resources */,
 				FF1AEB9BB29902212DA50BFC /* Secrets.xcconfig.example in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
