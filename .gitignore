@@ -111,8 +111,6 @@ Desktop.ini
 /android/app/profile
 /android/app/release
 
-# Firebase config stays local (download from Firebase Console).
-
 # Python
 __pycache__/
 *.pyc
